@@ -114,6 +114,11 @@ const routes = [
     component: () => import('@/pages/AntmedHospitalList.vue'),
   },
   {
+    path: '/antmed/contracts',
+    name: 'AntmedContracts',
+    component: () => import('@/pages/AntmedContracts.vue'),
+  },
+  {
     path: '/antmed/hospitals/:name',
     name: 'AntmedHospitalDetail',
     component: () => import('@/pages/AntmedHospitalDetail.vue'),

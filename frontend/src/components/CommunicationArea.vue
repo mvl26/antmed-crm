@@ -142,7 +142,7 @@ const subject = computed(() => {
 })
 
 const signature = createResource({
-  url: 'crm.api.get_user_signature',
+  url: 'antmed_crm.api.get_user_signature',
   cache: 'user-email-signature',
   auto: true,
 })
@@ -220,7 +220,7 @@ async function sendComment() {
     ? attachments.value.map((x) => x.name)
     : []
 
-  let comment = await call('crm.api.comment.add_comment', {
+  let comment = await call('antmed_crm.api.comment.add_comment', {
     reference_doctype: props.doctype,
     reference_name: doc.value.name,
     content: newComment.value,

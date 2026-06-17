@@ -1,0 +1,2 @@
+import{aW as i,ap as s,Z as c,B as u}from"./index-tOf8Sekn.js";const m=i("crm-organizations",()=>{let o=u({});const r=s(),n=c({url:"antmed_crm.api.session.get_organizations",cache:"organizations",initialData:[],auto:!0,transform(t){for(let a of t)o[a.name]=a;return t},onError(t){t&&t.exc_type==="AuthenticationError"&&r.push("/login")}});function e(t){return o[t]}return{organizations:n,getOrganization:e}});export{m as o};
+//# sourceMappingURL=organizations-BcpRXS9Y.js.map

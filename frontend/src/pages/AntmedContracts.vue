@@ -115,16 +115,17 @@
           </tr>
         </thead>
         <tbody>
+          <!--
+            Row-click drill-down VÔ HIỆU ở vòng này (ADR-M02-06): route
+            'AntmedContractDetail' (/antmed/contracts/:name) CHƯA tồn tại → tránh
+            điều hướng tới route no-match (dead-end). Đã gỡ cursor-pointer / role=link /
+            tabindex / @click / @keydown / aria-label "Xem chi tiết" để dòng không gợi ý
+            bấm được. TODO (Slice M02-1b Detail): khôi phục các affordance + openContract.
+          -->
           <tr
             v-for="row in rows"
             :key="row.name"
-            tabindex="0"
-            role="link"
-            :aria-label="__('Xem chi tiết hợp đồng') + ' ' + (row.contract_no || row.name)"
-            class="cursor-pointer text-p-base text-ink-gray-8 transition hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-3"
-            @click="openContract(row.name)"
-            @keydown.enter="openContract(row.name)"
-            @keydown.space.prevent="openContract(row.name)"
+            class="text-p-base text-ink-gray-8"
           >
             <td class="border-b border-outline-gray-1 py-3 pr-4 font-medium text-ink-gray-9">
               {{ row.contract_no || row.name }}
@@ -165,12 +166,9 @@
 
 <script setup>
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { Badge, Button, FormControl, FeatherIcon, toast } from 'frappe-ui'
 import LoadingIndicator from '@/components/Icons/LoadingIndicator.vue'
 import { listContracts, listHospitals, CONTRACT_WORKFLOW_THEME } from '@/data/antmed'
-
-const router = useRouter()
 
 // Options trạng thái — value khớp EXACT options DocType `AntMed Contract.status` (VI có dấu).
 // value rỗng = Tất cả. KHÔNG hardcode chuỗi EN.
@@ -261,8 +259,11 @@ function setStatus(value) {
   refetch()
 }
 
-function openContract(name) {
-  router.push({ name: 'AntmedContractDetail', params: { name } })
+// No-op ở vòng DANH SÁCH (ADR-M02-06): route 'AntmedContractDetail' chưa thuộc vòng
+// này → KHÔNG điều hướng (tránh dead-end no-match). Giữ chữ ký hàm để vòng Detail
+// (Slice M02-1b) khôi phục: router.push({ name: 'AntmedContractDetail', params: { name } }).
+function openContract(_name) {
+  // TODO(M02-1b): wire drill-down khi route AntmedContractDetail được đăng ký.
 }
 
 // Surface lỗi BR-XX / permission từ BE qua toast (ngoài banner tri-branch).

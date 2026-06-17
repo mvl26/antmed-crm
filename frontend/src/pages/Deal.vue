@@ -608,7 +608,7 @@ const tabs = computed(() => {
 const { tabIndex } = useActiveTabManager(tabs, 'lastDealTab')
 
 const sections = createResource({
-  url: 'crm.fcrm.doctype.crm_fields_layout.crm_fields_layout.get_sidepanel_sections',
+  url: 'antmed_crm.fcrm.doctype.crm_fields_layout.crm_fields_layout.get_sidepanel_sections',
   params: { doctype: 'CRM Deal' },
   transform: (data) => getParsedSections(data),
 })
@@ -667,7 +667,7 @@ async function addContact(contact) {
     return
   }
 
-  let d = await call('crm.fcrm.doctype.crm_deal.crm_deal.add_contact', {
+  let d = await call('antmed_crm.fcrm.doctype.crm_deal.crm_deal.add_contact', {
     deal: props.dealId,
     contact,
   })
@@ -678,7 +678,7 @@ async function addContact(contact) {
 }
 
 async function removeContact(contact) {
-  let d = await call('crm.fcrm.doctype.crm_deal.crm_deal.remove_contact', {
+  let d = await call('antmed_crm.fcrm.doctype.crm_deal.crm_deal.remove_contact', {
     deal: props.dealId,
     contact,
   })
@@ -689,7 +689,7 @@ async function removeContact(contact) {
 }
 
 async function setPrimaryContact(contact) {
-  let d = await call('crm.fcrm.doctype.crm_deal.crm_deal.set_primary_contact', {
+  let d = await call('antmed_crm.fcrm.doctype.crm_deal.crm_deal.set_primary_contact', {
     deal: props.dealId,
     contact,
   })
@@ -700,7 +700,7 @@ async function setPrimaryContact(contact) {
 }
 
 const dealContacts = createResource({
-  url: 'crm.fcrm.doctype.crm_deal.api.get_deal_contacts',
+  url: 'antmed_crm.fcrm.doctype.crm_deal.api.get_deal_contacts',
   params: { name: props.dealId },
   cache: ['deal_contacts', props.dealId],
   transform: (data) => {

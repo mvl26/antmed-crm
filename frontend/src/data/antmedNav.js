@@ -16,7 +16,7 @@
 export const ANTMED_NAV = [
   { key: 'dashboard', label: 'Dashboard', icon: '📊', to: '/antmed', enabled: true },
   { key: 'hospitals', label: 'Bệnh viện', icon: '🏥', to: '/antmed/hospitals', enabled: true },
-  { key: 'contracts', label: 'Hợp đồng', icon: '📋', to: '/antmed/contracts', enabled: false },
+  { key: 'contracts', label: 'Hợp đồng', icon: '📋', to: '/antmed/contracts', enabled: true },
   { key: 'inventory', label: 'Tồn kho', icon: '📦', to: '/antmed/inventory', enabled: false },
   { key: 'deliveries', label: 'Giao phòng mổ', icon: '🚚', to: '/antmed/deliveries', enabled: false },
   { key: 'instruments', label: 'Bộ dụng cụ', icon: '🧰', to: '/antmed/instruments', enabled: false },

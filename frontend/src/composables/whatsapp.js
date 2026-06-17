@@ -5,7 +5,7 @@ export const whatsappEnabled = ref(false)
 export const isWhatsappInstalled = ref(false)
 
 createResource({
-  url: 'crm.api.whatsapp.is_whatsapp_enabled',
+  url: 'antmed_crm.api.whatsapp.is_whatsapp_enabled',
   cache: 'Is Whatsapp Enabled',
   auto: true,
   onSuccess: (data) => {
@@ -14,7 +14,7 @@ createResource({
 })
 
 createResource({
-  url: 'crm.api.whatsapp.is_whatsapp_installed',
+  url: 'antmed_crm.api.whatsapp.is_whatsapp_installed',
   cache: 'Is Whatsapp Installed',
   auto: true,
   onSuccess: (data) => {

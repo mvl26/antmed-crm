@@ -86,7 +86,7 @@ const confirmPassword = ref('')
 const confirmPasswordMessage = ref('')
 
 const updatePassword = createResource({
-  url: 'crm.api.user.change_password',
+  url: 'antmed_crm.api.user.change_password',
   makeParams() {
     return {
       old_password: currentPassword.value,
