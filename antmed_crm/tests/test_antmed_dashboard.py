@@ -12,7 +12,7 @@ Nguyên tắc count == rows (BR-13): đếm bằng len(get_list(pluck="name", li
 get_list tôn trọng DocPerm + (khi M14 bật) permission_query_conditions, KHÔNG dùng frappe.db.count.
 
 Lệnh chạy:
-  bench --site miyano run-tests --module crm.tests.test_antmed_dashboard
+  bench --site miyano run-tests --module antmed_crm.tests.test_antmed_dashboard
 """
 
 import frappe

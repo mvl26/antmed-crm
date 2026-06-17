@@ -9,7 +9,7 @@ Acceptance:
   - KHÔNG tạo Role trùng (count Role VI == 3).
 
 Lệnh chạy:
-  bench --site miyano run-tests --module crm.tests.test_role_rename_idempotent
+  bench --site miyano run-tests --module antmed_crm.tests.test_role_rename_idempotent
 """
 
 import frappe

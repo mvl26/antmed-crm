@@ -2,7 +2,7 @@
 # See license.txt
 """M02 Slice M02-1 — endpoint Hợp đồng & Quota (read-only).
 
-Đường gọi: crm.api.antmed.contract.<fn>  (xem m02_contract_quota.md §1bis.3).
+Đường gọi: antmed_crm.api.antmed.contract.<fn>  (xem m02_contract_quota.md §1bis.3).
 Mọi hàm @frappe.whitelist(methods=["GET"]), type-annotated, trả RAW dict (KHÔNG
 envelope _ok/_err). Lỗi permission = frappe.throw(..., frappe.PermissionError).
 

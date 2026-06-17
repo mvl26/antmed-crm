@@ -19,7 +19,7 @@ Cover acceptance M02-1 (spec FROZEN m02_contract_quota.md §1bis):
                                         (KHÔNG write/create/delete); Thủ kho read; KHÔNG role EN.
 
 Lệnh chạy:
-  bench --site miyano run-tests --module crm.tests.test_antmed_contract
+  bench --site miyano run-tests --module antmed_crm.tests.test_antmed_contract
 """
 
 import re

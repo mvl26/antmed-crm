@@ -2,7 +2,7 @@
 # See license.txt
 """M01 R2 Customer 360° — endpoint Bệnh viện + Bác sỹ.
 
-Đường gọi: crm.api.antmed.customer.<fn>  (xem m01_customer360.md §API).
+Đường gọi: antmed_crm.api.antmed.customer.<fn>  (xem m01_customer360.md §API).
 Mọi hàm @frappe.whitelist(methods=["GET"]), type-annotated (require_type_annotated_api_methods),
 trả RAW dict (KHÔNG envelope _ok/_err). Lỗi permission = frappe.throw(..., frappe.PermissionError).
 

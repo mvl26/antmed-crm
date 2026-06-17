@@ -3,10 +3,10 @@
  *
  * R1 (bootstrap): resource health.ping chứng minh đường FE → BE callable.
  * R2 (Customer 360°): factory tạo resource list/detail cho Bệnh viện + Bác sỹ,
- *   gọi đúng naming contract `crm.api.antmed.customer.<fn>` (in-place app crm).
+ *   gọi đúng naming contract `antmed_crm.api.antmed.customer.<fn>` (in-place app crm).
  *
  * Convention (xem docs/antmed_crm/docs/m01_naming_conventions.md §5):
- *   - Resource url: 'crm.api.antmed.<module>.<fn>'  (in-place app crm, KHÔNG app riêng)
+ *   - Resource url: 'antmed_crm.api.antmed.<module>.<fn>'  (in-place app crm, KHÔNG app riêng)
  *   - DocType (Frappe CRUD nếu cần): 'AntMed <DocType>'
  *
  * ⚠️ Endpoint list trả RAW dict bọc { data: list, total_count: int } — KHÔNG phải
@@ -20,19 +20,19 @@
 import { createResource } from 'frappe-ui'
 
 /**
- * Health-check nền AntMed — GET crm.api.antmed.health.ping.
+ * Health-check nền AntMed — GET antmed_crm.api.antmed.health.ping.
  * Trả RAW dict { app, status, version }. Caller bật `auto: true` hoặc `.fetch()`.
  */
 export function getAntmedHealth() {
   return createResource({
-    url: 'crm.api.antmed.health.ping',
+    url: 'antmed_crm.api.antmed.health.ping',
   })
 }
 
 // ── M01 R2: Customer 360° — Bệnh viện + Bác sỹ ──────────────────────────────
 
 /**
- * Danh sách Bệnh viện — crm.api.antmed.customer.list_hospitals.
+ * Danh sách Bệnh viện — antmed_crm.api.antmed.customer.list_hospitals.
  * BE: list_hospitals(filters?, start?, page_length?, search?) -> { data, total_count }.
  * Item: name, hospital_name, rank, contract_status, tax_code. Invariant count==rows.
  *
@@ -42,46 +42,46 @@ export function getAntmedHealth() {
  */
 export function listHospitals({ params = {}, auto = false } = {}) {
   return createResource({
-    url: 'crm.api.antmed.customer.list_hospitals',
+    url: 'antmed_crm.api.antmed.customer.list_hospitals',
     params,
     auto,
   })
 }
 
 /**
- * Chi tiết Bệnh viện ("mặt 360") — crm.api.antmed.customer.get_hospital.
+ * Chi tiết Bệnh viện ("mặt 360") — antmed_crm.api.antmed.customer.get_hospital.
  * BE: get_hospital(name) -> field BV + doctors[] (name/full_name/specialty/phone).
  * throw frappe.PermissionError nếu không read được.
  */
 export function getHospital({ params = {}, auto = false } = {}) {
   return createResource({
-    url: 'crm.api.antmed.customer.get_hospital',
+    url: 'antmed_crm.api.antmed.customer.get_hospital',
     params,
     auto,
   })
 }
 
 /**
- * Danh sách Bác sỹ — crm.api.antmed.customer.list_doctors.
+ * Danh sách Bác sỹ — antmed_crm.api.antmed.customer.list_doctors.
  * BE: list_doctors(filters?, hospital?, start?, page_length?) -> { data, total_count }.
  * Item: name, full_name, specialty, hospital, phone (+ hospital_name nếu rẻ).
  */
 export function listDoctors({ params = {}, auto = false } = {}) {
   return createResource({
-    url: 'crm.api.antmed.customer.list_doctors',
+    url: 'antmed_crm.api.antmed.customer.list_doctors',
     params,
     auto,
   })
 }
 
 /**
- * Chi tiết Bác sỹ — crm.api.antmed.customer.get_doctor.
+ * Chi tiết Bác sỹ — antmed_crm.api.antmed.customer.get_doctor.
  * BE: get_doctor(name) -> field bác sỹ + hospital_name (resolve qua Link).
  * throw frappe.PermissionError nếu không read được.
  */
 export function getDoctor({ params = {}, auto = false } = {}) {
   return createResource({
-    url: 'crm.api.antmed.customer.get_doctor',
+    url: 'antmed_crm.api.antmed.customer.get_doctor',
     params,
     auto,
   })
@@ -90,7 +90,7 @@ export function getDoctor({ params = {}, auto = false } = {}) {
 // ── M02 Slice M02-1: Hợp đồng & Quota (read-only) ───────────────────────────
 
 /**
- * Danh sách Hợp đồng — crm.api.antmed.contract.list_contracts.
+ * Danh sách Hợp đồng — antmed_crm.api.antmed.contract.list_contracts.
  * BE: list_contracts(filters?, start?, page_length?, search?) -> { data, total_count }.
  * Item: name, contract_no, hospital, hospital_name, valid_to, total_value, status.
  *   - hiển thị hospital_name (KHÔNG mã hospital), badge theo status (Select VI).
@@ -103,21 +103,21 @@ export function getDoctor({ params = {}, auto = false } = {}) {
  */
 export function listContracts({ params = {}, auto = false } = {}) {
   return createResource({
-    url: 'crm.api.antmed.contract.list_contracts',
+    url: 'antmed_crm.api.antmed.contract.list_contracts',
     params,
     auto,
   })
 }
 
 /**
- * Chi tiết Hợp đồng — crm.api.antmed.contract.get_contract.
+ * Chi tiết Hợp đồng — antmed_crm.api.antmed.contract.get_contract.
  * BE: get_contract(name) -> field HĐ + hospital_name (resolve qua Link) + items[]
  *     (mỗi dòng item/item_name/uom/unit_price/quota_qty/used_qty/remaining_pct/lock_at_100).
  * throw frappe.PermissionError nếu không read được (FE bắt qua onError → toast).
  */
 export function getContract({ params = {}, auto = false } = {}) {
   return createResource({
-    url: 'crm.api.antmed.contract.get_contract',
+    url: 'antmed_crm.api.antmed.contract.get_contract',
     params,
     auto,
   })
@@ -126,7 +126,7 @@ export function getContract({ params = {}, auto = false } = {}) {
 // ── M11 Slice 2: Dashboard A1 — số liệu tổng quan ───────────────────────────
 
 /**
- * Số liệu tổng quan dashboard A1 — crm.api.antmed.dashboard.overview (GET).
+ * Số liệu tổng quan dashboard A1 — antmed_crm.api.antmed.dashboard.overview (GET).
  * BE: overview() -> RAW dict THƯỜNG { hospital_count: int, doctor_count: int }
  *     (đếm DƯỚI permission user — invariant count==rows như customer.py).
  *
@@ -136,7 +136,7 @@ export function getContract({ params = {}, auto = false } = {}) {
  */
 export function getDashboardOverview({ auto = false, onError } = {}) {
   return createResource({
-    url: 'crm.api.antmed.dashboard.overview',
+    url: 'antmed_crm.api.antmed.dashboard.overview',
     auto,
     onError,
   })

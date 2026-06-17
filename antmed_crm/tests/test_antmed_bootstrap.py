@@ -6,12 +6,12 @@ Cover acceptance R1 + W0-1 (DEC-A — Role nhãn tiếng Việt, ADR-M14W0-01):
   TDD-BE-1 test_three_roles_exist     — 3 Role AntMed VI tồn tại sau migrate
   TDD-BE-1b test_exactly_three_antmed_roles — đúng tập 3 Role VI (không thừa/thiếu)
   TDD-BE-1c test_no_legacy_en_roles   — KHÔNG còn Role EN cũ (chống sót rename)
-  TDD-BE-2 test_health_ping_shape     — ping() trả dict {app,status,version}, version==crm.__version__
+  TDD-BE-2 test_health_ping_shape     — ping() trả dict {app,status,version}, version==antmed_crm.__version__
   TDD-BE-3 test_health_ping_is_get_only — ping siết methods=['GET'], KHÔNG bare whitelist
-  TDD-BE-5 test_module_registered     — 'AntMed' trong modules.txt + crm.antmed import được
+  TDD-BE-5 test_module_registered     — 'AntMed' trong modules.txt + antmed_crm.antmed import được
 
 Lệnh chạy:
-  bench --site miyano run-tests --module crm.tests.test_antmed_bootstrap
+  bench --site miyano run-tests --module antmed_crm.tests.test_antmed_bootstrap
 """
 
 import frappe
@@ -76,9 +76,9 @@ class TestAntMedBootstrap(FrappeTestCase):
 		self.assertEqual(result["status"], "ok")
 
 	def test_health_ping_version_is_dynamic(self):
-		"""version đọc động từ crm.__version__ (str), KHÔNG hard-code."""
+		"""version đọc động từ antmed_crm.__version__ (str), KHÔNG hard-code."""
 		result = health.ping()
-		self.assertEqual(result["version"], crm.__version__)
+		self.assertEqual(result["version"], antmed_crm.__version__)
 		self.assertIsInstance(result["version"], str)
 
 	# --- TDD-BE-3 -----------------------------------------------------------
@@ -95,9 +95,9 @@ class TestAntMedBootstrap(FrappeTestCase):
 
 	# --- TDD-BE-5 -----------------------------------------------------------
 	def test_module_registered(self):
-		"""'AntMed' có trong modules.txt và crm.antmed import được."""
-		modules = frappe.get_module_list("crm")
-		self.assertIn("AntMed", modules, msg="Module 'AntMed' chưa khai trong crm/modules.txt")
+		"""'AntMed' có trong modules.txt và antmed_crm.antmed import được."""
+		modules = frappe.get_module_list("antmed_crm")
+		self.assertIn("AntMed", modules, msg="Module 'AntMed' chưa khai trong antmed_crm/modules.txt")
 		# import package không lỗi:
 		import antmed_crm.antmed  # noqa: F401
 

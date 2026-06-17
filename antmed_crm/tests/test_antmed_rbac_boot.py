@@ -13,7 +13,7 @@ Cover acceptance W0-2 (allow-check ADDITIVE, KHÔNG narrow CRM_ALLOWED_ROLES):
   Helper               — is_antmed_user / is_crm_or_antmed_user additive đúng.
 
 Lệnh chạy:
-  bench --site miyano run-tests --module crm.tests.test_antmed_rbac_boot
+  bench --site miyano run-tests --module antmed_crm.tests.test_antmed_rbac_boot
 """
 
 import frappe

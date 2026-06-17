@@ -2,7 +2,7 @@
 # See license.txt
 """M11 Dashboard — endpoint số liệu điều hành (A1 Dashboard).
 
-Đường gọi: crm.api.antmed.dashboard.<fn>  (xem AntMed_CRM_UI_Design.md §1 mockup A1).
+Đường gọi: antmed_crm.api.antmed.dashboard.<fn>  (xem AntMed_CRM_UI_Design.md §1 mockup A1).
 M11 là module API-only (KHÔNG có doctype riêng) — chỉ tổng hợp/đếm từ doctype có sẵn.
 
 Mọi hàm @frappe.whitelist(methods=["GET"]), type-annotated

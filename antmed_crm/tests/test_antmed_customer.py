@@ -17,7 +17,7 @@ Cover acceptance R2 (Bệnh viện + Bác sỹ):
   test_permission_guard             — user không có read → get_hospital/get_doctor raise PermissionError.
 
 Lệnh chạy:
-  bench --site miyano run-tests --module crm.tests.test_antmed_customer
+  bench --site miyano run-tests --module antmed_crm.tests.test_antmed_customer
 """
 
 import frappe

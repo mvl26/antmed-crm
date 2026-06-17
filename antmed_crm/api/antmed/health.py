@@ -11,11 +11,11 @@ import antmed_crm
 def ping() -> dict:
 	"""Smoke endpoint — chứng minh đường BE callable.
 
-	Đường gọi: crm.api.antmed.health.ping (GET, yêu cầu session).
-	Trả RAW dict thuần (KHÔNG envelope). version lấy động từ crm.__version__.
+	Đường gọi: antmed_crm.api.antmed.health.ping (GET, yêu cầu session).
+	Trả RAW dict thuần (KHÔNG envelope). version lấy động từ antmed_crm.__version__.
 	"""
 	return {
 		"app": "antmed",
 		"status": "ok",
-		"version": crm.__version__,
+		"version": antmed_crm.__version__,
 	}
