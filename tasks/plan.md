@@ -19,7 +19,7 @@ Dựng prototype trực quan 24 màn/8 vai trò khớp mockup, dữ liệu mẫu
 
 ### Phase 1 — Foundation
 
-- [ ] **T0 — Sửa test baseline brittle (prep).** `antmedCustomer.test.js:93` khớp nhầm comment "createListResource" trong `antmed.js`. Đổi assert sang khớp **lệnh gọi** (`/createListResource\s*\(/`) thay vì chuỗi bất kỳ. *AC:* suite xanh 100%. *Files:* `tests/unit/antmedCustomer.test.js`. *Scope:* XS. *Deps:* None.
+- [x] **T0 — Sửa test baseline brittle (prep).** `antmedCustomer.test.js:93` khớp nhầm comment "createListResource" trong `antmed.js`. Đổi assert sang khớp **lệnh gọi** (`/createListResource\s*\(/`) thay vì chuỗi bất kỳ. *AC:* suite xanh 100%. *Files:* `tests/unit/antmedCustomer.test.js`. *Scope:* XS. *Deps:* None.
 
 - [ ] **T1 — UI kit + token.** Tạo `components/Antmed/ui/`: AmPill, AmCard, AmKpiCard, AmBar, AmLifecycle, AmTimeline, AmFunnel, AmHeatCell, AmSteps, AmKanbanColumn, AmKanbanCard, AmPhoneFrame, AmTablet, AmRoleBand, AmScanBox, AmAlertBox + helper `antmedUi.js` (PILL_THEME map). *AC:* mỗi component file tồn tại + export; PILL_THEME phủ ok/warn/danger/info/neutral. *Verify:* test content-assert + helper unit test; `vite build` sạch. *Files:* ~16 `.vue` + `utils/antmedUi.js` + `tests/unit/antmedUi.test.js`. *Scope:* L. *Deps:* T0.
 

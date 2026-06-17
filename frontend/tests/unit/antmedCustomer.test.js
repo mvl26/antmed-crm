@@ -90,7 +90,10 @@ describe('AntMed FE Customer 360° (M01 R2) — grep gate (di sản stack cũ = 
 
   it('KHÔNG dùng createListResource cho endpoint trả dict bọc {data,total_count}', () => {
     // R2 chốt: list trả dict bọc → createResource (đọc r.data.data), KHÔNG createListResource.
-    expect(dataSrc).not.toMatch(/createListResource/)
+    // Khớp LỆNH GỌI (có dấu '(') + dòng import — tránh "đỗ giả" khi tên chỉ xuất hiện
+    // trong comment giải thích (vd "KHÔNG createListResource").
+    expect(dataSrc).not.toMatch(/createListResource\s*\(/)
+    expect(dataSrc).not.toMatch(/import[^\n]*\bcreateListResource\b/)
   })
 
   it('KHÔNG raw frappe.client.* (lookup phải qua endpoint permission-aware)', () => {
