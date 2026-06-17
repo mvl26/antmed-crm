@@ -1,0 +1,112 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-06-17 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "contract",
+  "item",
+  "do_ref",
+  "column_break_qty",
+  "qty",
+  "snapshot_pct",
+  "ts"
+ ],
+ "fields": [
+  {
+   "fieldname": "contract",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Hợp đồng",
+   "options": "AntMed Contract",
+   "reqd": 1
+  },
+  {
+   "fieldname": "item",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Vật tư (SKU)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "do_ref",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Tham chiếu phiếu giao (DO)"
+  },
+  {
+   "fieldname": "column_break_qty",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Số lượng tiêu hao",
+   "reqd": 1
+  },
+  {
+   "fieldname": "snapshot_pct",
+   "fieldtype": "Percent",
+   "label": "Còn lại % (snapshot)",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "default": "now",
+   "fieldname": "ts",
+   "fieldtype": "Datetime",
+   "label": "Thời điểm",
+   "no_copy": 1,
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-17 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "AntMed",
+ "name": "AntMed Quota Usage Log",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Quản lý"
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "NV kinh doanh"
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "Thủ kho"
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "contract,item,do_ref",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

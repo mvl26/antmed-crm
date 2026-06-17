@@ -17,8 +17,11 @@ Pattern mượn từ crm/api/antmed/customer.py (đã verify live R2).
 import frappe
 from frappe import _
 
+from antmed_crm.antmed import contract_hooks
+
 CONTRACT_DOCTYPE = "AntMed Contract"
 HOSPITAL_DOCTYPE = "AntMed Hospital"
+QUOTA_ITEM_DOCTYPE = "AntMed Quota Item"
 
 # Field item trả về cho list endpoint (Hyrum contract với FE AntmedContracts.vue:
 # đổi = breaking binding). hospital_name resolve qua dotted-fetch trong get_list.
@@ -153,3 +156,31 @@ def get_contract(name: str) -> dict:
 		{k: row.get(k) for k in QUOTA_ROW_FIELDS} for row in (doc.get("items") or [])
 	]
 	return result
+
+
+@frappe.whitelist(methods=["GET"])
+def check_item_in_contract(hospital: str, item: str) -> dict:
+	"""BR-01 lookup (read-only, KHÔNG throw): vật tư X có trong HĐ hiệu lực của BV Y không + quota còn lại.
+
+	Cho M04/mobile tra TRƯỚC khi giao (khác `contract_hooks.assert_item_in_contract` — bản này
+	không chặn, chỉ trả dữ liệu). Trả RAW dict 4 key ổn định (Hyrum):
+	  { "in_contract": bool, "contract": str|None, "unit_price": float|None, "remaining_qty": float|None }
+	"""
+	contract_name = contract_hooks.find_active_contract_with_item(hospital, item)
+	if not contract_name:
+		return {"in_contract": False, "contract": None, "unit_price": None, "remaining_qty": None}
+	row = frappe.db.get_value(
+		QUOTA_ITEM_DOCTYPE,
+		{"parent": contract_name, "item": item},
+		["unit_price", "quota_qty", "used_qty"],
+		as_dict=True,
+	)
+	if not row:
+		return {"in_contract": True, "contract": contract_name, "unit_price": None, "remaining_qty": None}
+	remaining_qty = (row.quota_qty or 0) - (row.used_qty or 0)
+	return {
+		"in_contract": True,
+		"contract": contract_name,
+		"unit_price": row.unit_price,
+		"remaining_qty": remaining_qty,
+	}
