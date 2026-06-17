@@ -1,0 +1,53 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-06-17 20:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "warehouse",
+  "item",
+  "lot",
+  "column_break_qty",
+  "qty_change",
+  "balance_qty",
+  "posting_datetime",
+  "section_break_voucher",
+  "stock_entry",
+  "voucher_type",
+  "voucher_no"
+ ],
+ "fields": [
+  {"fieldname": "warehouse", "fieldtype": "Link", "in_list_view": 1, "in_standard_filter": 1, "label": "Kho", "options": "AntMed Warehouse", "reqd": 1},
+  {"fieldname": "item", "fieldtype": "Link", "in_list_view": 1, "in_standard_filter": 1, "label": "Vật tư", "options": "AntMed Item", "reqd": 1},
+  {"fieldname": "lot", "fieldtype": "Link", "in_standard_filter": 1, "label": "Lô", "options": "AntMed Lot"},
+  {"fieldname": "column_break_qty", "fieldtype": "Column Break"},
+  {"fieldname": "qty_change", "fieldtype": "Float", "in_list_view": 1, "label": "Biến động SL"},
+  {"fieldname": "balance_qty", "fieldtype": "Float", "in_list_view": 1, "label": "Tồn sau", "read_only": 1},
+  {"fieldname": "posting_datetime", "fieldtype": "Datetime", "label": "Thời điểm"},
+  {"fieldname": "section_break_voucher", "fieldtype": "Section Break"},
+  {"fieldname": "stock_entry", "fieldtype": "Link", "label": "Phiếu kho", "options": "AntMed Stock Entry"},
+  {"fieldname": "voucher_type", "fieldtype": "Data", "label": "Loại chứng từ"},
+  {"fieldname": "voucher_no", "fieldtype": "Data", "label": "Số chứng từ"}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-17 20:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "AntMed",
+ "name": "AntMed Stock Ledger",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1},
+  {"export": 1, "print": 1, "read": 1, "report": 1, "role": "Quản lý"},
+  {"export": 1, "print": 1, "read": 1, "report": 1, "role": "Thủ kho"},
+  {"read": 1, "report": 1, "role": "NV kinh doanh"}
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "warehouse,item,lot",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}

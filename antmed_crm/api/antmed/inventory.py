@@ -8,12 +8,32 @@ envelope). count==rows (BR-13): total_count đếm DƯỚI permission user (get_
 Pattern mượn từ antmed_crm/api/antmed/contract.py (đã verify).
 """
 
+import json
+
 import frappe
 from frappe import _
 
 ITEM_DOCTYPE = "AntMed Item"
 WAREHOUSE_DOCTYPE = "AntMed Warehouse"
 LOT_DOCTYPE = "AntMed Lot"
+STOCK_ENTRY_DOCTYPE = "AntMed Stock Entry"
+
+STOCK_ENTRY_LIST_FIELDS = [
+	"name",
+	"entry_type",
+	"from_warehouse",
+	"to_warehouse",
+	"posting_datetime",
+	"docstatus",
+]
+STOCK_ENTRY_LIST_ITEM_KEYS = (
+	"name",
+	"entry_type",
+	"from_warehouse",
+	"to_warehouse",
+	"posting_datetime",
+	"docstatus",
+)
 
 # Field lô trả về cho list endpoint (Hyrum). item_name resolve qua Link bằng dotted-fetch.
 LOT_LIST_FIELDS = [
@@ -221,4 +241,79 @@ def list_lots(
 	data = [{k: r.get(k) for k in LOT_LIST_ITEM_KEYS} for r in rows]
 
 	total_count = len(frappe.get_list(LOT_DOCTYPE, filters=conditions, pluck="name", limit_page_length=0))
+	return {"data": data, "total_count": total_count}
+
+
+@frappe.whitelist(methods=["POST"])
+def create_stock_entry(
+	entry_type: str,
+	items: str | list | None = None,
+	from_warehouse: str | None = None,
+	to_warehouse: str | None = None,
+	nv_employee: str | None = None,
+	hospital: str | None = None,
+	reason: str | None = None,
+) -> dict:
+	"""Tạo + submit 1 phiếu kho (nhập/xuất/chuyển). Submit → ghi sổ tồn + tồn-không-âm.
+
+	`items` = list dict (hoặc JSON-string từ FE): [{item, lot?, qty, uom?, unit_price?}].
+	DocPerm áp tự nhiên (insert/submit theo quyền user). Trả {name, entry_type, docstatus}.
+	"""
+	item_rows = json.loads(items) if isinstance(items, str) else (items or [])
+	doc = frappe.get_doc(
+		{
+			"doctype": STOCK_ENTRY_DOCTYPE,
+			"entry_type": entry_type,
+			"from_warehouse": from_warehouse,
+			"to_warehouse": to_warehouse,
+			"nv_employee": nv_employee,
+			"hospital": hospital,
+			"reason": reason,
+			"items": item_rows,
+		}
+	)
+	doc.insert()
+	doc.submit()
+	return {"name": doc.name, "entry_type": doc.entry_type, "docstatus": doc.docstatus}
+
+
+@frappe.whitelist(methods=["GET"])
+def get_stock(warehouse: str, item: str, lot: str | None = None) -> dict:
+	"""Tồn hiện tại của (kho × item × lot). Trả {warehouse, item, lot, balance_qty}."""
+	from antmed_crm.antmed import stock
+
+	return {
+		"warehouse": warehouse,
+		"item": item,
+		"lot": lot,
+		"balance_qty": stock.get_balance(warehouse, item, lot),
+	}
+
+
+@frappe.whitelist(methods=["GET"])
+def list_stock_entries(
+	entry_type: str | None = None,
+	filters: dict | str | None = None,
+	start: int = 0,
+	page_length: int = 20,
+) -> dict:
+	"""Danh sách phiếu kho. Trả RAW {data, total_count} — count==rows dưới DocPerm."""
+	conditions = _coerce_filters(filters)
+	if entry_type:
+		conditions.append(["entry_type", "=", entry_type])
+
+	start = max(0, int(start))
+	page_length = max(0, int(page_length))
+
+	rows = frappe.get_list(
+		STOCK_ENTRY_DOCTYPE,
+		filters=conditions,
+		fields=STOCK_ENTRY_LIST_FIELDS,
+		limit_start=start,
+		limit_page_length=page_length or 0,
+		order_by="posting_datetime desc",
+	)
+	data = [{k: r.get(k) for k in STOCK_ENTRY_LIST_ITEM_KEYS} for r in rows]
+
+	total_count = len(frappe.get_list(STOCK_ENTRY_DOCTYPE, filters=conditions, pluck="name", limit_page_length=0))
 	return {"data": data, "total_count": total_count}
