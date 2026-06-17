@@ -1,0 +1,26 @@
+[
+ {
+  "doctype": "Role",
+  "name": "NV kinh doanh",
+  "role_name": "NV kinh doanh",
+  "desk_access": 1,
+  "disabled": 0,
+  "is_custom": 1
+ },
+ {
+  "doctype": "Role",
+  "name": "Thủ kho",
+  "role_name": "Thủ kho",
+  "desk_access": 1,
+  "disabled": 0,
+  "is_custom": 1
+ },
+ {
+  "doctype": "Role",
+  "name": "Quản lý",
+  "role_name": "Quản lý",
+  "desk_access": 1,
+  "disabled": 0,
+  "is_custom": 1
+ }
+]

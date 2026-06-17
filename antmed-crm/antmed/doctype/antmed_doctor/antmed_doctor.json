@@ -1,0 +1,154 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-06-17 13:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "doctor_code",
+  "full_name",
+  "hospital",
+  "column_break_main",
+  "specialty",
+  "birthday",
+  "section_break_contact",
+  "phone",
+  "email",
+  "zalo",
+  "column_break_notes",
+  "notes"
+ ],
+ "fields": [
+  {
+   "default": "AM-DOC-.YYYY.-.####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "AM-DOC-.YYYY.-.####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "doctor_code",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Mã bác sỹ",
+   "unique": 1
+  },
+  {
+   "fieldname": "full_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Họ tên",
+   "reqd": 1
+  },
+  {
+   "fieldname": "hospital",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Bệnh viện",
+   "options": "AntMed Hospital"
+  },
+  {
+   "fieldname": "column_break_main",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "specialty",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Chuyên khoa"
+  },
+  {
+   "fieldname": "birthday",
+   "fieldtype": "Date",
+   "label": "Sinh nhật"
+  },
+  {
+   "fieldname": "section_break_contact",
+   "fieldtype": "Section Break",
+   "label": "Liên hệ"
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "Điện thoại"
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email"
+  },
+  {
+   "fieldname": "zalo",
+   "fieldtype": "Data",
+   "label": "Zalo"
+  },
+  {
+   "fieldname": "column_break_notes",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Ghi chú cá nhân"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-17 13:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "AntMed",
+ "name": "AntMed Doctor",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Quản lý",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "NV kinh doanh",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "full_name,specialty,doctor_code",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "full_name",
+ "track_changes": 1
+}
