@@ -16,6 +16,7 @@ Pattern mượn từ crm/api/antmed/customer.py (đã verify live R2).
 
 import frappe
 from frappe import _
+from frappe.utils import getdate, nowdate
 
 from antmed_crm.antmed import contract_hooks
 
@@ -184,3 +185,74 @@ def check_item_in_contract(hospital: str, item: str) -> dict:
 		"unit_price": row.unit_price,
 		"remaining_qty": remaining_qty,
 	}
+
+
+def _health_color(used_pct: float, days_to_expiry: int | None) -> str:
+	"""Cờ màu sức khoẻ HĐ (§7): xanh ≤80% / cam 80–100% / đỏ >100% HOẶC còn ≤30 ngày tới hạn."""
+	color = "green"
+	if used_pct > 80:
+		color = "orange"
+	if used_pct > 100:
+		color = "red"
+	if days_to_expiry is not None and days_to_expiry <= 30:
+		color = "red"
+	return color
+
+
+@frappe.whitelist(methods=["GET"])
+def get_contract_health(start: int = 0, page_length: int = 20) -> dict:
+	"""Dữ liệu màn "Sức khoẻ Hợp đồng" (M02-2): mỗi HĐ kèm quota tổng đã dùng + hạn + cờ màu.
+
+	Mỗi item gồm field HĐ (như list_contracts) + 3 field dẫn xuất:
+	  - quota_used_pct = 100*SUM(used_qty)/SUM(quota_qty) trên các dòng quota (0 nếu chưa có quota).
+	  - days_to_expiry = (valid_to - hôm nay).days (None nếu thiếu valid_to).
+	  - health_color   = xanh/cam/đỏ theo §7 (xem _health_color).
+	Trả RAW {data, total_count}. total_count đếm DƯỚI permission user (get_list) → giữ invariant
+	count==rows (BR-13). Quota gộp batch (1 query get_all theo parent IN scope) — KHÔNG N+1.
+	"""
+	start = max(0, int(start))
+	page_length = max(0, int(page_length))
+
+	rows = frappe.get_list(
+		CONTRACT_DOCTYPE,
+		fields=CONTRACT_LIST_FIELDS,
+		limit_start=start,
+		limit_page_length=page_length or 0,
+		order_by=f"`tab{CONTRACT_DOCTYPE}`.modified desc",
+	)
+
+	# Gộp quota của các HĐ trong scope (chỉ item của HĐ user thấy — names lấy từ get_list permission).
+	agg: dict = {}
+	names = [r["name"] for r in rows]
+	if names:
+		for it in frappe.get_all(
+			QUOTA_ITEM_DOCTYPE,
+			filters={"parenttype": CONTRACT_DOCTYPE, "parentfield": "items", "parent": ("in", names)},
+			fields=["parent", "quota_qty", "used_qty"],
+		):
+			sum_q, sum_u = agg.get(it["parent"], (0.0, 0.0))
+			agg[it["parent"]] = (sum_q + (it.get("quota_qty") or 0), sum_u + (it.get("used_qty") or 0))
+
+	today = getdate(nowdate())
+	data = []
+	for r in rows:
+		sum_quota, sum_used = agg.get(r["name"], (0.0, 0.0))
+		used_pct = round(100 * sum_used / sum_quota, 2) if sum_quota else 0.0
+		days_to_expiry = (getdate(r.get("valid_to")) - today).days if r.get("valid_to") else None
+		data.append(
+			{
+				"name": r.get("name"),
+				"contract_no": r.get("contract_no"),
+				"hospital": r.get("hospital"),
+				"hospital_name": r.get("hospital_name"),
+				"valid_to": r.get("valid_to"),
+				"total_value": r.get("total_value"),
+				"status": r.get("status"),
+				"quota_used_pct": used_pct,
+				"days_to_expiry": days_to_expiry,
+				"health_color": _health_color(used_pct, days_to_expiry),
+			}
+		)
+
+	total_count = len(frappe.get_list(CONTRACT_DOCTYPE, pluck="name", limit_page_length=0))
+	return {"data": data, "total_count": total_count}
