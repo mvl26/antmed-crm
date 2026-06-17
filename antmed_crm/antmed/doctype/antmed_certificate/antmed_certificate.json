@@ -1,0 +1,52 @@
+{
+ "actions": [],
+ "autoname": "AM-CERT-.YYYY.-.#####",
+ "creation": "2026-06-17 19:45:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "cert_no",
+  "cert_type",
+  "item",
+  "lot",
+  "column_break_dates",
+  "issued_date",
+  "expires_at",
+  "file_url",
+  "hash_sha256"
+ ],
+ "fields": [
+  {"default": "AM-CERT-.YYYY.-.#####", "fieldname": "naming_series", "fieldtype": "Select", "label": "Series", "options": "AM-CERT-.YYYY.-.#####"},
+  {"fieldname": "cert_no", "fieldtype": "Data", "in_list_view": 1, "label": "Số chứng từ", "reqd": 1},
+  {"fieldname": "cert_type", "fieldtype": "Select", "in_list_view": 1, "in_standard_filter": 1, "label": "Loại chứng từ", "options": "CO\nCQ\nPhiếu kiểm nghiệm\nGiấy phép NK", "reqd": 1},
+  {"fieldname": "item", "fieldtype": "Link", "in_standard_filter": 1, "label": "Vật tư", "options": "AntMed Item"},
+  {"fieldname": "lot", "fieldtype": "Link", "in_standard_filter": 1, "label": "Lô", "options": "AntMed Lot"},
+  {"fieldname": "column_break_dates", "fieldtype": "Column Break"},
+  {"fieldname": "issued_date", "fieldtype": "Date", "label": "Ngày cấp"},
+  {"fieldname": "expires_at", "fieldtype": "Date", "in_list_view": 1, "label": "Hết hiệu lực"},
+  {"fieldname": "file_url", "fieldtype": "Attach", "label": "File chứng từ"},
+  {"fieldname": "hash_sha256", "fieldtype": "Data", "label": "SHA256", "no_copy": 1, "read_only": 1}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-17 19:45:00.000000",
+ "modified_by": "Administrator",
+ "module": "AntMed",
+ "name": "AntMed Certificate",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1},
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Quản lý", "share": 1, "write": 1},
+  {"create": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Thủ kho", "share": 1, "write": 1},
+  {"print": 1, "read": 1, "report": 1, "role": "NV kinh doanh"}
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "cert_no,cert_type",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "cert_no",
+ "track_changes": 1
+}

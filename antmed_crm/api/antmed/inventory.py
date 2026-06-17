@@ -13,6 +13,21 @@ from frappe import _
 
 ITEM_DOCTYPE = "AntMed Item"
 WAREHOUSE_DOCTYPE = "AntMed Warehouse"
+LOT_DOCTYPE = "AntMed Lot"
+
+# Field lô trả về cho list endpoint (Hyrum). item_name resolve qua Link bằng dotted-fetch.
+LOT_LIST_FIELDS = [
+	"name",
+	"lot_no",
+	"item",
+	"item.item_name as item_name",
+	"supplier",
+	"expiry_date",
+	"recall_status",
+]
+LOT_LIST_ITEM_KEYS = ("name", "lot_no", "item", "item_name", "supplier", "expiry_date", "recall_status")
+# Shape mỗi dòng lô trong get_item.lots.
+LOT_ROW_FIELDS = ("lot_no", "expiry_date", "recall_status", "co_cert", "cq_cert")
 
 # Field warehouse trả về cho list endpoint (Hyrum contract với FE).
 WAREHOUSE_LIST_FIELDS = ["name", "warehouse_name", "warehouse_type", "employee", "hospital", "disabled"]
@@ -125,7 +140,15 @@ def get_item(name: str) -> dict:
 
 	doc = frappe.get_doc(ITEM_DOCTYPE, name).as_dict()
 	result = {k: doc.get(k) for k in ITEM_DETAIL_FIELDS}
-	result["lots"] = []
+	# Lô của vật tư (A2: AntMed Lot đã land) — HSD sớm nhất trước.
+	lots = frappe.get_list(
+		LOT_DOCTYPE,
+		filters={"item": name},
+		fields=list(LOT_ROW_FIELDS),
+		order_by="expiry_date asc",
+		limit_page_length=0,
+	)
+	result["lots"] = [{k: r.get(k) for k in LOT_ROW_FIELDS} for r in lots]
 	return result
 
 
@@ -160,4 +183,42 @@ def list_warehouses(
 	data = [{k: r.get(k) for k in WAREHOUSE_LIST_ITEM_KEYS} for r in rows]
 
 	total_count = len(frappe.get_list(WAREHOUSE_DOCTYPE, filters=conditions, pluck="name", limit_page_length=0))
+	return {"data": data, "total_count": total_count}
+
+
+@frappe.whitelist(methods=["GET"])
+def list_lots(
+	item: str | None = None,
+	filters: dict | str | None = None,
+	search: str | None = None,
+	start: int = 0,
+	page_length: int = 20,
+) -> dict:
+	"""Danh sách lô VTYT. Trả RAW {data, total_count} — count==rows khi page_length=0.
+
+	- item: lọc nhanh theo vật tư.
+	- search: khớp lot_no (LIKE).
+	- Mỗi item gồm ĐÚNG 7 field: name, lot_no, item, item_name, supplier, expiry_date,
+	  recall_status. item_name resolve qua Link bằng dotted-fetch (null-guard FK orphan).
+	"""
+	conditions = _coerce_filters(filters)
+	if item:
+		conditions.append(["item", "=", item])
+	if search:
+		conditions.append(["lot_no", "like", f"%{search}%"])
+
+	start = max(0, int(start))
+	page_length = max(0, int(page_length))
+
+	rows = frappe.get_list(
+		LOT_DOCTYPE,
+		filters=conditions,
+		fields=LOT_LIST_FIELDS,
+		limit_start=start,
+		limit_page_length=page_length or 0,
+		order_by=f"`tab{LOT_DOCTYPE}`.expiry_date asc",
+	)
+	data = [{k: r.get(k) for k in LOT_LIST_ITEM_KEYS} for r in rows]
+
+	total_count = len(frappe.get_list(LOT_DOCTYPE, filters=conditions, pluck="name", limit_page_length=0))
 	return {"data": data, "total_count": total_count}
