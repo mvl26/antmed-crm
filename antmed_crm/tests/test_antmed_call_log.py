@@ -66,14 +66,15 @@ class TestAntMedCallLog(FrappeTestCase):
 			doctor_care.log_call(doctor=self.doctor, outcome="XYZ")
 
 	def test_list_call_logs_shape_and_sort(self):
-		doctor_care.log_call(doctor=self.doctor, outcome="Nghe máy", note="N1")
+		doctor_care.log_call(doctor=self.doctor, outcome="Nghe máy", note="N1", called_at="2026-01-01 08:00:00")
+		newer = doctor_care.log_call(doctor=self.doctor, outcome="Máy bận", called_at="2026-06-01 09:00:00")
 		res = doctor_care.list_call_logs(doctor=self.doctor)
-		self.assertGreaterEqual(res["total_count"], 1)
+		self.assertGreaterEqual(res["total_count"], 2)
 		row = res["data"][0]
 		for k in ("name", "status", "outcome", "direction", "duration", "start_time", "caller_name"):
 			self.assertIn(k, row)
 		self.assertEqual(row["direction"], "Gọi đi")
-		self.assertEqual(row["outcome"], "Nghe máy")
+		self.assertEqual(row["name"], newer["call_log"])  # newest start_time first
 
 	def test_br13_fail_closed(self):
 		email = "_t-call-noperm@example.com"
@@ -85,5 +86,7 @@ class TestAntMedCallLog(FrappeTestCase):
 		try:
 			with self.assertRaises(frappe.PermissionError):
 				doctor_care.list_call_logs(doctor=self.doctor)
+			with self.assertRaises(frappe.PermissionError):
+				doctor_care.log_call(doctor=self.doctor, outcome="Nghe máy")
 		finally:
 			frappe.set_user("Administrator")

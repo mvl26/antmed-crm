@@ -270,7 +270,7 @@ def log_call(
 
 	status = CALL_OUTCOME_TO_STATUS.get(outcome)
 	if not status:
-		frappe.throw(_("Kết quả cuộc gọi không hợp lệ."))
+		frappe.throw(_("Kết quả cuộc gọi không hợp lệ."), frappe.ValidationError)
 
 	to = (to_number or frappe.db.get_value(DOCTOR_DOCTYPE, doctor, "phone") or "").strip()
 	if not to:
