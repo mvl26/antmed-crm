@@ -22,6 +22,7 @@
   "decision_no",
   "won_contract",
   "deal",
+  "source_lead",
   "bid_documents"
  ],
  "fields": [
@@ -41,6 +42,7 @@
   {"fieldname": "decision_no", "fieldtype": "Data", "label": "Số QĐ KQLCNT"},
   {"fieldname": "won_contract", "fieldtype": "Link", "label": "HĐ trúng thầu", "options": "AntMed Contract"},
   {"fieldname": "deal", "fieldtype": "Link", "label": "CRM Deal", "options": "CRM Deal"},
+  {"fieldname": "source_lead", "fieldtype": "Link", "label": "Lead nguồn", "options": "CRM Lead", "read_only": 1},
   {"fieldname": "bid_documents", "fieldtype": "Attach", "label": "Hồ sơ thầu"}
  ],
  "index_web_pages_for_search": 1,
