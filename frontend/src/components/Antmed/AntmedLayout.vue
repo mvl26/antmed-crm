@@ -26,21 +26,26 @@
         }}
       </span>
 
-      <div
+      <button
         v-if="!isPortal"
-        class="ml-2 hidden h-6 max-w-[300px] flex-1 items-center gap-1.5 rounded-full bg-white/[0.12] px-2.5 text-[11px] sm:flex"
+        type="button"
+        class="ml-2 hidden h-6 max-w-[300px] flex-1 items-center gap-1.5 rounded-full bg-white/[0.12] px-2.5 text-[11px] text-white/70 transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-300 sm:flex"
+        :aria-label="__('Tìm kiếm nhanh')"
+        @click="searchOpen = true"
       >
         <FeatherIcon
           name="search"
           class="h-3.5 w-3.5 shrink-0 text-white/80"
           aria-hidden="true"
         />
-        <input
-          class="w-full border-0 bg-transparent text-[11px] text-white placeholder:text-white/60 focus:outline-none focus:ring-0"
-          :placeholder="__('Tìm bệnh viện / vật tư / NV...')"
-          :aria-label="__('Tìm kiếm')"
-        />
-      </div>
+        <span class="flex-1 truncate text-left">{{
+          __('Tìm chức năng, bệnh viện, hợp đồng...')
+        }}</span>
+        <span
+          class="shrink-0 rounded bg-white/20 px-1 py-0.5 text-[9px] font-medium leading-none"
+          >⌘K</span
+        >
+      </button>
 
       <!-- Nhóm phải: chuông (popup thông báo) + avatar -->
       <div class="ml-auto flex items-center gap-2.5">
@@ -210,11 +215,13 @@
         <slot />
       </main>
     </div>
+
+    <AntmedQuickSearch v-model:open="searchOpen" />
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   ANTMED_ROLES,
@@ -251,6 +258,7 @@ import AppsIcon from '@/components/Icons/AppsIcon.vue'
 import WebsiteIcon from '@/components/Icons/WebsiteIcon.vue'
 import EditIcon from '@/components/Icons/EditIcon.vue'
 import ListIcon from '@/components/Icons/ListIcon.vue'
+import AntmedQuickSearch from '@/components/Antmed/AntmedQuickSearch.vue'
 
 const ICON_BY_KEY = {
   // điều hành / tài chính
@@ -287,6 +295,17 @@ const iconFor = (key) => ICON_BY_KEY[key] || ListIcon
 
 const route = useRoute()
 const router = useRouter()
+
+// ── Quick-search command palette (⌘/Ctrl+K) ──
+const searchOpen = ref(false)
+function onGlobalKeydown(e) {
+  if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+    e.preventDefault()
+    searchOpen.value = true
+  }
+}
+onMounted(() => window.addEventListener('keydown', onGlobalKeydown))
+onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
 
 // Thông báo (store CRM gốc, resource auto:true) + avatar user THẬT từ session cookie.
 const { mark_as_read } = notificationsStore()
