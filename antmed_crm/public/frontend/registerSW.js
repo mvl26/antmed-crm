@@ -1,1 +1,0 @@
-if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/assets/antmed_crm/frontend/sw.js', { scope: '/assets/antmed_crm/frontend/' })})}

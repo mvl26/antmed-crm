@@ -23,3 +23,7 @@ AGENTS.md
 docs/antmed_crm
 .playwright
 .playwright-mcp
+antmed_crm/public
+antmed_crm/www/crm.html
+docs/superpowers
+docs/BA
