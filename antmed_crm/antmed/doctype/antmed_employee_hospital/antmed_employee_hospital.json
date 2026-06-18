@@ -1,0 +1,30 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-06-18 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["employee", "hospital"],
+ "fields": [
+  {"fieldname": "employee", "fieldtype": "Link", "in_list_view": 1, "in_standard_filter": 1, "label": "NV kinh doanh", "options": "User", "reqd": 1},
+  {"fieldname": "hospital", "fieldtype": "Link", "in_list_view": 1, "in_standard_filter": 1, "label": "Bệnh viện (tuyến)", "options": "AntMed Hospital", "reqd": 1}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-18 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "AntMed",
+ "name": "AntMed Employee Hospital",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1},
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Quản lý", "share": 1, "write": 1},
+  {"read": 1, "report": 1, "role": "NV kinh doanh"}
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "employee,hospital",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

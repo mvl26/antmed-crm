@@ -50,6 +50,7 @@ class TestAntMedDataScope(FrappeTestCase):
 		self.assertEqual(names, {self.da, self.db_})
 
 	def test_nv_scoped_to_own(self):
+		# A chưa gán tuyến BV nào → fail-closed về owner-based (chỉ phiếu mình phụ trách).
 		frappe.set_user(self.a)
 		try:
 			names = {d["name"] for d in frappe.get_list("AntMed Delivery", limit_page_length=0)}
@@ -57,3 +58,20 @@ class TestAntMedDataScope(FrappeTestCase):
 			frappe.set_user("Administrator")
 		self.assertIn(self.da, names)
 		self.assertNotIn(self.db_, names)  # fail-closed: KHÔNG thấy phiếu của NV khác
+
+	def test_territory_scope(self):
+		# C được gán BV-Z → thấy MỌI phiếu tới Z (kể cả phiếu NV khác phụ trách). BR-13 territory.
+		c = _mk_nv("_t_scope_c@example.com")
+		hz = _ensure("AntMed Hospital", "hospital_code", "_T-SCOPE-BVZ", {"hospital_name": "BV Scope Z"})
+		if not frappe.db.exists("AntMed Employee Hospital", {"employee": c, "hospital": hz}):
+			frappe.get_doc({"doctype": "AntMed Employee Hospital", "employee": c, "hospital": hz}).insert(ignore_permissions=True)
+		dz = frappe.get_doc(
+			{"doctype": "AntMed Delivery", "hospital": hz, "surgery_datetime": str(add_to_date(now_datetime(), hours=6)), "assigned_employee": self.b, "status": "Đã gán NV"}
+		).insert(ignore_permissions=True).name
+		frappe.set_user(c)
+		try:
+			names = {d["name"] for d in frappe.get_list("AntMed Delivery", limit_page_length=0)}
+		finally:
+			frappe.set_user("Administrator")
+		self.assertIn(dz, names)  # thấy phiếu tới BV trong tuyến dù assigned cho người khác
+		self.assertNotIn(self.da, names)  # phiếu BV ngoài tuyến + không phụ trách → KHÔNG thấy
