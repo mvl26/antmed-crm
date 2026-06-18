@@ -26,7 +26,8 @@ describe('antmed.js — doctor_care + call factories', () => {
       expect(src).toContain(`antmed_crm.api.antmed.doctor_care.${endpoint}`)
     })
   }
-  it('không dùng prefix crm.api.* cho doctor_care', () => {
-    expect(src).not.toContain('crm.api.antmed.doctor_care')
+  it('không dùng prefix crm.api.* (legacy) cho doctor_care', () => {
+    // 'crm.api.antmed.doctor_care' KHÔNG được đứng sau 'antmed_' (prefix legacy sai)
+    expect(src).not.toMatch(/[^_]crm\.api\.antmed\.doctor_care/)
   })
 })
