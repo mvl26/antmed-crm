@@ -61,6 +61,10 @@ def register_device(device_id: str, push_token: str | None = None, platform: str
 	"""Đăng ký/cập nhật thiết bị di động (push). Upsert theo device_id."""
 	values = {"user": frappe.session.user, "push_token": push_token, "platform": platform, "app_version": app_version, "last_seen": now_datetime()}
 	if frappe.db.exists(DEVICE_DOCTYPE, device_id):
+		# Chống IDOR / device-takeover: chỉ chủ sở hữu mới được cập nhật thiết bị (push token).
+		owner = frappe.db.get_value(DEVICE_DOCTYPE, device_id, "user")
+		if owner and owner != frappe.session.user:
+			frappe.throw(_("Thiết bị này đã được đăng ký bởi người dùng khác."), frappe.PermissionError)
 		frappe.db.set_value(DEVICE_DOCTYPE, device_id, values)
 	else:
 		frappe.get_doc({"doctype": DEVICE_DOCTYPE, "device_id": device_id, **values}).insert(ignore_permissions=True)

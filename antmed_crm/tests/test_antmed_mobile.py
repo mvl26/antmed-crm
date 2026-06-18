@@ -56,3 +56,23 @@ class TestAntMedMobile(FrappeTestCase):
 		mobile_sync.register_device(device_id="DEV-TEST-1", push_token="tok-456", platform="android", app_version="1.0.1")
 		self.assertEqual(frappe.db.count("AntMed Mobile Device", {"device_id": "DEV-TEST-1"}), 1)
 		self.assertEqual(frappe.db.get_value("AntMed Mobile Device", "DEV-TEST-1", "push_token"), "tok-456")
+
+	def test_register_device_idor_blocked(self):
+		"""IDOR: user khác KHÔNG được chiếm/ghi đè thiết bị đã đăng ký bởi người khác (device takeover)."""
+		ua = _ensure("User", "email", "_t_mob_a@example.com", {"first_name": "Mob A", "send_welcome_email": 0})
+		ub = _ensure("User", "email", "_t_mob_b@example.com", {"first_name": "Mob B", "send_welcome_email": 0})
+		frappe.set_user(ua)
+		try:
+			mobile_sync.register_device(device_id="DEV-IDOR", push_token="A-token")
+		finally:
+			frappe.set_user("Administrator")
+		self.assertEqual(frappe.db.get_value("AntMed Mobile Device", "DEV-IDOR", "user"), ua)
+		# user B cố chiếm thiết bị của A → PermissionError, token của A KHÔNG đổi
+		frappe.set_user(ub)
+		try:
+			with self.assertRaises(frappe.PermissionError):
+				mobile_sync.register_device(device_id="DEV-IDOR", push_token="B-token")
+		finally:
+			frappe.set_user("Administrator")
+		self.assertEqual(frappe.db.get_value("AntMed Mobile Device", "DEV-IDOR", "user"), ua)
+		self.assertEqual(frappe.db.get_value("AntMed Mobile Device", "DEV-IDOR", "push_token"), "A-token")
