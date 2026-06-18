@@ -115,11 +115,17 @@ class TestGlobalSearch(FrappeTestCase):
 		res = search.global_search(query=PREFIX, limit=1)
 		self.assertLessEqual(len(res["hospitals"]), 1)
 		self.assertLessEqual(len(res["contracts"]), 1)
+		self.assertLessEqual(len(res["instrument_sets"]), 1)
+		self.assertLessEqual(len(res["deliveries"]), 1)
 
 	def test_limit_clamped_when_invalid(self):
 		# limit không hợp lệ → fallback an toàn (5), KHÔNG raise
 		res = search.global_search(query=PREFIX, limit="abc")
 		self.assertIsInstance(res["hospitals"], list)
 		self.assertIsInstance(res["contracts"], list)
+		self.assertIsInstance(res["instrument_sets"], list)
+		self.assertIsInstance(res["deliveries"], list)
 		self.assertLessEqual(len(res["hospitals"]), 5)
 		self.assertLessEqual(len(res["contracts"]), 5)
+		self.assertLessEqual(len(res["instrument_sets"]), 5)
+		self.assertLessEqual(len(res["deliveries"]), 5)
