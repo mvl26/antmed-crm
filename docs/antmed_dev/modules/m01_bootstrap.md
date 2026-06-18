@@ -12,7 +12,7 @@
 
 > 🔴 **Self-Correction (DEC-A, 2026-06-17)**: Tên 3 Role đã đổi sang **tiếng Việt** (`NV kinh doanh` / `Thủ kho` / `Quản lý`) — **ADR-M01-02 (tên EN) đã bị Supersede** bởi ADR-M14W0-01. Mọi mục nhắc tên Role EN bên dưới (§Scope, §Fixtures, §ADR-M01-02) là **ngữ cảnh lịch sử R1**; nguồn quyết định cuối về Role naming = `./m14_rbac_w0_role_naming.md`.
 
-> ⚠️ **ADR-M01-01 (xem §ADR)**: R1 dựng AntMed **IN-PLACE bên trong app `crm`** (KHÔNG đẻ app `antmed_crm` riêng, KHÔNG namespace `antmed_crm.api.*`). Mọi tài liệu domain trong skill `antmed-doc` mô tả app `antmed_crm`/doctype prefix `AM ` là **định hướng kiến trúc tổng** cho các round sau; R1 chỉ đặt nền namespace + RBAC + harness, chưa tạo doctype nghiệp vụ.
+> ⚠️ **ADR-M01-01 (xem §ADR)**: AntMed dựng **IN-PLACE bên trong app CRM** — app cài thật là `antmed_crm` (fork in-place của Frappe CRM; `apps/crm` chỉ là compat-shim symlink). Code AntMed sống trong module `antmed_crm/antmed/` + endpoint package `antmed_crm/api/antmed/` → đường gọi `antmed_crm.api.antmed.<module>.<fn>`. KHÔNG đẻ thêm app thứ 2 ngoài luồng; KHÔNG dùng namespace cũ `crm.api.*`. Doctype prefix `AntMed ` (xem ADR-M01-02). R1 chỉ đặt nền namespace + RBAC + harness, chưa tạo doctype nghiệp vụ.
 
 ---
 
@@ -22,7 +22,7 @@ M01 là **foundation round (R1)**: dựng nền để các round M0X tiếp theo
 
 1. **Namespace in-place** `crm/antmed/` (Python module `AntMed`) + `crm/api/antmed/` (package endpoint).
 2. **3 Role fixture RBAC** load qua `bench migrate`, reproduce được (export fixture + khai trong `hooks.py`).
-3. **1 endpoint smoke** `crm.api.antmed.health.ping()` chứng minh đường BE callable (RAW dict).
+3. **1 endpoint smoke** `antmed_crm.api.antmed.health.ping()` chứng minh đường BE callable (RAW dict).
 4. **Convention naming FE↔BE** (1 trang) đủ để R2 (M1) theo.
 5. **Harness test xanh** (≥1 test mới, 0 fail) + **FE smoke** route `/antmed` → `AntmedHome.vue` gọi `health.ping`.
 6. **No-regression**: 4 test gốc Frappe CRM vẫn PASS; `hooks.py` mở rộng AN TOÀN.
@@ -43,7 +43,7 @@ M01 là **foundation round (R1)**: dựng nền để các round M0X tiếp theo
 - **Always** dùng `methods=["GET"]` tường minh cho `ping()` (KHÔNG bare `@frappe.whitelist()`).
 
 ### Never (R1 TUYỆT ĐỐI KHÔNG)
-- **Never** tạo app `antmed_crm` riêng, **Never** dùng namespace `antmed_crm.api.*` hay `assetcore.*`.
+- **Never** đẻ thêm app thứ 2 ngoài luồng (AntMed sống in-place trong app `antmed_crm`), **Never** dùng namespace cũ `crm.api.*` hay `assetcore.*`.
 - **Never** tạo bất kỳ DocType nghiệp vụ nào (Hợp đồng/Quota/DR/Loan/Chứng từ…) — đó là round sau.
 - **Never** xoá/sửa/đụng `permission_query_conditions`, `doc_events`, `override_doctype_class`, `after_migrate`, `before_tests` sẵn có.
 - **Never** đụng route/page/store Frappe CRM gốc (`frontend/src/router.js` chỉ THÊM 1 route mới; KHÔNG sửa route cũ).
@@ -116,11 +116,11 @@ fixtures = [
 
 ## API
 
-### Endpoint smoke — `crm.api.antmed.health.ping`
+### Endpoint smoke — `antmed_crm.api.antmed.health.ping`
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Đường dẫn gọi | `crm.api.antmed.health.ping` |
+| Đường dẫn gọi | `antmed_crm.api.antmed.health.ping` |
 | File | `crm/api/antmed/health.py` |
 | Decorator | `@frappe.whitelist(methods=["GET"])` (KHÔNG bare) |
 | Verb | GET |
@@ -152,7 +152,7 @@ fixtures = [
 | Route path | `/antmed` |
 | Route name | `AntmedHome` |
 | Component | `frontend/src/pages/AntmedHome.vue` (lazy `() => import(...)`) |
-| Hành vi | Gọi `createResource({ url: 'crm.api.antmed.health.ping' })`, hiển thị `status` |
+| Hành vi | Gọi `createResource({ url: 'antmed_crm.api.antmed.health.ping' })`, hiển thị `status` |
 
 **Boundaries UI (R1)**:
 - **Always** THÊM 1 object route mới vào mảng `routes` trong `frontend/src/router.js` (lazy import, KHÔNG eager).
@@ -231,13 +231,13 @@ fixtures = [
 
 ## ADR
 
-### ADR-M01-01: Bootstrap IN-PLACE trong app `crm` (không đẻ app `antmed_crm`)
-- **Status**: Accepted
+### ADR-M01-01: Bootstrap IN-PLACE trong app CRM (app cài tên `antmed_crm`, không đẻ app thứ 2)
+- **Status**: Accepted (Revised 2026-06-17 — đảo giả định tên app; xem §Consequences)
 - **Date**: 2026-06-17
-- **Context**: AntMed CRM lấy Frappe CRM làm gốc. Skill `antmed-doc` mô tả một app `antmed_crm` độc lập (doctype prefix `AM `). Nhưng R1 yêu cầu sống ký sinh trong app `crm` đang chạy (site `miyano`) để tái dùng auth/desk/SPA/build và giảm rủi ro merge với CRM gốc.
-- **Decision**: Đặt code AntMed trong app `crm` dưới namespace `crm/antmed/` (Python module Frappe `AntMed`) + `crm/api/antmed/` (package endpoint `crm.api.antmed.<module>.<fn>`). KHÔNG tạo app riêng, KHÔNG namespace `antmed_crm.api.*`.
+- **Context**: AntMed CRM là **fork in-place** của Frappe CRM. App cài thật trên site (`miyano`) tên là **`antmed_crm`** (`sites/apps.txt` = `frappe, antmed_crm, …`; KHÔNG có app `crm` — `apps/crm` chỉ là compat-shim symlink trỏ về `antmed_crm`). Yêu cầu: sống ký sinh trong chính app CRM này để tái dùng auth/desk/SPA/build và giảm rủi ro merge với CRM gốc, KHÔNG tách thành app thứ 2 ngoài luồng.
+- **Decision**: Đặt code AntMed **in-place trong app `antmed_crm`** dưới module `antmed_crm/antmed/` (Python module Frappe `AntMed`) + package endpoint `antmed_crm/api/antmed/` → đường gọi whitelist `antmed_crm.api.antmed.<module>.<fn>`. KHÔNG đẻ app thứ 2 ngoài luồng; KHÔNG dùng namespace cũ `crm.api.*` (giả định app tên `crm` — sai vì app cài là `antmed_crm`).
 - **Alternatives**:
-  - *App `antmed_crm` riêng* — loại ở R1: chi phí cài app, đồng bộ build FE riêng, rủi ro chia đôi site; có thể tái xét ở giai đoạn tách (xem hệ quả).
+  - *App thứ 2 đứng riêng (ngoài app CRM)* — loại: chi phí cài thêm app, đồng bộ build FE riêng, rủi ro chia đôi site; có thể tái xét ở giai đoạn tách (xem hệ quả).
   - *Nhét thẳng vào module `FCRM`* — loại: trộn code, khó grep/khó tách, dễ đụng test gốc.
 - **Consequences**:
   - (+) Tái dùng toàn bộ hạ tầng `crm`; chỉ thêm 1 module + 1 api package; dễ grep theo prefix `antmed`/`Antmed`/`AntMed `.

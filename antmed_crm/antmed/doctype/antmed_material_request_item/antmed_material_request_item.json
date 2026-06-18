@@ -1,0 +1,27 @@
+{
+ "actions": [],
+ "creation": "2026-06-18 18:30:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "istable": 1,
+ "field_order": ["item", "item_name", "requested_qty", "in_quota", "note"],
+ "fields": [
+  {"fieldname": "item", "fieldtype": "Link", "in_list_view": 1, "label": "Vật tư", "options": "AntMed Item", "reqd": 1},
+  {"fieldname": "item_name", "fieldtype": "Data", "in_list_view": 1, "label": "Tên vật tư"},
+  {"fieldname": "requested_qty", "fieldtype": "Float", "in_list_view": 1, "label": "SL yêu cầu"},
+  {"default": "0", "fieldname": "in_quota", "fieldtype": "Check", "in_list_view": 1, "label": "Trong thầu"},
+  {"fieldname": "note", "fieldtype": "Data", "label": "Ghi chú"}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-18 18:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "AntMed",
+ "name": "AntMed Material Request Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

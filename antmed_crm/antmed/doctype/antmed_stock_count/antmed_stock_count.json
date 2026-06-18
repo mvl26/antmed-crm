@@ -1,0 +1,51 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-06-18 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "is_submittable": 1,
+ "field_order": [
+  "naming_series",
+  "warehouse",
+  "count_datetime",
+  "column_break_hdr",
+  "counted_by",
+  "total_variance_qty",
+  "note",
+  "section_break_items",
+  "items"
+ ],
+ "fields": [
+  {"default": "AM-SC-.YYYY.-.#####", "fieldname": "naming_series", "fieldtype": "Select", "label": "Series", "options": "AM-SC-.YYYY.-.#####", "reqd": 1},
+  {"fieldname": "warehouse", "fieldtype": "Link", "in_list_view": 1, "in_standard_filter": 1, "label": "Kho kiểm kê", "options": "AntMed Warehouse", "reqd": 1},
+  {"fieldname": "count_datetime", "fieldtype": "Datetime", "label": "Thời điểm kiểm kê", "default": "now"},
+  {"fieldname": "column_break_hdr", "fieldtype": "Column Break"},
+  {"fieldname": "counted_by", "fieldtype": "Link", "label": "Người kiểm kê", "options": "User", "read_only": 1, "no_copy": 1},
+  {"fieldname": "total_variance_qty", "fieldtype": "Float", "label": "Tổng chênh lệch", "read_only": 1},
+  {"fieldname": "note", "fieldtype": "Small Text", "label": "Ghi chú"},
+  {"fieldname": "section_break_items", "fieldtype": "Section Break", "label": "Dòng kiểm kê"},
+  {"fieldname": "items", "fieldtype": "Table", "label": "Chi tiết", "options": "AntMed Stock Count Item", "reqd": 1}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-18 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "AntMed",
+ "name": "AntMed Stock Count",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {"amend": 1, "cancel": 1, "create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "submit": 1, "write": 1},
+  {"amend": 1, "cancel": 1, "create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Quản lý", "share": 1, "submit": 1, "write": 1},
+  {"amend": 1, "cancel": 1, "create": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Thủ kho", "share": 1, "submit": 1, "write": 1},
+  {"print": 1, "read": 1, "report": 1, "role": "NV kinh doanh"}
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "warehouse",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "warehouse",
+ "track_changes": 1
+}

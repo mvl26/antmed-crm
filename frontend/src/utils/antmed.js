@@ -20,3 +20,23 @@ export const antmedRoles = globalThis.window?.antmed_roles || []
 export function isAntmedPath(path) {
   return typeof path === 'string' && path.startsWith('/antmed')
 }
+
+// Phase 1 — CHỈ DÙNG UI AntMed: route hệ thống/login được GIỮ (không redirect về /antmed).
+// Mock prototype cũ có name 'Antmed*Mock' nhưng path KHÔNG /antmed → PHẢI redirect ⇒ keep
+// theo PATH (/antmed/*) + keep-list này, KHÔNG theo tiền tố tên 'Antmed'.
+export const ANTMED_KEEP_ROUTE_NAMES = [
+  'Not Permitted',
+  'Invalid Page',
+  'AntmedLogin',
+]
+
+/**
+ * True nếu route ĐƯỢC GIỮ khi đã consolidate về UI AntMed (Phase 1):
+ * khu /antmed/* (path-based) HOẶC login/trang lỗi hệ thống (keep-list).
+ * Mọi route khác (Home, CRM gốc /leads,/deals..., mock prototype /ceo,/sales/*...) → redirect /antmed.
+ */
+export function isAntmedOnlyKeptRoute(to) {
+  if (!to) return false
+  if (isAntmedPath(to.path)) return true
+  return ANTMED_KEEP_ROUTE_NAMES.includes(to.name)
+}

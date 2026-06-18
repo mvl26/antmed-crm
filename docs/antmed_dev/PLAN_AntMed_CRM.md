@@ -8,7 +8,7 @@
 
 ## 0. Trạng thái hiện tại (baseline)
 
-- ✅ **M01 — Bootstrap** (namespace `crm/antmed/`, 3 Role, `crm.api.antmed.health.ping`) + **Customer 360° slice** (DocType `AntMed Hospital`/`AntMed Doctor`, API list/detail, 3 trang Vue). Test xanh (BE 11 OK, FE 136). **Uncommitted**, chờ USER reload + pixel verify.
+- ✅ **M01 — Bootstrap** (namespace `crm/antmed/`, 3 Role, `antmed_crm.api.antmed.health.ping`) + **Customer 360° slice** (DocType `AntMed Hospital`/`AntMed Doctor`, API list/detail, 3 trang Vue). Test xanh (BE 11 OK, FE 136). **Uncommitted**, chờ USER reload + pixel verify.
 - ⏳ Mở: role-name → tiếng Việt (DEC-A), tách route AntMed riêng (DEC-B), purge data rác `_SEC-H*`.
 
 ---

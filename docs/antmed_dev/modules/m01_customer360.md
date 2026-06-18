@@ -4,7 +4,7 @@
 |---|---|
 | Module folder | `crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) |
 | DocType folder | `crm/antmed/doctype/antmed_hospital/`, `crm/antmed/doctype/antmed_doctor/` |
-| API package | `crm/api/antmed/customer.py` (đường gọi `crm.api.antmed.customer.<fn>`) |
+| API package | `crm/api/antmed/customer.py` (đường gọi `antmed_crm.api.antmed.customer.<fn>`) |
 | FE pages | `frontend/src/pages/Antmed*` + route `/antmed/hospitals`, `/antmed/hospitals/:name`, `/antmed/doctors/:name` |
 | Phase triển khai | 1 — Lõi vận hành (đây là **feature nghiệp vụ M1 thật**, khác R1 foundation) |
 | Round | **R2** (nối tiếp R1 Bootstrap — xem `m01_bootstrap.md`) |
@@ -48,7 +48,7 @@ Theo `AntMed_CRM_Modules.md §1` (mô tả nghiệp vụ ground-truth):
 - **Always** tạo DocType **`AntMed Hospital`** tại `crm/antmed/doctype/antmed_hospital/` với module = `AntMed`, custom = 0 (doctype của app, đi theo code).
 - **Always** tạo DocType **`AntMed Doctor`** tại `crm/antmed/doctype/antmed_doctor/`, module = `AntMed`.
 - **Always** dùng naming an toàn (xem §DocTypes): Hospital autoname `field:hospital_code` (hoặc series riêng), Doctor naming_series `AM-DOC-.YYYY.-.####`. **Never** dùng `AM-DR` (reserve cho M04 Delivery Request).
-- **Always** đặt endpoint trong `crm/api/antmed/customer.py`, đường gọi `crm.api.antmed.customer.<fn>`, **type-annotated** (vì `crm/hooks.py:28 require_type_annotated_api_methods = True`), trả **RAW dict/list** (KHÔNG envelope).
+- **Always** đặt endpoint trong `crm/api/antmed/customer.py`, đường gọi `antmed_crm.api.antmed.customer.<fn>`, **type-annotated** (vì `crm/hooks.py:28 require_type_annotated_api_methods = True`), trả **RAW dict/list** (KHÔNG envelope).
 - **Always** giữ invariant **count == len(data)** ở `list_hospitals` khi không phân trang (BR-13 count==rows).
 - **Always** `get_hospital`/`get_doctor` gọi `frappe.has_permission(...)` và `frappe.throw(..., frappe.PermissionError)` khi không read được.
 - **Always** thêm DocPerm cho 3 Role R1 trên 2 DocType mới (read tối thiểu cho Sales Rep; read+write cho Manager) — xem §Permissions.
@@ -133,7 +133,7 @@ Theo `AntMed_CRM_Modules.md §1` (mô tả nghiệp vụ ground-truth):
 
 > File: `crm/api/antmed/customer.py`. Mọi hàm `@frappe.whitelist(methods=["GET"])`, **type-annotated**, trả **RAW**. Lỗi nghiệp vụ/permission = `frappe.throw(...)` in-handler (Frappe trả exception JSON; KHÔNG envelope).
 
-### 1) `crm.api.antmed.customer.list_hospitals`
+### 1) `antmed_crm.api.antmed.customer.list_hospitals`
 
 | Thuộc tính | Giá trị |
 |---|---|
@@ -161,7 +161,7 @@ Theo `AntMed_CRM_Modules.md §1` (mô tả nghiệp vụ ground-truth):
 }
 ```
 
-### 2) `crm.api.antmed.customer.get_hospital`
+### 2) `antmed_crm.api.antmed.customer.get_hospital`
 
 | Thuộc tính | Giá trị |
 |---|---|
@@ -188,7 +188,7 @@ Theo `AntMed_CRM_Modules.md §1` (mô tả nghiệp vụ ground-truth):
 - `doctors` = `frappe.get_list("AntMed Doctor", filters={"hospital": name}, fields=["name","full_name","specialty","phone"])`. Children fields **đúng acceptance**: `name`, `full_name`, `specialty`, `phone`.
 - Nếu `name` không tồn tại → `frappe.DoesNotExistError` (Frappe ném khi `get_doc`). Permission fail → `PermissionError`.
 
-### 3) `crm.api.antmed.customer.list_doctors`
+### 3) `antmed_crm.api.antmed.customer.list_doctors`
 
 | Thuộc tính | Giá trị |
 |---|---|
@@ -198,7 +198,7 @@ Theo `AntMed_CRM_Modules.md §1` (mô tả nghiệp vụ ground-truth):
 
 **Field mỗi item**: `name`, `full_name`, `specialty`, `hospital`, `phone` (+ `hospital_name` resolve nếu rẻ — xem note). `hospital` param = lọc nhanh theo 1 BV (gộp vào filters). Cùng quy ước count==rows như `list_hospitals`.
 
-### 4) `crm.api.antmed.customer.get_doctor`
+### 4) `antmed_crm.api.antmed.customer.get_doctor`
 
 | Thuộc tính | Giá trị |
 |---|---|
@@ -280,7 +280,7 @@ R2 gắn DocPerm tối thiểu cho 2 DocType mới (định nghĩa trong JSON Do
 
 ## UI
 
-> Vue 3 + frappe-ui SPA. Dùng `createListResource` (hoặc `createResource`) gọi **đúng** endpoint `crm.api.antmed.customer.*`. Route mới APPEND vào `frontend/src/router.js` (lazy). KHÔNG đụng route CRM gốc.
+> Vue 3 + frappe-ui SPA. Dùng `createListResource` (hoặc `createResource`) gọi **đúng** endpoint `antmed_crm.api.antmed.customer.*`. Route mới APPEND vào `frontend/src/router.js` (lazy). KHÔNG đụng route CRM gốc.
 
 ### Routes (THÊM mới — lazy import)
 
@@ -294,9 +294,9 @@ R2 gắn DocPerm tối thiểu cho 2 DocType mới (định nghĩa trong JSON Do
 
 ### Trang `/antmed/hospitals` (list)
 - Bảng BV: cột **Tên** (`hospital_name`), **Hạng** (`rank`), **Trạng thái HĐ** (`contract_status`) (+ có thể MST).
-- Nguồn dữ liệu: `createListResource` gọi **method-form** `crm.api.antmed.customer.list_hospitals` (endpoint trả `{data, total_count}` custom — KHÔNG dùng doctype-list-form chuẩn). FE đọc `resource.data.data` (list) + `resource.data.total_count`.
+- Nguồn dữ liệu: `createListResource` gọi **method-form** `antmed_crm.api.antmed.customer.list_hospitals` (endpoint trả `{data, total_count}` custom — KHÔNG dùng doctype-list-form chuẩn). FE đọc `resource.data.data` (list) + `resource.data.total_count`.
 
-  > ⚠️ **Lưu ý FE (chốt để không đoán)**: vì endpoint trả **dict bọc** `{data, total_count}` (không phải list thuần như `frappe.client.get_list`), nên dùng `createResource({ url: 'crm.api.antmed.customer.list_hospitals', params: {...}, auto: true })` và đọc `r.data.data`. Nếu muốn dùng `createListResource`, phải set `url` trỏ method này và xử lý shape bọc — KHÔNG để frappe-ui tự coi response là array. **Khuyến nghị R2: dùng `createResource`** cho list (đơn giản, khớp shape `{data,total_count}`).
+  > ⚠️ **Lưu ý FE (chốt để không đoán)**: vì endpoint trả **dict bọc** `{data, total_count}` (không phải list thuần như `frappe.client.get_list`), nên dùng `createResource({ url: 'antmed_crm.api.antmed.customer.list_hospitals', params: {...}, auto: true })` và đọc `r.data.data`. Nếu muốn dùng `createListResource`, phải set `url` trỏ method này và xử lý shape bọc — KHÔNG để frappe-ui tự coi response là array. **Khuyến nghị R2: dùng `createResource`** cho list (đơn giản, khớp shape `{data,total_count}`).
 - Ô **search** `hospital_name`: gõ → gọi lại endpoint với `search`/`filters` (debounce). 
 - Click 1 dòng → `router.push` sang `/antmed/hospitals/:name`.
 
@@ -304,16 +304,16 @@ R2 gắn DocPerm tối thiểu cho 2 DocType mới (định nghĩa trong JSON Do
 - Header BV: mã (`hospital_code`/`name`), tên, hạng, MST, trạng thái HĐ.
 - Danh sách bác sỹ thuộc BV (từ `doctors` trong `get_hospital`): mỗi dòng tên + chuyên khoa.
 - Click 1 bác sỹ → `/antmed/doctors/:name`.
-- Nguồn: `createResource({ url: 'crm.api.antmed.customer.get_hospital', params: { name: route.params.name }, auto: true })`.
+- Nguồn: `createResource({ url: 'antmed_crm.api.antmed.customer.get_hospital', params: { name: route.params.name }, auto: true })`.
 
 ### Trang `/antmed/doctors/:name` (profile bác sỹ)
 - Profile: chuyên khoa, sinh nhật, liên hệ (phone/email/zalo), ghi chú.
 - **Link ngược về BV**: hiển thị `hospital_name` + click → `/antmed/hospitals/:hospital`.
-- Nguồn: `createResource({ url: 'crm.api.antmed.customer.get_doctor', params: { name }, auto: true })`.
+- Nguồn: `createResource({ url: 'antmed_crm.api.antmed.customer.get_doctor', params: { name }, auto: true })`.
 
 ### Boundaries UI
 - **Always** lazy import 3 page mới; **Always** dùng `__()` cho nhãn VN; trạng thái loading/error/empty cho mỗi resource.
-- **Never** sửa layout/sidebar/route CRM gốc; **Never** gọi `antmed_crm.api.*` (sai namespace — đúng là `crm.api.antmed.*`); **Never** axios trực tiếp (dùng frappe-ui resource).
+- **Never** sửa layout/sidebar/route CRM gốc; **Never** gọi `crm.api.*` (sai namespace — đúng là `antmed_crm.api.antmed.*`); **Never** axios trực tiếp (dùng frappe-ui resource).
 
 ---
 
@@ -335,7 +335,7 @@ R2 gắn DocPerm tối thiểu cho 2 DocType mới (định nghĩa trong JSON Do
 
 ### FE test (vitest — xanh)
 - File *(FE chốt)*: `frontend/tests/unit/antmedCustomer.test.js` (theo idiom content-assert như R1).
-- Assertion tối thiểu: 3 route mới tồn tại (path/name/lazy import); page list gọi đúng `crm.api.antmed.customer.list_hospitals`; detail gọi `get_hospital`/`get_doctor`; route CRM gốc (Leads/Deals/Contacts/Organizations) còn; KHÔNG `antmed_crm.api`/axios/tanstack.
+- Assertion tối thiểu: 3 route mới tồn tại (path/name/lazy import); page list gọi đúng `antmed_crm.api.antmed.customer.list_hospitals`; detail gọi `get_hospital`/`get_doctor`; route CRM gốc (Leads/Deals/Contacts/Organizations) còn; KHÔNG `antmed_crm.api`/axios/tanstack.
 - `yarn build` emit chunk Antmed* không vỡ.
 
 ---
@@ -349,7 +349,7 @@ R2 gắn DocPerm tối thiểu cho 2 DocType mới (định nghĩa trong JSON Do
 3. **BE**: `bench --site miyano migrate` → verify `frappe.db.exists("DocType","AntMed Hospital")` & `"AntMed Doctor"`; verify naming sinh `AM-DOC-…`.
 4. **BE**: viết `crm/api/antmed/customer.py` 4 hàm (type hint, RAW, count==rows, PermissionError).
 5. **BE**: viết `crm/tests/test_antmed_customer.py` (failing-first) → cho xanh; chạy lại no-regression (bootstrap 6 + 4 gốc).
-6. **FE**: tạo 3 page Antmed* + APPEND 3 route vào `router.js`; wire `createResource`→`crm.api.antmed.customer.*`; vitest + `yarn build` xanh.
+6. **FE**: tạo 3 page Antmed* + APPEND 3 route vào `router.js`; wire `createResource`→`antmed_crm.api.antmed.customer.*`; vitest + `yarn build` xanh.
 7. **QA**: sau khi user reload BE (gunicorn --preload), Playwright smoke `/antmed/hospitals` → click → detail → doctor.
 
 > ⚠️ **Reload**: thêm DocType + API mới → cần `bench --site miyano migrate` (DocType) và **user reload BE** (`bench restart`) để HTTP serve endpoint mới. `run-tests`/`execute` chạy live ngay (không cần reload). (Carry-over từ STATE R1.)

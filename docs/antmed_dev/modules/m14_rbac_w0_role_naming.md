@@ -160,7 +160,7 @@ def execute():
 
 ## API
 
-**W0-1 KHÔNG thêm/sửa endpoint.** Endpoint hiện hữu (`crm.api.antmed.health.ping`, `crm.api.antmed.customer.*`) không nhúng chuỗi role → không chịu ảnh hưởng. Data-scope/`permission_query_conditions` chưa wiring cho 2 doctype này ở R2 (RBAC qua DocPerm). Invariant **count == rows** giữ nguyên hành vi R2 (không đổi).
+**W0-1 KHÔNG thêm/sửa endpoint.** Endpoint hiện hữu (`antmed_crm.api.antmed.health.ping`, `antmed_crm.api.antmed.customer.*`) không nhúng chuỗi role → không chịu ảnh hưởng. Data-scope/`permission_query_conditions` chưa wiring cho 2 doctype này ở R2 (RBAC qua DocPerm). Invariant **count == rows** giữ nguyên hành vi R2 (không đổi).
 
 ---
 

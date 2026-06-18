@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build --base=/assets/crm/frontend/ && yarn copy-html-entry",
-    "copy-html-entry": "cp ../crm/public/frontend/index.html ../crm/www/crm.html",
+    "build": "vite build --base=/assets/antmed_crm/frontend/ && yarn copy-html-entry",
+    "copy-html-entry": "cp ../antmed_crm/public/frontend/index.html ../antmed_crm/www/crm.html",
     "serve": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
@@ -21,6 +21,7 @@
     "dompurify": "^3.3.3",
     "frappe-ui": "0.1.261",
     "gemoji": "^8.1.0",
+    "html5-qrcode": "^2.3.8",
     "leaflet": "^1.9.4",
     "leaflet-draw": "^1.0.4",
     "leaflet.locatecontrol": "^0.89.0",

@@ -1,0 +1,36 @@
+{
+ "actions": [],
+ "creation": "2026-06-18 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item",
+  "lot",
+  "column_break_qty",
+  "system_qty",
+  "counted_qty",
+  "variance"
+ ],
+ "fields": [
+  {"fieldname": "item", "fieldtype": "Link", "in_list_view": 1, "label": "Vật tư", "options": "AntMed Item", "reqd": 1},
+  {"fieldname": "lot", "fieldtype": "Link", "in_list_view": 1, "label": "Lô", "options": "AntMed Lot"},
+  {"fieldname": "column_break_qty", "fieldtype": "Column Break"},
+  {"fieldname": "system_qty", "fieldtype": "Float", "in_list_view": 1, "label": "SL hệ thống", "read_only": 1},
+  {"fieldname": "counted_qty", "fieldtype": "Float", "in_list_view": 1, "label": "SL thực đếm"},
+  {"fieldname": "variance", "fieldtype": "Float", "in_list_view": 1, "label": "Chênh lệch", "read_only": 1}
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-06-18 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "AntMed",
+ "name": "AntMed Stock Count Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

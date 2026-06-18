@@ -1,5 +1,8 @@
 <template>
-  <main class="flex h-full flex-col overflow-auto" aria-labelledby="antmed-hospital-detail-title">
+  <main
+    class="flex h-full flex-col overflow-auto"
+    aria-labelledby="antmed-hospital-detail-title"
+  >
     <!-- Thanh điều hướng ngược -->
     <div class="px-6 pt-4">
       <Button
@@ -29,9 +32,18 @@
       class="flex flex-col items-center gap-3 py-16 text-center"
       role="alert"
     >
-      <Badge variant="subtle" theme="red" size="lg" :label="__('Không tải được')" />
+      <Badge
+        variant="subtle"
+        theme="red"
+        size="lg"
+        :label="__('Không tải được')"
+      />
       <p class="max-w-md text-p-sm text-ink-gray-6">{{ errorMessage }}</p>
-      <Button variant="outline" :label="__('Thử lại')" @click="hospital.reload()" />
+      <Button
+        variant="outline"
+        :label="__('Thử lại')"
+        @click="hospital.reload()"
+      />
     </div>
 
     <!-- Data -->
@@ -61,7 +73,9 @@
           />
         </div>
 
-        <dl class="mt-4 grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
+        <dl
+          class="mt-4 grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2 lg:grid-cols-3"
+        >
           <div class="flex flex-col gap-0.5">
             <dt class="text-p-xs uppercase tracking-wide text-ink-gray-5">
               {{ __('Mã bệnh viện') }}
@@ -74,19 +88,26 @@
             <dt class="text-p-xs uppercase tracking-wide text-ink-gray-5">
               {{ __('Mã số thuế') }}
             </dt>
-            <dd class="text-p-base text-ink-gray-8">{{ hospital.data.tax_code || '—' }}</dd>
+            <dd class="text-p-base text-ink-gray-8">
+              {{ hospital.data.tax_code || '—' }}
+            </dd>
           </div>
           <div class="flex flex-col gap-0.5 sm:col-span-2 lg:col-span-1">
             <dt class="text-p-xs uppercase tracking-wide text-ink-gray-5">
               {{ __('Địa chỉ') }}
             </dt>
-            <dd class="text-p-base text-ink-gray-8">{{ hospital.data.address || '—' }}</dd>
+            <dd class="text-p-base text-ink-gray-8">
+              {{ hospital.data.address || '—' }}
+            </dd>
           </div>
         </dl>
       </header>
 
       <!-- Section bác sỹ thuộc BV -->
-      <section class="px-6 pb-8" aria-labelledby="antmed-hospital-doctors-title">
+      <section
+        class="px-6 pb-8"
+        aria-labelledby="antmed-hospital-doctors-title"
+      >
         <h2
           id="antmed-hospital-doctors-title"
           class="mb-3 text-base font-semibold text-ink-gray-8"
@@ -107,7 +128,9 @@
             <button
               type="button"
               class="flex w-full items-center justify-between gap-3 rounded-xl border border-outline-gray-1 bg-surface-white px-4 py-3 text-left transition hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-3"
-              :aria-label="__('Xem hồ sơ bác sỹ') + ' ' + (doc.full_name || doc.name)"
+              :aria-label="
+                __('Xem hồ sơ bác sỹ') + ' ' + (doc.full_name || doc.name)
+              "
               @click="openDoctor(doc.name)"
             >
               <span class="flex flex-col gap-0.5">
@@ -119,12 +142,25 @@
                 </span>
               </span>
               <span class="flex items-center gap-3">
-                <span v-if="doc.phone" class="text-p-sm text-ink-gray-6">{{ doc.phone }}</span>
-                <FeatherIcon name="chevron-right" class="h-4 w-4 text-ink-gray-5" />
+                <span v-if="doc.phone" class="text-p-sm text-ink-gray-6">{{
+                  doc.phone
+                }}</span>
+                <FeatherIcon
+                  name="chevron-right"
+                  class="h-4 w-4 text-ink-gray-5"
+                />
               </span>
             </button>
           </li>
         </ul>
+      </section>
+
+      <!-- Hoạt động: Ghi chú + Công việc gắn BV này (port FCRM Note + CRM Task → AntMed). -->
+      <section class="px-6 pb-10" :aria-label="__('Hoạt động bệnh viện')">
+        <AntmedActivityPanel
+          reference-doctype="AntMed Hospital"
+          :reference-docname="hospital.data.name"
+        />
       </section>
     </template>
   </main>
@@ -135,6 +171,7 @@ import { computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Badge, Button, FeatherIcon, toast } from 'frappe-ui'
 import LoadingIndicator from '@/components/Icons/LoadingIndicator.vue'
+import AntmedActivityPanel from '@/components/Antmed/AntmedActivityPanel.vue'
 import { getHospital, RANK_THEME, CONTRACT_STATUS_THEME } from '@/data/antmed'
 
 const props = defineProps({

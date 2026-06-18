@@ -40,11 +40,11 @@ describe('AntMed FE Customer 360° (M01 R2) — routes', () => {
     )
   })
 
-  it('KHÔNG đụng route Frappe CRM gốc (Leads/Deals/Contacts/Organizations còn nguyên)', () => {
-    expect(routerSrc).toMatch(/name:\s*['"]Leads['"]/)
-    expect(routerSrc).toMatch(/name:\s*['"]Deals['"]/)
-    expect(routerSrc).toMatch(/name:\s*['"]Contacts['"]/)
-    expect(routerSrc).toMatch(/name:\s*['"]Organizations['"]/)
+  it('Phase 2 (bỏ UI CRM gốc): route Frappe CRM (Leads/Deals/Contacts/Organizations) ĐÃ GỠ', () => {
+    expect(routerSrc).not.toMatch(/name:\s*['"]Leads['"]/)
+    expect(routerSrc).not.toMatch(/name:\s*['"]Deals['"]/)
+    expect(routerSrc).not.toMatch(/name:\s*['"]Contacts['"]/)
+    expect(routerSrc).not.toMatch(/name:\s*['"]Organizations['"]/)
   })
 
   it('route /antmed R1 (AntmedHome) vẫn còn', () => {
@@ -54,10 +54,10 @@ describe('AntMed FE Customer 360° (M01 R2) — routes', () => {
 
 describe('AntMed FE Customer 360° (M01 R2) — resource naming contract', () => {
   it('data/antmed.js expose list_hospitals / get_hospital / list_doctors / get_doctor', () => {
-    expect(dataSrc).toMatch(/url:\s*['"]crm\.api\.antmed\.customer\.list_hospitals['"]/)
-    expect(dataSrc).toMatch(/url:\s*['"]crm\.api\.antmed\.customer\.get_hospital['"]/)
-    expect(dataSrc).toMatch(/url:\s*['"]crm\.api\.antmed\.customer\.list_doctors['"]/)
-    expect(dataSrc).toMatch(/url:\s*['"]crm\.api\.antmed\.customer\.get_doctor['"]/)
+    expect(dataSrc).toMatch(/url:\s*['"]antmed_crm\.api\.antmed\.customer\.list_hospitals['"]/)
+    expect(dataSrc).toMatch(/url:\s*['"]antmed_crm\.api\.antmed\.customer\.get_hospital['"]/)
+    expect(dataSrc).toMatch(/url:\s*['"]antmed_crm\.api\.antmed\.customer\.list_doctors['"]/)
+    expect(dataSrc).toMatch(/url:\s*['"]antmed_crm\.api\.antmed\.customer\.get_doctor['"]/)
   })
 
   it('AntmedHospitalList gọi đúng url list_hospitals (qua resource layer)', () => {
@@ -82,15 +82,18 @@ describe('AntMed FE Customer 360° (M01 R2) — grep gate (di sản stack cũ = 
     }
   })
 
-  it('KHÔNG dùng namespace sai antmed_crm.api (app này in-place = crm.api.antmed)', () => {
-    for (const src of allFiles) {
-      expect(src).not.toMatch(/antmed_crm\.api/)
-    }
+  it('Dùng ĐÚNG namespace antmed_crm.api.antmed (app cài = antmed_crm; gọi crm.api.* → AppNotInstalledError)', () => {
+    // App cài thật = antmed_crm → resource url PHẢI là antmed_crm.api.antmed.* (không phải crm.api.*).
+    expect(dataSrc).toMatch(/url:\s*['"]antmed_crm\.api\.antmed/)
+    expect(dataSrc).not.toMatch(/url:\s*['"]crm\.api\.antmed/) // không còn namespace cũ
   })
 
   it('KHÔNG dùng createListResource cho endpoint trả dict bọc {data,total_count}', () => {
     // R2 chốt: list trả dict bọc → createResource (đọc r.data.data), KHÔNG createListResource.
-    expect(dataSrc).not.toMatch(/createListResource/)
+    // Khớp LỆNH GỌI (có dấu '(') + dòng import — tránh "đỗ giả" khi tên chỉ xuất hiện
+    // trong comment giải thích (vd "KHÔNG createListResource").
+    expect(dataSrc).not.toMatch(/createListResource\s*\(/)
+    expect(dataSrc).not.toMatch(/import[^\n]*\bcreateListResource\b/)
   })
 
   it('KHÔNG raw frappe.client.* (lookup phải qua endpoint permission-aware)', () => {

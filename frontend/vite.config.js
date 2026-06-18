@@ -18,32 +18,32 @@ export default defineConfig(async ({ mode }) => {
         },
         manifest: {
           display: 'standalone',
-          name: 'Frappe CRM',
-          short_name: 'Frappe CRM',
+          name: 'AntMed CRM',
+          short_name: 'AntMed CRM',
           start_url: '/crm',
           description:
             'Modern & 100% Open-source CRM tool to supercharge your sales operations',
           icons: [
             {
-              src: '/assets/crm/manifest/manifest-icon-192.maskable.png',
+              src: '/assets/antmed_crm/manifest/manifest-icon-192.maskable.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/assets/crm/manifest/manifest-icon-192.maskable.png',
+              src: '/assets/antmed_crm/manifest/manifest-icon-192.maskable.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'maskable',
             },
             {
-              src: '/assets/crm/manifest/manifest-icon-512.maskable.png',
+              src: '/assets/antmed_crm/manifest/manifest-icon-512.maskable.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/assets/crm/manifest/manifest-icon-512.maskable.png',
+              src: '/assets/antmed_crm/manifest/manifest-icon-512.maskable.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable',
@@ -82,7 +82,7 @@ export default defineConfig(async ({ mode }) => {
       lucideIcons: true,
       jinjaBootData: true,
       buildConfig: {
-        indexHtmlPath: '../crm/www/crm.html',
+        indexHtmlPath: '../antmed_crm/www/crm.html',
         emptyOutDir: true,
         sourcemap: true,
       },

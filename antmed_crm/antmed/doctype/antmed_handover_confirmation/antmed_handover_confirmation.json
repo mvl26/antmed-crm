@@ -1,0 +1,48 @@
+{
+ "actions": [],
+ "autoname": "AM-HC-.YYYY.-.#####",
+ "creation": "2026-06-18 12:30:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "is_submittable": 1,
+ "field_order": [
+  "naming_series",
+  "delivery",
+  "document_bundle",
+  "hospital_contact",
+  "column_break_sig",
+  "signed_at",
+  "signature_file",
+  "hash_sha256"
+ ],
+ "fields": [
+  {"default": "AM-HC-.YYYY.-.#####", "fieldname": "naming_series", "fieldtype": "Select", "label": "Series", "options": "AM-HC-.YYYY.-.#####"},
+  {"fieldname": "delivery", "fieldtype": "Link", "in_list_view": 1, "in_standard_filter": 1, "label": "Phiếu giao", "options": "AntMed Delivery"},
+  {"fieldname": "document_bundle", "fieldtype": "Link", "label": "Bundle chứng từ", "options": "AntMed Document"},
+  {"fieldname": "hospital_contact", "fieldtype": "Data", "in_list_view": 1, "label": "Người nhận (BV)"},
+  {"fieldname": "column_break_sig", "fieldtype": "Column Break"},
+  {"fieldname": "signed_at", "fieldtype": "Datetime", "label": "Ký lúc", "read_only": 1},
+  {"fieldname": "signature_file", "fieldtype": "Attach Image", "label": "Chữ ký"},
+  {"fieldname": "hash_sha256", "fieldtype": "Data", "label": "SHA256", "no_copy": 1, "read_only": 1}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-18 12:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "AntMed",
+ "name": "AntMed Handover Confirmation",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {"amend": 1, "cancel": 1, "create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "submit": 1, "write": 1},
+  {"amend": 1, "cancel": 1, "create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Quản lý", "share": 1, "submit": 1, "write": 1},
+  {"create": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "NV kinh doanh", "share": 1, "submit": 1, "write": 1},
+  {"print": 1, "read": 1, "report": 1, "role": "Thủ kho"}
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "delivery,hospital_contact",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

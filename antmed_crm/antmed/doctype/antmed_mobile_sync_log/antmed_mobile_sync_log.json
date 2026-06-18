@@ -1,0 +1,36 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-06-18 16:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["user", "direction", "doctype_synced", "column_break_s", "record_count", "status", "ts", "error_log"],
+ "fields": [
+  {"fieldname": "user", "fieldtype": "Link", "in_list_view": 1, "in_standard_filter": 1, "label": "Người dùng", "options": "User"},
+  {"fieldname": "direction", "fieldtype": "Select", "in_list_view": 1, "in_standard_filter": 1, "label": "Chiều", "options": "Pull\nPush"},
+  {"fieldname": "doctype_synced", "fieldtype": "Data", "label": "DocType"},
+  {"fieldname": "column_break_s", "fieldtype": "Column Break"},
+  {"fieldname": "record_count", "fieldtype": "Int", "in_list_view": 1, "label": "Số bản ghi"},
+  {"fieldname": "status", "fieldtype": "Select", "in_list_view": 1, "in_standard_filter": 1, "label": "Trạng thái", "options": "OK\nConflict\nFailed"},
+  {"fieldname": "ts", "fieldtype": "Datetime", "label": "Thời điểm", "default": "now"},
+  {"fieldname": "error_log", "fieldtype": "Small Text", "label": "Lỗi"}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-18 16:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "AntMed",
+ "name": "AntMed Mobile Sync Log",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1},
+  {"export": 1, "print": 1, "read": 1, "report": 1, "role": "Quản lý"},
+  {"read": 1, "report": 1, "role": "NV kinh doanh"}
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "user,direction,status",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}

@@ -5,7 +5,7 @@ import path from 'path'
 // router.js. Kiểm bằng nội dung file (grep nhẹ), KHÔNG cần e2e.
 //
 // ⚠️ M11 FE Slice 2: AntmedHome.vue ĐÃ rewrite từ health-widget → layout dashboard A1
-// (gọi crm.api.antmed.dashboard.overview, KHÔNG còn health.ping). Smoke health.ping R1
+// (gọi antmed_crm.api.antmed.dashboard.overview, KHÔNG còn health.ping). Smoke health.ping R1
 // nay test ở: BE crm/tests/test_antmed_bootstrap.py (ping()) + FE data/antmed.js export
 // getAntmedHealth + suite antmedDashboard.test.js. Assertion AntmedHome bên dưới cập nhật
 // theo contract MỚI (overview) — KHÔNG mất coverage health.ping.
@@ -29,11 +29,11 @@ describe('AntMed FE bootstrap (M01 R1)', () => {
     )
   })
 
-  it('KHÔNG đụng route Frappe CRM gốc (Leads/Deals/Contacts/Organizations vẫn còn)', () => {
-    expect(routerSrc).toMatch(/name:\s*['"]Leads['"]/)
-    expect(routerSrc).toMatch(/name:\s*['"]Deals['"]/)
-    expect(routerSrc).toMatch(/name:\s*['"]Contacts['"]/)
-    expect(routerSrc).toMatch(/name:\s*['"]Organizations['"]/)
+  it('Phase 2 (bỏ UI CRM gốc): route Frappe CRM (Leads/Deals/Contacts/Organizations) ĐÃ GỠ', () => {
+    expect(routerSrc).not.toMatch(/name:\s*['"]Leads['"]/)
+    expect(routerSrc).not.toMatch(/name:\s*['"]Deals['"]/)
+    expect(routerSrc).not.toMatch(/name:\s*['"]Contacts['"]/)
+    expect(routerSrc).not.toMatch(/name:\s*['"]Organizations['"]/)
   })
 
   it('AntmedHome.vue (Slice 2) gọi resource dashboard.overview qua data layer', () => {
@@ -41,13 +41,12 @@ describe('AntMed FE bootstrap (M01 R1)', () => {
     // KHÔNG tự createResource health.ping nữa. Health.ping vẫn callable + test ở BE + data layer.
     expect(pageSrc).toMatch(/getDashboardOverview/)
     const dataSrc = readFileSync(path.join(srcDir, 'data/antmed.js'), 'utf8')
-    expect(dataSrc).toMatch(/url:\s*['"]crm\.api\.antmed\.dashboard\.overview['"]/)
+    expect(dataSrc).toMatch(/url:\s*['"]antmed_crm\.api\.antmed\.dashboard\.overview['"]/)
   })
 
   it('AntmedHome.vue KHÔNG dùng axios/TanStack/api-ts layer (di sản stack cũ)', () => {
     expect(pageSrc).not.toMatch(/axios/)
     expect(pageSrc).not.toMatch(/@tanstack\/vue-query/)
     expect(pageSrc).not.toMatch(/from ['"]@\/api\//)
-    expect(pageSrc).not.toMatch(/antmed_crm\.api/)
   })
 })

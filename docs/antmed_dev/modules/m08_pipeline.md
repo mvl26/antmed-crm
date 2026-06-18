@@ -4,7 +4,7 @@
 |---|---|
 | Module folder | `crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) — DocType AntMed mới đặt ở `crm/antmed/doctype/<snake>/` |
 | Mở rộng core CRM | `crm/fcrm/doctype/crm_lead/` + `crm/fcrm/doctype/crm_deal/` (chỉ THÊM Custom Field qua fixtures — **KHÔNG sửa JSON gốc**) |
-| Code path BE | `crm/api/antmed/pipeline.py` → đường gọi `crm.api.antmed.pipeline.<fn>` · business rules ở `crm/antmed/pipeline_hooks.py` wire qua `doc_events` |
+| Code path BE | `crm/api/antmed/pipeline.py` → đường gọi `antmed_crm.api.antmed.pipeline.<fn>` · business rules ở `crm/antmed/pipeline_hooks.py` wire qua `doc_events` |
 | FE pages | `frontend/src/pages/AntmedPipeline*.vue` + route `/antmed/pipeline`, `/antmed/pipeline/forecast`, `/antmed/tenders`, `/antmed/tenders/:name` |
 | Wave (PLAN) | **W4 — Tăng trưởng & kiểm soát** (Phase 3) |
 | Role chính (VI) | `NV kinh doanh`, `Quản lý` · [PLANNED] `Trưởng KD` / `CEO` (xem §4, §7 — đề xuất role VI mới) |
@@ -124,7 +124,7 @@ M08 có **một** state machine cho `AntMed Tender` (gói thầu) = **Frappe-nat
 
 > File: `crm/api/antmed/pipeline.py`. Mọi hàm `@frappe.whitelist(methods=["GET"|"POST"])`, **type-annotated** (`crm/hooks.py:28`), trả **RAW dict/list** (KHÔNG `_ok/_err` envelope). Lỗi nghiệp vụ = `frappe.throw(_("BR-M08-..."))`. List endpoint giữ invariant **count == rows** (`get_list(pluck=…, limit_page_length=0)` để đếm, không cắt bởi page_length).
 
-| Endpoint (`crm.api.antmed.pipeline.<fn>`) | Verb | Mô tả |
+| Endpoint (`antmed_crm.api.antmed.pipeline.<fn>`) | Verb | Mô tả |
 |---|---|---|
 | `list_pipeline` | GET | List `CRM Deal` (lọc các deal có `antmed_pipeline_stage`) cho kanban — trả `{data, total_count}`; mỗi item: `name`, `organization`/`antmed_hospital`, `antmed_pipeline_stage`, `antmed_win_probability_pct`, `antmed_forecast_value`, `deal_owner`. **count==rows**. |
 | `get_pipeline_board` | GET | Trả deal **gom theo giai đoạn** cho kanban: `{ "Tiếp cận": [...], "Khảo sát": [...], ... }`. Tổng số item = count (invariant). |
@@ -168,7 +168,7 @@ doc_events = {
 
 ## 7. UI
 
-> Vue 3 + frappe-ui SPA. Route APPEND vào `frontend/src/router.js` (lazy). Gọi `crm.api.antmed.pipeline.*`. KHÔNG đụng route/page CRM gốc (Leads/Deals gốc vẫn chạy song song). Nguồn màn hình: `AntMed_CRM_UI_Design.md` hàng 3 dashboard (Funnel: Lead→Khảo sát→Báo giá→Dự thầu→Trúng) + bảng module #8 (Kanban pipeline, Báo giá; role NV KD, Trưởng KD, CEO).
+> Vue 3 + frappe-ui SPA. Route APPEND vào `frontend/src/router.js` (lazy). Gọi `antmed_crm.api.antmed.pipeline.*`. KHÔNG đụng route/page CRM gốc (Leads/Deals gốc vẫn chạy song song). Nguồn màn hình: `AntMed_CRM_UI_Design.md` hàng 3 dashboard (Funnel: Lead→Khảo sát→Báo giá→Dự thầu→Trúng) + bảng module #8 (Kanban pipeline, Báo giá; role NV KD, Trưởng KD, CEO).
 
 ### Routes (THÊM mới — lazy)
 
@@ -230,7 +230,7 @@ doc_events = {
 
 **No-regression:** `test_antmed_bootstrap` + `test_antmed_customer` + 4 test gốc CRM (Lead/Task/Territory/org_hierarchy) còn xanh; pipeline/kanban **Deal gốc** không đổi hành vi.
 
-**FE (vitest + build):** `yarn vitest run` xanh — 4 route mới tồn tại (path/name/lazy), page gọi đúng `crm.api.antmed.pipeline.*`, kanban gọi `get_pipeline_board`+`move_stage`, KHÔNG `antmed_crm.api`/axios/tanstack; `yarn build` emit chunk `AntmedPipeline*` không vỡ.
+**FE (vitest + build):** `yarn vitest run` xanh — 4 route mới tồn tại (path/name/lazy), page gọi đúng `antmed_crm.api.antmed.pipeline.*`, kanban gọi `get_pipeline_board`+`move_stage`, KHÔNG `antmed_crm.api`/axios/tanstack; `yarn build` emit chunk `AntmedPipeline*` không vỡ.
 
 **Pixel (sau USER reload, Playwright cổng 80 login):** `/antmed/pipeline` render kanban thật, kéo-thả cập nhật stage (API 200); `/antmed/tenders` list + detail workflow action; `/antmed/pipeline/forecast` hiện tổng trọng số; 0 console error.
 

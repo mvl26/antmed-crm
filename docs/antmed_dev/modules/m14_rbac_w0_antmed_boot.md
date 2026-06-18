@@ -129,7 +129,7 @@ roles = frappe.get_roles()
 if any(role in ["System Manager", "Sales User", "Sales Manager"] for role in roles):
     return True
 # [W0-2 ADDITIVE] OR-thêm nhánh AntMed — KHÔNG sửa nhánh CRM trên
-from crm.api.antmed.rbac import is_antmed_user
+from antmed_crm.api.antmed.rbac import is_antmed_user
 if is_antmed_user():
     return True
 return False
@@ -143,7 +143,7 @@ return False
 
 ```python
 # crm/api/session.py
-from crm.api.antmed.rbac import ANTMED_ALLOWED_ROLES  # top-level OK: rbac.py không import ngược ở top-level
+from antmed_crm.api.antmed.rbac import ANTMED_ALLOWED_ROLES  # top-level OK: rbac.py không import ngược ở top-level
 
 CRM_ALLOWED_ROLES = ["System Manager", "Sales Manager", "Sales User"]  # GIỮ NGUYÊN — không đổi
 
@@ -207,7 +207,7 @@ if (isLoggedIn && to.name !== 'Not Permitted') {
 
 ```python
 # crm/www/crm.py — trong get_boot() dict, THÊM:
-from crm.api.antmed.rbac import ANTMED_ALLOWED_ROLES, is_antmed_user
+from antmed_crm.api.antmed.rbac import ANTMED_ALLOWED_ROLES, is_antmed_user
 # ...
 "antmed_roles": ANTMED_ALLOWED_ROLES,
 "is_antmed_user": is_antmed_user(),
@@ -229,7 +229,7 @@ export const antmedRoles = window.antmed_roles || []
 
 ## API
 
-**W0-2 KHÔNG thêm endpoint whitelist nghiệp vụ mới.** `rbac.py` chứa helper **nội bộ** (không `@frappe.whitelist` — chỉ gọi server-side bởi gate/boot). Endpoint hiện hữu giữ shape RAW dict/list, không envelope (`crm.api.antmed.health.ping`, `crm.api.antmed.customer.*`). Không đụng quy ước Frappe-standard API (RAW, in-handler `frappe.throw` cho lỗi nghiệp vụ).
+**W0-2 KHÔNG thêm endpoint whitelist nghiệp vụ mới.** `rbac.py` chứa helper **nội bộ** (không `@frappe.whitelist` — chỉ gọi server-side bởi gate/boot). Endpoint hiện hữu giữ shape RAW dict/list, không envelope (`antmed_crm.api.antmed.health.ping`, `antmed_crm.api.antmed.customer.*`). Không đụng quy ước Frappe-standard API (RAW, in-handler `frappe.throw` cho lỗi nghiệp vụ).
 
 > **Invariant count == rows**: W0-2 KHÔNG đổi `permission_query_conditions` (chưa wiring cho Hospital/Doctor ở R2 — RBAC qua DocPerm). Số rows list endpoint không đổi hành vi. BR-13 data-scope vẫn `[ROADMAP]` M14.
 
@@ -350,7 +350,7 @@ cd frontend && yarn vitest run && yarn build
   - (+) NV KD AntMed boot được SPA mà không cần Role CRM; CRM-pure user không đổi hành vi (no-regression).
   - (+) Single-source ở BE → đổi danh sách Role AntMed 1 nơi; FE đọc cờ, không drift.
   - (−) **Buộc đụng 3 core file** (`crm/api/__init__.py`, `crm/api/session.py`, `frontend/src/router.js`) — đây là tầng gate HTML/session/router, KHÔNG có extension-point/hook nào khác để chèn (Frappe www `get_context` gọi thẳng `check_app_permission`; session helper gọi thẳng; FE guard là 1 `beforeEach` tập trung). **Cam kết**: chỉ EXTEND (OR-thêm nhánh), KHÔNG sửa return/AND nhánh CRM gốc. Diff core tối thiểu, có ADR ghi lý do buộc đụng.
-  - (−) Thêm 1 dependency core→AntMed: `session.py` import `crm.api.antmed.rbac`. Rủi ro circular xử bằng lazy-import trong `is_crm_or_antmed_user` (import `CRM_ALLOWED_ROLES` ngược). `session.py` import `ANTMED_ALLOWED_ROLES` top-level an toàn (rbac.py không import session ở top-level).
+  - (−) Thêm 1 dependency core→AntMed: `session.py` import `antmed_crm.api.antmed.rbac`. Rủi ro circular xử bằng lazy-import trong `is_crm_or_antmed_user` (import `CRM_ALLOWED_ROLES` ngược). `session.py` import `ANTMED_ALLOWED_ROLES` top-level an toàn (rbac.py không import session ở top-level).
 
 ### ADR-M14W0-04: Bootflag `is_antmed_user` (tính sẵn ở BE) làm nguồn cho FE guard — KHÔNG hardcode role ở FE
 - **Status**: Accepted

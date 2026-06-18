@@ -4,7 +4,7 @@
 |---|---|
 | Module folder | `crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) |
 | DocType folder | `crm/antmed/doctype/antmed_integration_setting/`, `crm/antmed/doctype/antmed_integration_log/` |
-| Code path BE | `crm/api/antmed/integrations.py` (đường gọi `crm.api.antmed.integrations.<fn>`) + connector helpers trong `crm/antmed/integrations/` (zalo, sms, bank, muasamcong, accounting, his) + module hooks `crm/antmed/integrations/hooks.py` (scheduler/retry) |
+| Code path BE | `crm/api/antmed/integrations.py` (đường gọi `antmed_crm.api.antmed.integrations.<fn>`) + connector helpers trong `crm/antmed/integrations/` (zalo, sms, bank, muasamcong, accounting, his) + module hooks `crm/antmed/integrations/hooks.py` (scheduler/retry) |
 | FE pages | `frontend/src/pages/AntmedIntegrationSetting.vue`, `frontend/src/pages/AntmedIntegrationLog.vue` + route `/antmed/admin/integrations`, `/antmed/admin/integration-logs` |
 | Wave (PLAN) | **W4 — Tăng trưởng & kiểm soát** |
 | Role chính (VI) | `Quản lý` (admin tích hợp). Đề xuất role chuyên trách `Quản trị hệ thống` *(VI — [PLANNED], thay cho `AM System Admin` scaffold)* |
@@ -97,7 +97,7 @@ Vị trí trong 14 module: M13 nằm cuối DAG (W4), **phụ thuộc M06 + M09*
 
 > File: `crm/api/antmed/integrations.py`. Mọi hàm `@frappe.whitelist(methods=[...])`, **type-annotated** (`crm/hooks.py:28`), trả **RAW dict/list** (KHÔNG `_ok/_err` envelope). Lỗi nghiệp vụ/bảo mật = `frappe.throw(_("BR-INT-xx: …tiếng Việt"))`. Webhook vào dùng `allow_guest=True` + verify chữ ký (KHÔNG dựa session).
 
-| Endpoint (`crm.api.antmed.integrations.*`) | Verb | Mô tả |
+| Endpoint (`antmed_crm.api.antmed.integrations.*`) | Verb | Mô tả |
 |---|---|---|
 | `get_settings` | GET | Trả `AntMed Integration Setting` **đã mask** mọi field Password (chỉ `bool` "đã cấu hình" + non-secret) — BR-INT-01. Chỉ role admin. |
 | `update_settings` | POST | Cập nhật Setting (ghi credential qua `set_password`); chỉ role admin; ghi audit. |
@@ -143,7 +143,7 @@ Vị trí trong 14 module: M13 nằm cuối DAG (W4), **phụ thuộc M06 + M09*
 | `/antmed/admin/integration-logs` | `AntmedIntegrationLogs` | `pages/AntmedIntegrationLog.vue` | `Quản lý`/`Quản trị hệ thống` | Bảng log: lọc connector + trạng thái + ngày; cột `integration_name/direction/status/retry_count/ts`; click → drawer detail (payload đã redact) + nút "Gửi lại". Gọi `list_integration_logs`/`get_integration_log`/`retry_log`. |
 
 - **Always** lazy import; nhãn 100% tiếng Việt qua `__()`; loading/error/empty cho mỗi resource; **không** render secret thô.
-- **Never** gọi `antmed_crm.api.*` (đúng: `crm.api.antmed.integrations.*`); **Never** axios trực tiếp; **Never** đụng route/sidebar CRM gốc.
+- **Never** gọi `crm.api.*` (đúng: `antmed_crm.api.antmed.integrations.*`); **Never** axios trực tiếp; **Never** đụng route/sidebar CRM gốc.
 
 ---
 
@@ -163,7 +163,7 @@ Vị trí trong 14 module: M13 nằm cuối DAG (W4), **phụ thuộc M06 + M09*
 ## 9. ADRs
 
 **Chưa có ADR riêng cho M13** (sẽ ghi khi land W4). Kế thừa + tham chiếu:
-- **ADR-M01-01** (in-place app `crm`) + **ADR-M01-02** (prefix `AntMed `) — áp dụng: connector/Setting/Log đều prefix `AntMed `, path `crm.api.antmed.integrations.*`.
+- **ADR-M01-01** (in-place app `crm`) + **ADR-M01-02** (prefix `AntMed `) — áp dụng: connector/Setting/Log đều prefix `AntMed `, path `antmed_crm.api.antmed.integrations.*`.
 - **DEC-2026-06-17-A** (role tiếng Việt) — role admin tích hợp = `Quản lý` (mở rộng `Quản trị hệ thống` [PLANNED]).
 - **D1 native-lite** — dispatcher/worker thao tác trên DocType **native M06/M09** (`AntMed E-Invoice`, `AntMed Order`, `AntMed AR Entry`), KHÔNG dùng ERPNext `Sales Invoice` (scaffold cũ tham chiếu `Sales Invoice` → ADAPT bỏ).
 
@@ -176,7 +176,7 @@ Vị trí trong 14 module: M13 nằm cuối DAG (W4), **phụ thuộc M06 + M09*
 
 Theo SPEC §6 — một slice "xong" khi:
 1. **BE**: `bench --site miyano run-tests --module crm.tests.test_antmed_integrations` → **`Ran N OK`**, 0 fail. TC tối thiểu (slice 13.1): 2 DocType tồn tại sau migrate + field tối thiểu; `get_settings` **không** trả secret thô (BR-INT-01); `list_integration_logs` trả `{data,total_count}` với **`len(data)==total_count`** khi không phân trang (count==rows); thiếu read-perm → `frappe.PermissionError`; `_log()` ghi đúng `status/direction`.
-2. **FE**: `yarn vitest run` xanh — 2 route admin tồn tại (path/name/lazy), gọi đúng `crm.api.antmed.integrations.*`, KHÔNG `antmed_crm.api`/axios/tanstack, không render secret thô.
+2. **FE**: `yarn vitest run` xanh — 2 route admin tồn tại (path/name/lazy), gọi đúng `antmed_crm.api.antmed.integrations.*`, KHÔNG `antmed_crm.api`/axios/tanstack, không render secret thô.
 3. **Build**: `yarn build` xanh, chunk `Antmed*` không vỡ.
 4. **Pixel** (sau USER reload): `http://miyano/crm/antmed/admin/integrations` render form + mask secret; `/antmed/admin/integration-logs` render bảng + filter + drawer detail; 0 console error; API 200.
 5. **No-regression**: route/test Frappe CRM gốc + module AntMed đã land còn xanh; connector ở `developer_mode` trả mock (không gọi mạng trong test).

@@ -4,7 +4,7 @@
 |---|---|
 | Module folder | `crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) |
 | DocType folder | `crm/antmed/doctype/antmed_document/`, `crm/antmed/doctype/antmed_e_invoice/`, … |
-| Code path BE | `crm/antmed/doctype/<snake>/` + module hooks `doc_events` + `crm/api/antmed/documents.py` (đường gọi `crm.api.antmed.documents.<fn>`) |
+| Code path BE | `crm/antmed/doctype/<snake>/` + module hooks `doc_events` + `crm/api/antmed/documents.py` (đường gọi `antmed_crm.api.antmed.documents.<fn>`) |
 | Wave (PLAN) | **W2 — Chuỗi vận hành lõi** (M04 → **M06** → M09, tuần tự bắt buộc) |
 | Role chính (VI) | `NV chứng từ` *(VI role mới — [PLANNED], xem §4/ADR-M06-03)*, `Kế toán` *([PLANNED])*, `Quản lý`; phụ: `NV kinh doanh` (xem trạng thái bộ chứng từ đơn của mình) |
 | Phụ thuộc | **M02** (Contract — pháp nhân/HĐ), **M03** (Lot CO/CQ/ĐKLH), **M04** (Delivery — nguồn sinh bộ chứng từ) |
@@ -102,7 +102,7 @@ M06 có **2 state machine** (Frappe-native Workflow, fixtures `crm/fixtures/work
 | **BR-03** | **Không phát hành thiếu CO/CQ**: mọi lot của item `requires_cocq=1` phải có CO **và** CQ đính kèm trước khi phát hành bộ chứng từ / HĐĐT. Thiếu → `frappe.throw(_("BR-03: Phải gắn CO/CQ trước khi phát hành: {chips}"))`. | module hooks `doc_events`: `AntMed Document` (hoặc `AntMed E-Invoice`) `before_submit`/`validate` — `crm/antmed/m06/doc_events.py::enforce_cocq_attached` (ADAPT từ scaffold `enforce_cocq_attached`). |
 | **BR-04** | **HĐĐT immutable sau phát hành**: sau khi `AntMed E-Invoice` submit (đã đẩy provider/có `ma_cqt`), **cấm sửa/hủy** nội dung (số HĐ, tiền, lot). Chỉ điều chỉnh qua HĐĐT điều chỉnh/thay thế mới. | `AntMed E-Invoice` submittable (`docstatus=1` khóa field) + controller `on_update_after_submit`/`on_cancel` → `frappe.throw(_("BR-04: HĐĐT đã phát hành không thể sửa/hủy"))`. |
 | **BR-07** | **Không xóa phiếu giao đã ký**: chặn xóa `AntMed Delivery` khi đã có Handover Confirmation/bộ chứng từ đã phát hành. | doc_events `AntMed Delivery.on_trash` (do M04 owner; M06 cung cấp check "có bundle đã phát hành"). Liên-module — xem §6. |
-| **BR-10** | **Audit hash chain**: mỗi lần upload/sửa file chứng từ, phát hành HĐĐT, ghi nhận ký nhận → ghi log có `hash_sha256` (lưu trữ có hiệu lực kiểm toán — `Modules §6` "hash, dấu thời gian, log truy cập"). | lazy-import `crm.api.antmed.audit.write_log` (M14) từ doc_events M06. `hash_sha256` trên `AntMed Document`/`AntMed Handover Confirmation`. |
+| **BR-10** | **Audit hash chain**: mỗi lần upload/sửa file chứng từ, phát hành HĐĐT, ghi nhận ký nhận → ghi log có `hash_sha256` (lưu trữ có hiệu lực kiểm toán — `Modules §6` "hash, dấu thời gian, log truy cập"). | lazy-import `antmed_crm.api.antmed.audit.write_log` (M14) từ doc_events M06. `hash_sha256` trên `AntMed Document`/`AntMed Handover Confirmation`. |
 
 > **BA gate domain (6 câu hỏi feasibility — PLAN dòng 104):** M06 chạm CRM stage *giao hàng/chứng từ*; **có** nghĩa vụ chứng từ + HĐĐT (trọng tâm); **có** truy vết lot (CO/CQ theo lot từ M03); hậu quả data sai = **cao** (pháp lý) → BR-03/BR-04/BR-10 là **gate cứng**, phải có test compliance trước khi cho phát hành.
 
@@ -116,15 +116,15 @@ M06 có **2 state machine** (Frappe-native Workflow, fixtures `crm/fixtures/work
 
 | Endpoint (đề xuất) | Verb | Mô tả |
 |---|---|---|
-| `crm.api.antmed.documents.list_release_queue` | GET | Hàng chờ phát hành: phiếu giao đã xong nhưng chưa đủ bộ chứng từ. Trả `{data, total_count}`; mỗi item: `delivery`, `hospital`, `sales_rep`, `missing_chips` (list), `status`, `date`. **Invariant count==rows**. Filter theo BV/NV/trạng thái (UI_Design §5.1 top bar). |
-| `crm.api.antmed.documents.get_bundle` | GET | Chi tiết 1 bộ chứng từ theo `delivery` hoặc `name`: các file đính kèm + `lines` (lot/CO/CQ status) + `missing_items` + trạng thái HĐĐT. `frappe.has_permission` → `PermissionError`. |
-| `crm.api.antmed.documents.refresh_release_status` | POST | Đối chiếu lại lot↔CO/CQ của 1 Delivery, cập nhật `missing_chips` + `status` (`Thiếu chứng từ`/`Sẵn sàng`). (ADAPT scaffold `refresh_release_status`.) |
-| `crm.api.antmed.documents.attach_cocq` | POST | Gắn file CO/CQ cho 1 lot (kéo-thả hoặc từ kho CO/CQ theo lot). Ghi hash + audit log (BR-10). |
-| `crm.api.antmed.documents.list_cocq_store` | GET | Kho CO/CQ theo cây NCC → Nhãn hàng → Lot (UI_Design §5.3): mỗi file `pdf`, `hash`, `uploaded_at`, số phiếu giao đã gắn. **count==rows**. |
-| `crm.api.antmed.documents.issue_einvoice` | POST | Phát hành HĐĐT cho 1 bundle: gate **BR-03** (đủ CO/CQ), tạo `AntMed E-Invoice`, enqueue job ký+đẩy provider (M13), trả trạng thái. |
-| `crm.api.antmed.documents.list_einvoices` | GET | Danh sách HĐĐT: `provider`, `status`, `ma_cqt`, `signed_at`, `sent_to_email`, `ack_at`. **count==rows**. |
-| `crm.api.antmed.documents.list_handover_review` | GET | Đối soát ký nhận (UI_Design §5.4): phiếu đã gửi BV + trạng thái `Chờ ký`/`Đã ký`/`Phản hồi sai sót`. **count==rows**. |
-| `crm.api.antmed.documents.confirm_handover` | POST | Ghi nhận BV ký nhận: tạo/submit `AntMed Handover Confirmation` (chữ ký + hash + `signed_at`), chuyển bundle → `BV đã ký nhận`. |
+| `antmed_crm.api.antmed.documents.list_release_queue` | GET | Hàng chờ phát hành: phiếu giao đã xong nhưng chưa đủ bộ chứng từ. Trả `{data, total_count}`; mỗi item: `delivery`, `hospital`, `sales_rep`, `missing_chips` (list), `status`, `date`. **Invariant count==rows**. Filter theo BV/NV/trạng thái (UI_Design §5.1 top bar). |
+| `antmed_crm.api.antmed.documents.get_bundle` | GET | Chi tiết 1 bộ chứng từ theo `delivery` hoặc `name`: các file đính kèm + `lines` (lot/CO/CQ status) + `missing_items` + trạng thái HĐĐT. `frappe.has_permission` → `PermissionError`. |
+| `antmed_crm.api.antmed.documents.refresh_release_status` | POST | Đối chiếu lại lot↔CO/CQ của 1 Delivery, cập nhật `missing_chips` + `status` (`Thiếu chứng từ`/`Sẵn sàng`). (ADAPT scaffold `refresh_release_status`.) |
+| `antmed_crm.api.antmed.documents.attach_cocq` | POST | Gắn file CO/CQ cho 1 lot (kéo-thả hoặc từ kho CO/CQ theo lot). Ghi hash + audit log (BR-10). |
+| `antmed_crm.api.antmed.documents.list_cocq_store` | GET | Kho CO/CQ theo cây NCC → Nhãn hàng → Lot (UI_Design §5.3): mỗi file `pdf`, `hash`, `uploaded_at`, số phiếu giao đã gắn. **count==rows**. |
+| `antmed_crm.api.antmed.documents.issue_einvoice` | POST | Phát hành HĐĐT cho 1 bundle: gate **BR-03** (đủ CO/CQ), tạo `AntMed E-Invoice`, enqueue job ký+đẩy provider (M13), trả trạng thái. |
+| `antmed_crm.api.antmed.documents.list_einvoices` | GET | Danh sách HĐĐT: `provider`, `status`, `ma_cqt`, `signed_at`, `sent_to_email`, `ack_at`. **count==rows**. |
+| `antmed_crm.api.antmed.documents.list_handover_review` | GET | Đối soát ký nhận (UI_Design §5.4): phiếu đã gửi BV + trạng thái `Chờ ký`/`Đã ký`/`Phản hồi sai sót`. **count==rows**. |
+| `antmed_crm.api.antmed.documents.confirm_handover` | POST | Ghi nhận BV ký nhận: tạo/submit `AntMed Handover Confirmation` (chữ ký + hash + `signed_at`), chuyển bundle → `BV đã ký nhận`. |
 
 > **Phân biệt 403**: dispatcher-403 (guest) cho tất cả; in-handler `PermissionError` cho `get_bundle`/`confirm_handover`/`issue_einvoice`. Với `list_*`, Frappe permission engine + (về sau) `permission_query_conditions` BR-13 tự lọc — không tồn tại = list rỗng, KHÔNG 403.
 
@@ -141,7 +141,7 @@ M06 có **2 state machine** (Frappe-native Workflow, fixtures `crm/fixtures/work
 
 **Ra khỏi M06 (M06 cấp dữ liệu):**
 - **M06 → M09**: HĐĐT đã phát hành (`AntMed E-Invoice`, `ma_cqt`) là **gốc công nợ AR**. M09 đọc HĐĐT để tạo đơn/AR (BR-14 ở M09). Trạng thái `Đã thanh toán` quay ngược về bundle do M09 cập nhật.
-- **M06 → M13**: `issue_einvoice` enqueue job tới **connector HĐĐT** (Viettel/MISA/VNPT) — ADAPT scaffold `frappe.enqueue("antmed_crm.m13_integrations.einvoice_dispatcher.dispatch")` → native `crm.api.antmed.integrations.einvoice.dispatch` [PLANNED M13]. Cấu hình từ `AntMed E-Invoice Provider` (Single). Auto-fallback provider (README dòng 127).
+- **M06 → M13**: `issue_einvoice` enqueue job tới **connector HĐĐT** (Viettel/MISA/VNPT) — ADAPT scaffold `frappe.enqueue("antmed_crm.m13_integrations.einvoice_dispatcher.dispatch")` → native `antmed_crm.api.antmed.integrations.einvoice.dispatch` [PLANNED M13]. Cấu hình từ `AntMed E-Invoice Provider` (Single). Auto-fallback provider (README dòng 127).
 - **M06 → M14 (audit)**: mọi upload/phát hành/ký nhận → `write_log` hash-chain (BR-10).
 
 **Compliance gate (cốt lõi):** BR-03 chặn `issue_einvoice`/submit bundle khi thiếu CO/CQ → đảm bảo "không giao/không phát hành thiếu giấy". Đây là gate domain M06.
@@ -152,7 +152,7 @@ M06 có **2 state machine** (Frappe-native Workflow, fixtures `crm/fixtures/work
 
 ## 7. UI
 
-> Vue 3 + frappe-ui SPA. Persona chính = **NV chứng từ / Pháp lý** (UI_Design §5, desktop-first). Route `/antmed/*` APPEND vào `frontend/src/router.js` (lazy). Nhãn 100% tiếng Việt qua `__()`. KHÔNG đụng route CRM gốc. Gọi đúng `crm.api.antmed.documents.*` (KHÔNG `antmed_crm.api.*`, KHÔNG axios).
+> Vue 3 + frappe-ui SPA. Persona chính = **NV chứng từ / Pháp lý** (UI_Design §5, desktop-first). Route `/antmed/*` APPEND vào `frontend/src/router.js` (lazy). Nhãn 100% tiếng Việt qua `__()`. KHÔNG đụng route CRM gốc. Gọi đúng `antmed_crm.api.antmed.documents.*` (KHÔNG `crm.api.*`, KHÔNG axios).
 
 ### Routes (THÊM mới — lazy import)
 
@@ -222,7 +222,7 @@ M06 có **2 state machine** (Frappe-native Workflow, fixtures `crm/fixtures/work
 7. Permission: user thiếu read gọi `get_bundle` → `frappe.PermissionError`.
 - **No-regression**: `test_antmed_bootstrap` (6) + `test_antmed_customer` + 4 test gốc CRM (Lead/Task/Organization/Territory) vẫn xanh.
 
-**FE (vitest — xanh):** `frontend/tests/unit/antmedDocuments.test.js` — route mới tồn tại (path/name/lazy); page gọi đúng `crm.api.antmed.documents.*`; KHÔNG `antmed_crm.api`/axios/tanstack; route CRM gốc còn. `yarn vitest run` xanh + `yarn build` emit chunk Antmed* không vỡ.
+**FE (vitest — xanh):** `frontend/tests/unit/antmedDocuments.test.js` — route mới tồn tại (path/name/lazy); page gọi đúng `antmed_crm.api.antmed.documents.*`; KHÔNG `antmed_crm.api`/axios/tanstack; route CRM gốc còn. `yarn vitest run` xanh + `yarn build` emit chunk Antmed* không vỡ.
 
 **Pixel / e2e (sau USER reload):** Playwright trên `http://miyano/crm/antmed/documents/queue` (cổng 80, login): list phiếu thiếu chứng từ render, chip đỏ đúng, drawer kéo-thả, modal phát hành HĐĐT; 0 console error; API 200.
 

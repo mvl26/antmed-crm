@@ -3,7 +3,7 @@
 | Mục | Giá trị |
 |---|---|
 | Module folder | `crm/antmed/` (module Frappe **`AntMed`**) — **M11 KHÔNG thêm DocType**, chỉ thêm API + (tùy chọn) scheduler |
-| Code path | `crm/api/antmed/dashboard.py` (đường gọi `crm.api.antmed.dashboard.<fn>`) · scheduler `crm/antmed/m11_dashboard.py` (tùy chọn digest) |
+| Code path | `crm/api/antmed/dashboard.py` (đường gọi `antmed_crm.api.antmed.dashboard.<fn>`) · scheduler `crm/antmed/m11_dashboard.py` (tùy chọn digest) |
 | FE pages | **FE Slice 2 (NOW):** viết lại `frontend/src/pages/AntmedHome.vue` (route `/antmed`, shell A1). **W4 [PLANNED]:** `AntmedDashboardCEO.vue`, `AntmedDashboardWarehouse.vue`, `AntmedDashboardInstrument.vue`, `AntmedDashboardSLA.vue`, `AntmedReportCompliance.vue` · route `/antmed/dashboard*`, `/antmed/reports/compliance` |
 | Wave (PLAN) | **FE Slice 2 (shell A1 + `overview()` count thật) = BUILDABLE NOW** (chỉ M01) · phần đầy đủ ở **W4 — Tăng trưởng & kiểm soát** |
 | Role chính (VI) | `Quản lý` (CEO/BGĐ + Trưởng phòng KD) · đọc-có-scope cho `NV kinh doanh` / `Thủ kho` *(xem §4)* |
@@ -14,7 +14,7 @@
 
 > **FE Slice 2 (`overview()` + shell A1 trên `AntmedHome`) = spec đầy đủ, codeable ngay** (xem §5.A · §7.A · §8.A · ADR-M11-03). Phần dưới đây (`ceo_kpis` và các dashboard chuyên đề) vẫn ↓
 > **Trạng thái: [PLANNED — chưa code]**
-> Module này **chưa được code** trong app `crm`. Toàn bộ schema/API/widget dưới đây là **DESIGN (đề xuất)** để factory build, ground trên `../../antmed_crm/docs/AntMed_CRM_Modules.md §11`, `../PLAN_AntMed_CRM.md` (hàng M11), `../../antmed_crm/docs/AntMed_CRM_UI_Design.md §1` (widget CEO) và scaffold tham chiếu `antmed_crm/m11_dashboard/` (bản app-riêng cũ — đã **adapt**: `AM `→`AntMed `, bỏ ERPNext-reuse `Sales Invoice`/`Delivery Note`/`AM Instrument Loan` → native-lite tương đương; `antmed_crm.api.dashboard`→`crm.api.antmed.dashboard`). M11 nằm cuối DAG → **chỉ build được khi M02/M04/M09/M10 đã có DocType native** để query; nếu build sớm, từng endpoint phải **gate theo độ sẵn sàng** của module nguồn (xem §6 + §8).
+> Module này **chưa được code** trong app `crm`. Toàn bộ schema/API/widget dưới đây là **DESIGN (đề xuất)** để factory build, ground trên `../../antmed_crm/docs/AntMed_CRM_Modules.md §11`, `../PLAN_AntMed_CRM.md` (hàng M11), `../../antmed_crm/docs/AntMed_CRM_UI_Design.md §1` (widget CEO) và scaffold tham chiếu `antmed_crm/m11_dashboard/` (bản app-riêng cũ — đã **adapt**: `AM `→`AntMed `, bỏ ERPNext-reuse `Sales Invoice`/`Delivery Note`/`AM Instrument Loan` → native-lite tương đương; `antmed_crm.api.dashboard`→`antmed_crm.api.antmed.dashboard`). M11 nằm cuối DAG → **chỉ build được khi M02/M04/M09/M10 đã có DocType native** để query; nếu build sớm, từng endpoint phải **gate theo độ sẵn sàng** của module nguồn (xem §6 + §8).
 
 ---
 
@@ -108,7 +108,7 @@ M11 **không enforce BR nghiệp vụ "cứng"** (không validate/chặn ghi —
 def overview() -> dict:
     """KPI nền dashboard điều hành (A1) — chỉ đếm M01 đã land.
 
-    Đường gọi: crm.api.antmed.dashboard.overview (GET, yêu cầu session).
+    Đường gọi: antmed_crm.api.antmed.dashboard.overview (GET, yêu cầu session).
     Trả RAW dict thuần (KHÔNG envelope _ok/_err).
 
     count == rows (BR-13): đếm bằng len(get_list(pluck="name", limit_page_length=0))
@@ -144,7 +144,7 @@ def overview() -> dict:
 
 ### Dashboard CEO
 
-| Endpoint (`crm.api.antmed.dashboard.*`) | Verb | Mô tả / shape trả (RAW) |
+| Endpoint (`antmed_crm.api.antmed.dashboard.*`) | Verb | Mô tả / shape trả (RAW) |
 |---|---|---|
 | **`overview()`** ✅ **[BUILDABLE NOW — FE Slice 2]** | GET | KPI nền chỉ đếm dữ liệu **M01 đã land** (không phụ thuộc M02–M10) → `{ "hospital_count": int, "doctor_count": int }`. Đếm DƯỚI permission user (count==rows pattern, xem §5.A) — KHÔNG `frappe.db.count`. Đây là endpoint **duy nhất codeable ngay** vì nguồn (`AntMed Hospital`/`AntMed Doctor`) đã tồn tại; các endpoint còn lại `[PLANNED]` chờ module nguồn. Chi tiết: **§5.A**. |
 | `ceo_kpis(date_from, date_to)` | GET | 4 thẻ KPI lớn → `{ "revenue": {...}, "quota_used_pct": float, "sla_ontime_pct": float, "instrument_in_circulation": {...} }`. `revenue` gồm `amount`, `prev_amount`, `delta_pct`, `sparkline: list[float]` (12 tháng). Ground scaffold `ceo_kpis()` (adapt: `Sales Invoice`→`AntMed Order/AR Entry`; `AM Tender Contract Item`→`AntMed Quota Item`; `AM DO Extras`+`Delivery Note`→`AntMed Delivery.sla_status`; `AM Instrument Loan`→`AntMed Instrument Set`). |
@@ -212,7 +212,7 @@ def overview() -> dict:
 
 ## 7. UI
 
-> Vue 3 + frappe-ui SPA. Gọi **đúng** `crm.api.antmed.dashboard.*` qua `createResource` (shape dict bọc / số thuần — KHÔNG để frappe-ui coi response là array). Route mới **APPEND** vào `frontend/src/router.js` (lazy). KHÔNG đụng route CRM gốc. Nhãn 100% tiếng Việt qua `__()`, design token frappe-ui (KHÔNG hex thô), trạng thái loading/error/empty mỗi widget, a11y (aria-live cho số liệu cập nhật). Ground `../../antmed_crm/docs/AntMed_CRM_UI_Design.md §1` (widget CEO) + §11 (ma trận màn-hình→vai trò).
+> Vue 3 + frappe-ui SPA. Gọi **đúng** `antmed_crm.api.antmed.dashboard.*` qua `createResource` (shape dict bọc / số thuần — KHÔNG để frappe-ui coi response là array). Route mới **APPEND** vào `frontend/src/router.js` (lazy). KHÔNG đụng route CRM gốc. Nhãn 100% tiếng Việt qua `__()`, design token frappe-ui (KHÔNG hex thô), trạng thái loading/error/empty mỗi widget, a11y (aria-live cho số liệu cập nhật). Ground `../../antmed_crm/docs/AntMed_CRM_UI_Design.md §1` (widget CEO) + §11 (ma trận màn-hình→vai trò).
 
 ### Routes (THÊM mới — lazy import)
 
@@ -267,7 +267,7 @@ def overview() -> dict:
 
 ### Boundaries UI
 - **Always** lazy import các page mới; `__()` cho nhãn; loading/error/empty mỗi widget; đọc `r.data` đúng shape (dict bọc `{data,total_count}` hoặc số thuần).
-- **Never** gọi `antmed_crm.api.*` (đúng: `crm.api.antmed.dashboard.*`); **Never** axios/tanstack/`frappe.client.*` trực tiếp; **Never** sửa layout/route CRM gốc.
+- **Never** gọi `crm.api.*` (đúng: `antmed_crm.api.antmed.dashboard.*`); **Never** axios/tanstack/`frappe.client.*` trực tiếp; **Never** sửa layout/route CRM gốc.
 
 ---
 
@@ -286,19 +286,19 @@ def overview() -> dict:
     - **Hàng 1 — 4 thẻ KPI** (`cardrow cols-4`): `Số bệnh viện`, `Số bác sỹ` (2 thẻ render số THẬT từ `overview()`), + `Doanh thu tháng`, `Bộ DC lưu hành` (2 thẻ empty-state — mockup A1 có "Doanh thu tháng"/"Quota đã dùng"/"SLA giao PT"/"Bộ DC lưu hành"; ta thay 2 ô đầu bằng KPI thật M01, giữ 2 ô mockup còn lại ở trạng thái "Chưa có dữ liệu"). *(Quyết định card-mapping + vì sao 2/4 thẻ: xem §7.A.)*
     - **Hàng 2 — `cardrow cols-12`:** card "Top 10 Bệnh viện" (empty-state "Chưa có dữ liệu").
     - **Hàng 3 — `cardrow cols-2`:** card "Pipeline gói thầu" + card "⚠ Cảnh báo điều hành" (cả 2 empty-state).
-  - **FE thêm resource** `dashboardOverview()` trong `frontend/src/data/antmed.js` (createResource url `crm.api.antmed.dashboard.overview`, `auto: true`).
+  - **FE thêm resource** `dashboardOverview()` trong `frontend/src/data/antmed.js` (createResource url `antmed_crm.api.antmed.dashboard.overview`, `auto: true`).
   - **Tri-branch mỗi nguồn-có-data:** `loading` = `LoadingIndicator`; `error` = `Badge` đỏ + nút "Thử lại" (`overview.reload()`) + `toast.error(err.messages?.[0] || fallback VN)`; `data` = render 2 KPI thật. (Reuse pattern `AntmedHome` cũ — health-widget đã đúng idiom.)
   - **Empty-state card chưa có nguồn:** render literal tiếng Việt **"Chưa có dữ liệu"** / **"Sắp có"** — KHÔNG fetch, KHÔNG số.
 - **Never (cấm):**
   - ❌ Hardcode bất kỳ số mockup nào: `12,8 tỷ`, `78%`, `94,2%`, `47`, `/3 quá hạn`, top-BV "Bạch Mai 2,1", funnel "Lead — 38", cảnh báo "Chợ Rẫy còn 12 ngày" → **tất cả là dữ liệu giả của mockup**, phải thay bằng count thật (2 KPI) hoặc empty-state (phần còn lại).
-  - ❌ Gọi `antmed_crm.api.*` (đúng: `crm.api.antmed.dashboard.overview`); ❌ axios/tanstack/`frappe.client.*`.
+  - ❌ Gọi `crm.api.*` (đúng: `antmed_crm.api.antmed.dashboard.overview`); ❌ axios/tanstack/`frappe.client.*`.
   - ❌ Đụng route/layout CRM gốc; ❌ thêm route mới (tái dùng route `/antmed` name `AntmedHome` đã có — KHÔNG tạo `AntmedDashboardCEO.vue` ở slice này; trang CEO đầy đủ là Slice 1–2 W4 sau).
   - ❌ `frappe.db.count` ở BE.
 
 **DoD Slice 2 (đo được):**
 1. `git diff frontend/` NON-EMPTY: `AntmedHome.vue` bị viết lại thành layout A1 (KPI row 4 + row 12-col Top10 + row 2-col Pipeline/Cảnh báo).
 2. **BE:** `bench --site miyano run-tests --module crm.tests.test_antmed_dashboard` → `Ran N OK 0 fail` (≥3 case: shape `{hospital_count:int,doctor_count:int}`; whitelist GET + type-annotated + no-envelope; count khớp `get_list` thật / count==rows; degrade — gọi được khi 0 bác sỹ trả `doctor_count==0` không raise).
-3. **FE:** `yarn vitest run` XANH, baseline 154 → **target ≥158** (≥4 case dashboard mới: KPI render số từ resource không hardcode; empty-state literal "Chưa có dữ liệu"/"Sắp có"; tri-branch loading/error/data; gọi đúng url `crm.api.antmed.dashboard.overview`). `yarn build` XANH (chunk emit + `crm.html` regenerate).
+3. **FE:** `yarn vitest run` XANH, baseline 154 → **target ≥158** (≥4 case dashboard mới: KPI render số từ resource không hardcode; empty-state literal "Chưa có dữ liệu"/"Sắp có"; tri-branch loading/error/data; gọi đúng url `antmed_crm.api.antmed.dashboard.overview`). `yarn build` XANH (chunk emit + `crm.html` regenerate).
 4. **No-regression:** `test_antmed_bootstrap` / `test_antmed_customer` / `test_antmed_rbac_boot` / `test_role_rename_idempotent` + CRM gốc (`org_hierarchy`/`crm_lead`/`crm_task`) giữ xanh; vitest baseline 154 không tụt.
 5. **Pixel (sau USER reload BE):** `http://miyano:8000/crm/antmed` render 2 KPI thật (BV=2, BS=0 ở site hiện tại) + các card "Chưa có dữ liệu"; 0 console error; network `overview` 200.
 
@@ -352,7 +352,7 @@ Theo SPEC §6 (DoD một lát cắt = BE test xanh + FE vitest + build + pixel +
    - Số liệu **đúng**: seed dữ liệu nguồn (đơn/quota/giao/lot) → assert giá trị aggregate khớp tính tay (vd `ar_aging_buckets` chia đúng bucket; `ceo_kpis.revenue` đúng tổng kỳ).
    - **Degrade-gracefully:** khi DocType nguồn chưa tồn tại → trả `0`/`[]`, KHÔNG raise 500.
    - **Scope:** user role `Quản lý` thấy toàn bộ; (khi BR-13 bật) `NV kinh doanh` chỉ thấy BV được giao — aggregate co theo scope (count==rows theo từng NV).
-2. **FE:** `cd apps/crm/frontend && yarn vitest run` xanh — route mới tồn tại (path/name/lazy), page gọi **đúng** `crm.api.antmed.dashboard.*`, không `antmed_crm.api`/axios/tanstack; `yarn build` xanh (chunk Antmed* không vỡ).
+2. **FE:** `cd apps/crm/frontend && yarn vitest run` xanh — route mới tồn tại (path/name/lazy), page gọi **đúng** `antmed_crm.api.antmed.dashboard.*`, không `antmed_crm.api`/axios/tanstack; `yarn build` xanh (chunk Antmed* không vỡ).
 3. **Pixel (sau USER reload BE):** `http://miyano/crm/antmed/dashboard` render thẻ KPI + bảng top + cảnh báo với dữ liệu thật; đổi kỳ/bộ lọc → số đổi; click widget → drilldown; 0 console error; API 200.
 4. **No-regression:** route/test Frappe CRM gốc + các module M02/M04/M09/M10 nguồn còn xanh; M11 không thêm `doc_events` nên không đụng luồng ghi.
 5. **Hiệu năng (measure-first):** feeder nặng có số đo (p95) + index nguồn nếu cần; guard chống regression.
@@ -367,5 +367,5 @@ Theo SPEC §6 (DoD một lát cắt = BE test xanh + FE vitest + build + pixel +
 - UI: `../../antmed_crm/docs/AntMed_CRM_UI_Design.md` §1 (widget Dashboard CEO), §11 (ma trận màn-hình → vai trò; "11. Báo cáo → CEO, Trưởng KD")
 - House style / mẫu Core Doc: `./m01_customer360.md`
 - RBAC / role VI: `./m14_rbac_w0_role_naming.md`, `./m14_rbac_w0_antmed_boot.md`
-- Scaffold tham chiếu (app-riêng cũ, ĐÃ adapt → native-lite + `crm.api.antmed.*`): `antmed_crm/m11_dashboard/` (`api/dashboard.py`: `ceo_kpis`/`kanban_b1`/`ar_aging_buckets`; `scheduler.py`: weekly digest)
+- Scaffold tham chiếu (app-riêng cũ, ĐÃ adapt → native-lite + `antmed_crm.api.antmed.*`): `antmed_crm/m11_dashboard/` (`api/dashboard.py`: `ceo_kpis`/`kanban_b1`/`ar_aging_buckets`; `scheduler.py`: weekly digest)
 - Module nguồn liên quan (khi có doc): M02 Hợp đồng/Quota · M03 Kho/Lot · M04 Giao phòng mổ/SLA · M05 Bộ mượn · M06 Chứng từ/HĐĐT · M08 Pipeline/Tender · M09 Đơn/AR · M10 KPI · M14 Security/BR-13

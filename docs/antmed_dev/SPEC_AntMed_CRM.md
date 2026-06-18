@@ -67,11 +67,11 @@ crm/                                 # Python package (Frappe CRM gốc + AntMed
   antmed/                            # code module AntMed
     doctype/<snake>/<snake>.{json,py}   # AntMed Hospital, AntMed Doctor, …
     README.md                        # mirror naming convention
-  api/antmed/<module>.py             # whitelist endpoint → crm.api.antmed.<module>.<fn>
+  api/antmed/<module>.py             # whitelist endpoint → antmed_crm.api.antmed.<module>.<fn>
   tests/test_antmed_<module>.py      # BE test (vị trí thực tế đang dùng)
 frontend/src/
   pages/Antmed<Feature>.vue          # AntmedHospitalList / AntmedHospitalDetail / AntmedDoctorDetail …
-  data/antmed.js                     # createResource factory cho crm.api.antmed.*
+  data/antmed.js                     # createResource factory cho antmed_crm.api.antmed.*
   stores/antmed<Feature>.js          # (round sau)
   router.js                          # CHỈ THÊM route /antmed/* ; KHÔNG đụng route gốc
 frontend/tests/unit/antmed*.test.js  # FE vitest
@@ -100,7 +100,7 @@ def get_hospital(name: str) -> dict:                      # BẮT BUỘC type-an
                                   fields=["name", "full_name", "specialty", "phone"]),
     }
 ```
-- Endpoint path: `crm.api.antmed.<module>.<fn>`. **Cấm** `antmed_crm.api.*`, `assetcore.*`, app riêng.
+- Endpoint path: `antmed_crm.api.antmed.<module>.<fn>`. **Cấm** `crm.api.*` (namespace cũ — app cài là `antmed_crm`), `assetcore.*`, app khác.
 - DocType prefix **`AntMed `** (KHÔNG `AM `). ERPNext reuse KHÔNG prefix.
 - Lỗi nghiệp vụ = `frappe.throw(_("BR-XX: …tiếng Việt"))`. Phân biệt **dispatcher-403** (guest) vs **in-handler PermissionError-403**.
 - List endpoint giữ bất biến **count == rows** (đếm qua `get_list(pluck=…, limit_page_length=0)` để R3 thêm `permission_query_conditions` không vỡ).
@@ -108,7 +108,7 @@ def get_hospital(name: str) -> dict:                      # BẮT BUỘC type-an
 **Frontend (Vue 3 + frappe-ui):**
 ```js
 // frontend/src/data/antmed.js — list trả dict {data,total_count} ⇒ dùng createResource, đọc r.data.data
-export const listHospitals = createResource({ url: 'crm.api.antmed.customer.list_hospitals', auto: false })
+export const listHospitals = createResource({ url: 'antmed_crm.api.antmed.customer.list_hospitals', auto: false })
 ```
 - Route `/antmed/*`, route name `Antmed*`, component `frontend/src/pages/Antmed<Feature>.vue`.
 - Nhãn 100% tiếng Việt qua `__()`; **giữ key kỹ thuật** (vd status `ok`) khi chỉ đổi nhãn hiển thị. Design token frappe-ui (KHÔNG hex thô). A11y: aria-live, role=alert, dl/dt/dd, focus-ring.
@@ -122,7 +122,7 @@ export const listHospitals = createResource({ url: 'crm.api.antmed.customer.list
 |---|---|---|---|
 | BE unit/controller/BR | Frappe test runner | `crm/tests/test_antmed_<module>.py` | TDD failing-first; mỗi feature ≥1 test; **0 fail**; assert shape (Hyrum) |
 | BE no-regression | như trên | test gốc CRM | bootstrap + Lead + Task + Organization vẫn OK |
-| FE unit | vitest | `frontend/tests/unit/antmed*.test.js` | route/lazy/props, gọi đúng `crm.api.antmed.*`, gate cấm-import |
+| FE unit | vitest | `frontend/tests/unit/antmed*.test.js` | route/lazy/props, gọi đúng `antmed_crm.api.antmed.*`, gate cấm-import |
 | FE build | vite | — | `yarn build` xanh, SFC compile sạch |
 | Pixel / e2e | Playwright MCP | site `miyano` cổng 80 (login) | render thật: list/detail hiển thị, 0 console error, API 200 |
 
@@ -141,7 +141,7 @@ export const listHospitals = createResource({ url: 'crm.api.antmed.customer.list
 - Reload/restart gunicorn (HARD-STOP USER — bench dùng chung), `bench migrate` trên site thật, đổi schema DocType đã có data, thêm dependency, sửa file gốc CRM (`crm/api/session.py`, router guard…), commit/push.
 
 **Never (không bao giờ):**
-- Tạo app `antmed_crm` riêng / dùng `antmed_crm.api.*` (đã chốt in-place).
+- Dùng namespace cũ `crm.api.*` (giả định app tên `crm`) — app cài thật là `antmed_crm`, mọi endpoint là `antmed_crm.api.antmed.*`. KHÔNG đẻ thêm app khác.
 - `git commit`/push/reset DB/drop site/deploy prod khi chưa có lệnh USER.
 - Sửa/xoá doctype/route/test của Frappe CRM gốc; xoá test đang fail để "qua bài".
 - Commit secrets; copy nguyên app scaffold `docs/antmed_crm/antmed_crm` (chỉ tham khảo).

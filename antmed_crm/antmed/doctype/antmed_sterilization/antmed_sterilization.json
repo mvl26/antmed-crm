@@ -1,0 +1,49 @@
+{
+ "actions": [],
+ "autoname": "AntMed-STR-.YYYY.-.#####",
+ "creation": "2026-06-18 11:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "loan",
+  "instrument_set",
+  "result",
+  "column_break_method",
+  "method",
+  "operator",
+  "started_at",
+  "ended_at"
+ ],
+ "fields": [
+  {"default": "AntMed-STR-.YYYY.-.#####", "fieldname": "naming_series", "fieldtype": "Select", "label": "Series", "options": "AntMed-STR-.YYYY.-.#####"},
+  {"fieldname": "loan", "fieldtype": "Link", "in_list_view": 1, "in_standard_filter": 1, "label": "Lượt mượn", "options": "AntMed Instrument Loan", "reqd": 1},
+  {"fieldname": "instrument_set", "fieldtype": "Link", "in_standard_filter": 1, "label": "Bộ dụng cụ", "options": "AntMed Instrument Set"},
+  {"fieldname": "result", "fieldtype": "Select", "in_list_view": 1, "label": "Kết quả", "options": "Pass\nFail", "reqd": 1},
+  {"fieldname": "column_break_method", "fieldtype": "Column Break"},
+  {"fieldname": "method", "fieldtype": "Select", "label": "Phương pháp", "options": "Hấp\nEO\nPlasma"},
+  {"fieldname": "operator", "fieldtype": "Data", "label": "Người thực hiện"},
+  {"fieldname": "started_at", "fieldtype": "Datetime", "label": "Bắt đầu"},
+  {"fieldname": "ended_at", "fieldtype": "Datetime", "label": "Kết thúc"}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-18 11:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "AntMed",
+ "name": "AntMed Sterilization",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1},
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Quản lý", "share": 1, "write": 1},
+  {"create": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Thủ kho", "share": 1, "write": 1},
+  {"print": 1, "read": 1, "report": 1, "role": "NV kinh doanh"}
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "loan,result",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

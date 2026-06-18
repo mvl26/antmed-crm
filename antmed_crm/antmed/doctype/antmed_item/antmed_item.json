@@ -1,0 +1,160 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 1,
+ "autoname": "field:item_code",
+ "creation": "2026-06-17 19:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "item_code",
+  "item_name",
+  "manufacturer_code",
+  "registration_no",
+  "ma_dkluuhanh",
+  "column_break_attr",
+  "classification",
+  "requires_cocq",
+  "shelf_life_months",
+  "uom",
+  "default_unit_price",
+  "is_consignment",
+  "disabled"
+ ],
+ "fields": [
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Mã VTYT",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Tên vật tư",
+   "reqd": 1
+  },
+  {
+   "fieldname": "manufacturer_code",
+   "fieldtype": "Data",
+   "label": "Mã NSX"
+  },
+  {
+   "fieldname": "registration_no",
+   "fieldtype": "Data",
+   "label": "Số ĐKLH"
+  },
+  {
+   "fieldname": "ma_dkluuhanh",
+   "fieldtype": "Data",
+   "label": "Mã ĐK lưu hành"
+  },
+  {
+   "fieldname": "column_break_attr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "classification",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Phân loại",
+   "options": "\nLoại A\nLoại B\nLoại C\nLoại D"
+  },
+  {
+   "default": "1",
+   "fieldname": "requires_cocq",
+   "fieldtype": "Check",
+   "label": "Yêu cầu CO/CQ"
+  },
+  {
+   "fieldname": "shelf_life_months",
+   "fieldtype": "Int",
+   "label": "Hạn dùng (tháng)"
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Data",
+   "label": "Đơn vị tính"
+  },
+  {
+   "fieldname": "default_unit_price",
+   "fieldtype": "Currency",
+   "label": "Đơn giá mặc định"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_consignment",
+   "fieldtype": "Check",
+   "label": "Hàng ký gửi"
+  },
+  {
+   "default": "0",
+   "fieldname": "disabled",
+   "fieldtype": "Check",
+   "label": "Ngừng dùng"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-17 19:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "AntMed",
+ "name": "AntMed Item",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Quản lý",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Thủ kho",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "NV kinh doanh"
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "item_code,item_name",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "item_name",
+ "track_changes": 1
+}

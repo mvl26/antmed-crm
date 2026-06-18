@@ -4,7 +4,7 @@
 |---|---|
 | Module folder | `crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) |
 | DocType folder | `crm/antmed/doctype/antmed_instrument_set/`, `.../antmed_instrument_loan/`, `.../antmed_sterilization/`, + child `.../antmed_instrument_set_component/`, `.../antmed_loan_checklist_item/`, `.../antmed_loan_incident/` |
-| Code path BE | `crm/api/antmed/instrument_loan.py` → `crm.api.antmed.instrument_loan.<fn>` · module hooks `crm/antmed/instrument_loan_hooks.py` (wired qua `doc_events` trong `crm/hooks.py`) |
+| Code path BE | `crm/api/antmed/instrument_loan.py` → `antmed_crm.api.antmed.instrument_loan.<fn>` · module hooks `crm/antmed/instrument_loan_hooks.py` (wired qua `doc_events` trong `crm/hooks.py`) |
 | FE pages | `frontend/src/pages/AntmedInstrumentSets.vue`, `AntmedInstrumentLoan.vue` (3 tab), `AntmedInstrumentSetDetail.vue` + route `/antmed/instrument-sets`, `/antmed/loans`, `/antmed/loans/:name` |
 | Wave (PLAN) | **W3 — Đặc thù AntMed** (điểm nhấn cạnh tranh; chạy ‖ M07, sau W1) |
 | Role chính (VI) | `NV kinh doanh` (đặt/bàn giao/nhận trả), `Thủ kho` (tiệt khuẩn + mark Sẵn sàng), `Quản lý` (giám sát/sự cố) — DEC-A |
@@ -107,8 +107,8 @@ Sẵn sàng → Đã đặt → Đang giao → Đang sử dụng tại BV → Đ
 
 | BR | Mô tả | Nơi enforce (DESIGN) |
 |---|---|---|
-| **BR-05** | **Chặn đặt trùng lịch**: 1 bộ không được đặt cho 2 ca chồng thời gian. Khi book → kiểm tra không tồn tại loan khác cùng `instrument_set` còn hiệu lực (state ∈ {Đã đặt, Đang giao, Đang sử dụng tại BV}) trong khoảng `booked_at..due_return_at` giao nhau. | `crm.api.antmed.instrument_loan.book` + module hook `validate` trên `AntMed Instrument Loan`. `frappe.throw(_("BR-05: Bộ dụng cụ đã có lịch mượn trùng khoảng thời gian này"))` |
-| **BR-09** | **Chỉ "Sẵn sàng" lại sau tiệt khuẩn Pass**: transition "Đang xử lý/tiệt khuẩn → Sẵn sàng" yêu cầu tồn tại ≥1 `AntMed Sterilization` với `loan`=loan hiện tại và `result="Pass"`. | `crm.api.antmed.instrument_loan.mark_ready` + module hook (kiểm tra trước khi đổi `workflow_state`/`current_status`). `frappe.throw(_("BR-09: Chưa có bản ghi tiệt khuẩn Pass — không thể chuyển về Sẵn sàng"))` |
+| **BR-05** | **Chặn đặt trùng lịch**: 1 bộ không được đặt cho 2 ca chồng thời gian. Khi book → kiểm tra không tồn tại loan khác cùng `instrument_set` còn hiệu lực (state ∈ {Đã đặt, Đang giao, Đang sử dụng tại BV}) trong khoảng `booked_at..due_return_at` giao nhau. | `antmed_crm.api.antmed.instrument_loan.book` + module hook `validate` trên `AntMed Instrument Loan`. `frappe.throw(_("BR-05: Bộ dụng cụ đã có lịch mượn trùng khoảng thời gian này"))` |
+| **BR-09** | **Chỉ "Sẵn sàng" lại sau tiệt khuẩn Pass**: transition "Đang xử lý/tiệt khuẩn → Sẵn sàng" yêu cầu tồn tại ≥1 `AntMed Sterilization` với `loan`=loan hiện tại và `result="Pass"`. | `antmed_crm.api.antmed.instrument_loan.mark_ready` + module hook (kiểm tra trước khi đổi `workflow_state`/`current_status`). `frappe.throw(_("BR-09: Chưa có bản ghi tiệt khuẩn Pass — không thể chuyển về Sẵn sàng"))` |
 | **BR (cảnh báo) quá hạn** | Bộ ở {Đang giao, Đang sử dụng tại BV} mà `due_return_at` < now → cảnh báo realtime + đỏ trên UI. **Warn, không chặn.** | Scheduler `check_overdue_loans` (ground @ scaffold `scheduler.py`) → `frappe.publish_realtime("loan_overdue", ...)`; wired qua `scheduler_events` trong `crm/hooks.py`. |
 | **BR-13** | **Data-scope**: `NV kinh doanh` chỉ thấy lượt mượn / bộ thuộc tuyến mình (gắn `employee`/`current_holder` = NV đó). | `[ROADMAP]` — `permission_query_conditions` cho `AntMed Instrument Loan`/`AntMed Instrument Set` (M14). Invariant `count==rows` vẫn enforce ngay. |
 | **BR-10** | **Audit log** mọi thao tác trên bộ dụng cụ (mượn/trả/tiệt khuẩn/sự cố) — phục vụ thanh kiểm tra. | `[ROADMAP M14]` — hash-chain `AntMed Audit Log`; M05 chỉ phát event/`track_changes=1` ở W3. |
@@ -121,7 +121,7 @@ Sẵn sàng → Đã đặt → Đang giao → Đang sử dụng tại BV → Đ
 
 > File `crm/api/antmed/instrument_loan.py`. Mọi hàm `@frappe.whitelist`, **type-annotated** (`crm/hooks.py:28 require_type_annotated_api_methods=True`), trả **RAW dict/list** (KHÔNG `_ok`/`_err`). Lỗi nghiệp vụ = `frappe.throw(_("BR-XX: …"))`. List giữ bất biến **count == rows** (`get_list(limit_page_length=0)`).
 
-| Endpoint (`crm.api.antmed.instrument_loan.<fn>`) | Verb | Mô tả |
+| Endpoint (`antmed_crm.api.antmed.instrument_loan.<fn>`) | Verb | Mô tả |
 |---|---|---|
 | `list_instrument_sets` | GET | Danh mục bộ + `current_status`, `surgery_type`, `current_holder`, `lifetime_loans`. Trả `{data, total_count}`, **count==rows** khi không phân trang; filter theo `surgery_type`/`current_status`. |
 | `get_instrument_set` | GET | Chi tiết 1 bộ + `components` (món) + lịch sử mượn gần đây. `frappe.has_permission(... "read")` → `PermissionError` nếu fail. |
@@ -134,7 +134,7 @@ Sẵn sàng → Đã đặt → Đang giao → Đang sử dụng tại BV → Đ
 | `mark_ready` | POST | Chuyển **Đang xử lý/tiệt khuẩn → Sẵn sàng**. **Enforce BR-09** (yêu cầu Sterilization Pass). Set `Set.current_status=Ready`. |
 | `report_incident` | POST | Tạo `AntMed Loan Incident` (type/value/biên bản/charged_to_hospital); set `Set.current_status` = Lost/Damaged nếu phù hợp. |
 
-> Ground @ scaffold cũ có route `POST .../instrument_loan.sterilize` + BR-05 `book` + BR-09 `mark_ready` (README dòng 207/211) — giữ tên hàm, scrub namespace `antmed_crm.api.*`→`crm.api.antmed.*`.
+> Ground @ scaffold cũ có route `POST .../instrument_loan.sterilize` + BR-05 `book` + BR-09 `mark_ready` (README dòng 207/211) — giữ tên hàm, scrub namespace `antmed_crm.api.*`→`antmed_crm.api.antmed.*`.
 
 ---
 
@@ -161,7 +161,7 @@ Sẵn sàng → Đã đặt → Đang giao → Đang sử dụng tại BV → Đ
 
 ## 7. UI
 
-> Ground @ `AntMed_CRM_UI_Design.md §3.3` (màn "Bộ dụng cụ — Cho mượn / Nhận trả") + §sidebar (mục "Bộ dụng cụ"). Vue 3 + frappe-ui; `createResource`/`createListResource` gọi `crm.api.antmed.instrument_loan.*`. Route APPEND vào `frontend/src/router.js` (lazy). Nhãn 100% tiếng Việt qua `__()`.
+> Ground @ `AntMed_CRM_UI_Design.md §3.3` (màn "Bộ dụng cụ — Cho mượn / Nhận trả") + §sidebar (mục "Bộ dụng cụ"). Vue 3 + frappe-ui; `createResource`/`createListResource` gọi `antmed_crm.api.antmed.instrument_loan.*`. Route APPEND vào `frontend/src/router.js` (lazy). Nhãn 100% tiếng Việt qua `__()`.
 
 | Route | name | component | Mô tả | Role |
 |---|---|---|---|---|
@@ -177,7 +177,7 @@ Sẵn sàng → Đã đặt → Đang giao → Đang sử dụng tại BV → Đ
 - **Modal "Checklist nhận trả"**: tương tự; nếu đánh Missing/Damaged → nút **Lập biên bản sự cố** (gọi `report_incident`).
 - **Cảnh báo realtime** `loan_overdue` → banner/toast đỏ; bộ quá hạn highlight trong tab Đang giữ.
 
-> Boundaries UI: lazy import; loading/error/empty mỗi resource; **Never** gọi `antmed_crm.api.*` (đúng là `crm.api.antmed.*`); **Never** axios trực tiếp; **Never** đụng route/page CRM gốc.
+> Boundaries UI: lazy import; loading/error/empty mỗi resource; **Never** gọi `crm.api.*` (đúng là `antmed_crm.api.antmed.*`); **Never** axios trực tiếp; **Never** đụng route/page CRM gốc.
 
 ---
 
@@ -224,7 +224,7 @@ Sẵn sàng → Đã đặt → Đang giao → Đang sử dụng tại BV → Đ
   7. `report_incident` Missing/Damaged → `Set.current_status` set Lost/Damaged.
   8. Permission: user thiếu read → `get_loan` raise `PermissionError`.
 - **No-regression**: `test_antmed_bootstrap` + `test_antmed_customer` (M01) + 4 test gốc CRM vẫn xanh.
-- **FE vitest** `frontend/tests/unit/antmedInstrumentLoan.test.js`: 4 route tồn tại (lazy); page gọi đúng `crm.api.antmed.instrument_loan.*`; KHÔNG `antmed_crm.api`/axios; route CRM gốc còn.
+- **FE vitest** `frontend/tests/unit/antmedInstrumentLoan.test.js`: 4 route tồn tại (lazy); page gọi đúng `antmed_crm.api.antmed.instrument_loan.*`; KHÔNG `antmed_crm.api`/axios; route CRM gốc còn.
 - **Build**: `yarn build` xanh, chunk `Antmed*` không vỡ.
 - **Pixel (sau USER reload)**: Playwright `http://miyano/crm/antmed/loans` → tab Đang giữ render, mở modal checklist bàn giao chụp ảnh + ký → state đổi; tab Xử lý sau dùng → tiệt khuẩn Pass → bộ Sẵn sàng; 0 console error, API 200.
 - DoD: BE OK + vitest + build + (sau reload) pixel + no-regression. Chưa pixel ⇒ "contract verified", chưa "xong".

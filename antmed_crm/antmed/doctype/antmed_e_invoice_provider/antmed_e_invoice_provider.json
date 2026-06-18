@@ -1,0 +1,46 @@
+{
+ "actions": [],
+ "creation": "2026-06-18 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "issingle": 1,
+ "field_order": [
+  "default_provider",
+  "section_viettel",
+  "viettel_endpoint",
+  "viettel_api_key",
+  "section_misa",
+  "misa_endpoint",
+  "misa_api_key",
+  "section_vnpt",
+  "vnpt_endpoint",
+  "vnpt_api_key"
+ ],
+ "fields": [
+  {"fieldname": "default_provider", "fieldtype": "Select", "label": "Nhà cung cấp mặc định", "options": "\nViettel\nMISA\nVNPT"},
+  {"fieldname": "section_viettel", "fieldtype": "Section Break", "label": "Viettel"},
+  {"fieldname": "viettel_endpoint", "fieldtype": "Data", "label": "Endpoint"},
+  {"fieldname": "viettel_api_key", "fieldtype": "Password", "label": "API Key"},
+  {"fieldname": "section_misa", "fieldtype": "Section Break", "label": "MISA"},
+  {"fieldname": "misa_endpoint", "fieldtype": "Data", "label": "Endpoint"},
+  {"fieldname": "misa_api_key", "fieldtype": "Password", "label": "API Key"},
+  {"fieldname": "section_vnpt", "fieldtype": "Section Break", "label": "VNPT"},
+  {"fieldname": "vnpt_endpoint", "fieldtype": "Data", "label": "Endpoint"},
+  {"fieldname": "vnpt_api_key", "fieldtype": "Password", "label": "API Key"}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-18 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "AntMed",
+ "name": "AntMed E-Invoice Provider",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1},
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Quản lý", "share": 1, "write": 1}
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

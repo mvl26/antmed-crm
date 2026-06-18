@@ -5,13 +5,13 @@
 | Module folder | `crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) |
 | DocType folder | `crm/antmed/doctype/antmed_item/`, `.../antmed_warehouse/`, `.../antmed_lot/`, `.../antmed_stock_entry/` … |
 | Code path | `crm/antmed/doctype/<snake>/` + module hooks `crm/antmed/hooks_m03.py` (doc_events) + scheduler `crm/antmed/scheduler_m03.py` |
-| API package | `crm/api/antmed/inventory.py` (đường gọi `crm.api.antmed.inventory.<fn>`) |
+| API package | `crm/api/antmed/inventory.py` (đường gọi `antmed_crm.api.antmed.inventory.<fn>`) |
 | Wave (PLAN) | **W1 — Master data & catalog** (M03 catalog-lite chạy ‖ M01-full ‖ M02) |
 | Role chính (VI) | `Thủ kho` (chính), `NV kinh doanh` (kho cá nhân + đối chiếu ký gửi), `Quản lý` |
 | Phụ thuộc (M..) | — (Item native — không phụ thuộc module nào; tham chiếu mềm `AntMed Hospital` từ M01 cho kho ký gửi) |
 | Cấp dữ liệu cho (M..) | **M04** (giao phòng mổ: tồn/FIFO/lot), **M05** (bộ dụng cụ mượn: xuất/nhập kho), **M06** (chứng từ CO/CQ/ĐKLH gate) |
-| Trạng thái | **[PLANNED — chưa code]** (DESIGN; đề xuất schema/API/workflow) |
-| Cập nhật | 2026-06-17 |
+| Trạng thái | **[PARTIAL — đang code]** — catalog/lot/warehouse/stock-entry DocType + nhiều endpoint `inventory.*` đã land trên site `miyano`. Slice M03-8 (`get_stock_entry` + màn chi tiết phiếu) = **spec sẵn-sàng-code** (§5.1, §7.1). Các slice còn lại (đối chiếu/recall/FIFO scheduler) vẫn DESIGN. |
+| Cập nhật | 2026-06-18 |
 
 > **Trạng thái: [PLANNED — chưa code]**
 > Toàn bộ DocType / API / workflow / BR dưới đây là **ĐỀ XUẤT thiết kế** (spec-before-code), ground từ PLAN component-inventory dòng M03, `AntMed_CRM_Modules.md §3`, scaffold cũ `m03_inventory/` (app riêng — ĐÃ adapt `AM `→`AntMed `, ERPNext-reuse→native-lite), `AntMed_CRM_UI_Design.md §4 (Thủ kho)`, và BR-03/08/13/15. **Chưa có dòng code nào trên site `miyano`.** Mọi mục không truy được nguồn → đánh `[UNVERIFIED]` / `[cần khảo sát]`.
@@ -115,11 +115,11 @@ M03 có **2 nhóm trạng thái**: (a) DocType giao dịch dùng **`docstatus`**
 
 | BR | Mô tả | Nơi enforce (đề xuất) | Trạng thái |
 |---|---|---|---|
-| **BR-08** | **FIFO theo HSD**: khi xuất kho (Stock Entry type `Xuất cho NV`/`Chuyển kho`) gợi ý lô có `expiry_date` sớm nhất còn tồn; nếu chọn lô không ưu tiên → **cảnh báo** (warn, không chặn cứng). Endpoint `fifo_suggest` + `check_fifo`. | `AntMed Stock Entry.validate` (warn) + `crm.api.antmed.inventory.fifo_suggest` | **[PLANNED]** — ground BR-08 README + UI_Design §4 dòng 128 |
+| **BR-08** | **FIFO theo HSD**: khi xuất kho (Stock Entry type `Xuất cho NV`/`Chuyển kho`) gợi ý lô có `expiry_date` sớm nhất còn tồn; nếu chọn lô không ưu tiên → **cảnh báo** (warn, không chặn cứng). Endpoint `fifo_suggest` + `check_fifo`. | `AntMed Stock Entry.validate` (warn) + `antmed_crm.api.antmed.inventory.fifo_suggest` | **[PLANNED]** — ground BR-08 README + UI_Design §4 dòng 128 |
 | **BR-03** (chuẩn bị) | **Gate CO/CQ**: lô VTYT có `requires_cocq=1` phải gắn `co_cert`+`cq_cert` còn hiệu lực trước khi xuất/giao. M03 set `cocq_ok` trên dòng Stock Entry; **chặn cứng** thực thi ở M06 (phát hành). | `AntMed Stock Entry.validate` (set `cocq_ok`, warn nếu thiếu) | **[PLANNED]** — BR-03 enforce đầy đủ ở M06 Sales Invoice |
 | **BR-15** | **Nhắc đối chiếu kho ký gửi định kỳ** (hằng tuần): scheduler quét kho `warehouse_type=Ký gửi BV` chưa đối chiếu trong 7 ngày → tạo task/notification cho NV phụ trách BV. | `crm/antmed/scheduler_m03.py::weekly_consignment_reminder` (hooks `scheduler_events`) | **[PLANNED]** — ground BR-15 README dòng 217 + scaffold scheduler |
 | **BR-13** | **Data-scope**: NV chỉ thấy kho cá nhân của mình + kho ký gửi BV mình phụ trách. | `permission_query_conditions` cho `AntMed Warehouse`/`AntMed Stock Entry`/`AntMed Consignment Reconciliation` | **[PLANNED — hoãn W4/M14]** (giữ invariant count==rows ngay) |
-| **BR-10** | **Audit hash-chain**: `AntMed Certificate.hash_sha256` (SHA256 file CO/CQ) + ghi `AntMed Audit Log` khi recall/đối chiếu submit. | `AntMed Certificate.validate` + lazy-import `crm.api.antmed.audit.write_log` | **[PLANNED]** — nền M14 |
+| **BR-10** | **Audit hash-chain**: `AntMed Certificate.hash_sha256` (SHA256 file CO/CQ) + ghi `AntMed Audit Log` khi recall/đối chiếu submit. | `AntMed Certificate.validate` + lazy-import `antmed_crm.api.antmed.audit.write_log` | **[PLANNED]** — nền M14 |
 | **BR (native)** | **Cận date 30/60/90 ngày**: scheduler quét lô có `expiry_date` rơi vào 30/60/90 ngày tới → `publish_realtime`/notification. | `scheduler_m03.py::check_near_expiry_90_60_30` | **[PLANNED]** — ground Modules §3 + UI_Design §4.3 |
 | **BR (native)** | **Tồn không âm**: Stock Entry xuất quá tồn lô khả dụng → `frappe.throw` (chặn cứng). | `AntMed Stock Entry.on_submit` (kiểm `AntMed Stock Ledger` balance) | **[PLANNED]** |
 | **BR (native)** | **Ràng buộc kho 3 cấp**: `warehouse_type=Cá nhân NV` ⇒ bắt buộc `employee`; `Ký gửi BV` ⇒ bắt buộc `hospital`. | `AntMed Warehouse.validate` | **[PLANNED]** — ground scaffold hook `validate_warehouse_type` |
@@ -132,7 +132,7 @@ M03 có **2 nhóm trạng thái**: (a) DocType giao dịch dùng **`docstatus`**
 
 > File: `crm/api/antmed/inventory.py`. Mọi hàm `@frappe.whitelist(methods=["GET"|"POST"])`, **type-annotated** (`crm/hooks.py` `require_type_annotated_api_methods=True`), trả **RAW dict/list** (KHÔNG `_ok`/`_err`/envelope). Lỗi = `frappe.throw(_("BR-XX: …"))`. List endpoint giữ **count == rows**.
 
-| Endpoint (`crm.api.antmed.inventory.<fn>`) | Verb | Mô tả |
+| Endpoint (`antmed_crm.api.antmed.inventory.<fn>`) | Verb | Mô tả |
 |---|---|---|
 | `list_items(filters, search, start, page_length)` | GET | Danh mục VTYT (`item_code`, `item_name`, `classification`, `requires_cocq`, `shelf_life_months`). count==rows. |
 | `get_item(name)` | GET | Chi tiết 1 VTYT + danh sách lô (`AntMed Lot`) + tồn tổng. `has_permission` → `PermissionError`. |
@@ -143,6 +143,7 @@ M03 có **2 nhóm trạng thái**: (a) DocType giao dịch dùng **`docstatus`**
 | `check_fifo(item, warehouse, lot)` | GET | **BR-08**: trả `{is_priority: bool, suggested_lot}` để FE cảnh báo nếu lô không ưu tiên. |
 | `create_stock_entry(entry_type, from_warehouse, to_warehouse, items, ...)` | POST | Tạo + (tuỳ) submit phiếu nhập/xuất/chuyển. Enforce tồn không âm + set `cocq_ok`. |
 | `list_stock_entries(filters, entry_type)` | GET | Danh sách phiếu kho. count==rows. |
+| `get_stock_entry(name)` | GET | **[M03-8 — IMPLEMENTED]** Chi tiết 1 phiếu (header + bảng dòng vật tư đã chuẩn bị). Trả **RAW dict THƯỜNG** (KHÔNG bọc `{data,total_count}`). Drill-down từ `list_stock_entries`. Xem §5.1. |
 | `start_consignment_reconciliation(hospital, warehouse)` | POST | **BR-15**: snapshot tồn hệ thống → tạo `AntMed Consignment Reconciliation` (Nháp). |
 | `submit_reconciliation(name, counted_items, signed_by_nv, signed_by_dd)` | POST | Cập nhật SL thực đếm, tính variance, submit (Đã ký). |
 | `list_consignment_pending()` | GET | Kho ký gửi quá hạn đối chiếu (>7 ngày) — feed FE Thủ kho. count==rows. |
@@ -152,6 +153,67 @@ M03 có **2 nhóm trạng thái**: (a) DocType giao dịch dùng **`docstatus`**
 | `near_expiry_report(days)` | GET | Báo cáo lô cận date toàn hệ thống (30/60/90). count==rows. |
 
 > **Shape list (ví dụ)** `{ "data": [...], "total_count": N }`, `len(data) == total_count` khi không phân trang. **POST mutate** trả RAW dict bản ghi vừa tạo/sửa (vd `{"name": "AM-SE-2026-00001", "docstatus": 1}`).
+
+### 5.1 `get_stock_entry(name)` — Chi tiết phiếu xuất / Vật tư đã chuẩn bị [M03-8]
+
+> Endpoint MỚI cho slice **M03-8** (mockup C2 Wizard bước 3 — card "Vật tư đã chuẩn bị — BV K · BS. Hùng"; persona NV Kinh doanh id=nvkd). Drill-down 1-dòng từ list "Phiếu xuất gần đây" (`list_stock_entries`) → màn `/antmed/warehouse/stock-entries/:name`.
+>
+> File: `antmed_crm/api/antmed/inventory.py`. `@frappe.whitelist(methods=["GET"])`, type-annotated. Trả **RAW dict THƯỜNG** (KHÔNG envelope, KHÔNG bọc `{data,total_count}` — phân biệt rõ với list endpoint). FE đọc `r.data.<key>` / `r.data.items` TRỰC TIẾP.
+
+**Signature**
+```python
+@frappe.whitelist(methods=["GET"])
+def get_stock_entry(name: str) -> dict:
+```
+
+**Shape trả về (Hyrum — khoá cố định, KHÔNG đảo/đổi):**
+```json
+{
+  "name": "AM-SE-2026-00007",
+  "entry_type": "Xuất cho NV",
+  "posting_datetime": "2026-06-17 09:12:00",
+  "from_warehouse": "WH-Tong",
+  "to_warehouse": "WH-NV-Hung",
+  "nv_employee": "hung@antmed.vn",
+  "nv_employee_name": "Trần Văn Hùng",
+  "hospital": "BV-K",
+  "hospital_name": "Bệnh viện K",
+  "expected_use_date": "2026-06-20",
+  "total_value": 12500000.0,
+  "items": [
+    {
+      "item": "VTYT-001", "item_name": "Chỉ khâu Vicryl 3-0",
+      "lot": "LOT-2026-A", "lot_no": "LOT-2026-A",
+      "expiry_date": "2027-03-31", "qty": 10.0, "uom": "Cái",
+      "unit_price": 250000.0, "amount": 2500000.0, "cocq_ok": 1
+    }
+  ]
+}
+```
+
+**Header keys (11):** `name`, `entry_type`, `posting_datetime`, `from_warehouse`, `to_warehouse`, `nv_employee`, `nv_employee_name`, `hospital`, `hospital_name`, `expected_use_date`, `total_value`.
+- `nv_employee_name` = `User.full_name` (dotted-fetch / resolve qua Link, null-guard FK orphan → fallback `nv_employee`); **KHÔNG lộ email** ngoài cặp `nv_employee` (id) + `nv_employee_name` (tên).
+- `hospital_name` = `AntMed Hospital.hospital_name` (resolve qua Link; null-guard). `hospital`/`expected_use_date` chỉ có khi phiếu type `Xuất cho NV`/`Nhập ký gửi BV` (field native nullable) → `None` an toàn nếu trống.
+- `total_value` = `SUM(child.amount)` (đọc từ `doc.items` đã load — KHÔNG query lại). Phiếu 0 dòng → `total_value = 0` (KHÔNG None; header luôn ổn định).
+
+**Items keys (10) mỗi dòng (Hyrum):** `item`, `item_name`, `lot`, `lot_no`, `expiry_date`, `qty`, `uom`, `unit_price`, `amount`, `cocq_ok`.
+- `item` = Link `AntMed Item` (= mã SKU; `AntMed Item.name == item_code` vì autoname `field:item_code`). `item_name` = `AntMed Item.item_name`.
+- `lot` = Link `AntMed Lot` (= `AntMed Lot.name`). `lot_no` = `AntMed Lot.lot_no` (autoname `field:lot_no` ⇒ `name == lot_no`; vẫn trả CẢ HAI key để FE binding ổn định, KHÔNG để FE suy diễn).
+- `expiry_date` = `AntMed Lot.expiry_date` (HSD). `cocq_ok` = giá trị `Check` đã lưu trên dòng child (controller set ở `validate`; KHÔNG tính lại ở endpoint). `None`/0/falsy → FE coi là "Thiếu CO/CQ".
+- `qty`/`uom`/`unit_price`/`amount` đọc thẳng từ child `AntMed Stock Entry Item`.
+
+**Batch resolve — KHÔNG N+1 (BẮT BUỘC):**
+- `item_name` + `expiry_date` (+ `lot_no`) lấy bằng **đúng 2 query batch**, KHÔNG vòng-lặp-query:
+  1. `frappe.get_all("AntMed Lot", filters={"name": ("in", lot_ids)}, fields=["name","lot_no","expiry_date"])` → map theo `name`.
+  2. `frappe.get_all("AntMed Item", filters={"name": ("in", item_ids)}, fields=["name","item_name"])` → map theo `name`.
+  - `lot_ids`/`item_ids` = set các giá trị non-null trên `doc.items`. Dòng thiếu lot → `lot_no=None`, `expiry_date=None` (không crash). Dòng thiếu item → `item_name=None`.
+
+**Lỗi & fail-closed:**
+- **Không tồn tại** → `frappe.get_doc(STOCK_ENTRY_DOCTYPE, name)` raise **`DoesNotExistError`** (HTTP 404-ish exception JSON; KHÔNG bắt nuốt). FE map → empty-state `Không tìm thấy phiếu`.
+- **Fail-closed BR-13** (user KHÔNG có read-perm phiếu): `frappe.get_doc(...)` → `frappe.has_permission(STOCK_ENTRY_DOCTYPE, "read", doc)` → nếu thiếu quyền **raise `frappe.PermissionError`** (KHÔNG rò header thật, KHÔNG 500). FE bắt `PermissionError`/403 → map sang empty-state (KHÔNG hiện dữ liệu phiếu của BV/NV khác). *(Dispatcher-403 guest = chưa login; in-handler PermissionError = đã login nhưng ngoài data-scope — FE xử cả hai → empty.)*
+  - **Boundaries — Always:** check perm TRƯỚC khi build dict; chỉ trả dict khi đã pass `has_permission`. **Never:** trả header thật khi chưa pass perm; trả envelope `_ok`/`_err`; tính lại `cocq_ok`/FIFO/tồn ở endpoint này (read-only thuần).
+
+> **invariant items == doc.items:** số dòng `items` trả ra == số dòng child trên phiếu (read-only theo phiếu đơn — không phân trang). Phiếu 0 dòng → `items: []` (FE render empty-row 'Phiếu chưa có vật tư').
 
 ---
 
@@ -190,12 +252,14 @@ scheduler_events = {
 
 ## 7. UI
 
-> Vue 3 + frappe-ui SPA. Route `/antmed/*` (APPEND vào `frontend/src/router.js`, lazy import). Page `Antmed<Feature>.vue`. Gọi đúng `crm.api.antmed.inventory.*` (KHÔNG `antmed_crm.api.*`, KHÔNG axios). Nguồn: `AntMed_CRM_UI_Design.md §4 (Thủ kho Tổng)` + định danh vật tư chuẩn `Mã VT | Tên | Lot | HSD | CO/CQ status` (§ nguyên tắc dòng 12).
+> Vue 3 + frappe-ui SPA. Route `/antmed/*` (APPEND vào `frontend/src/router.js`, lazy import). Page `Antmed<Feature>.vue`. Gọi đúng `antmed_crm.api.antmed.inventory.*` (KHÔNG `crm.api.*`, KHÔNG axios). Nguồn: `AntMed_CRM_UI_Design.md §4 (Thủ kho Tổng)` + định danh vật tư chuẩn `Mã VT | Tên | Lot | HSD | CO/CQ status` (§ nguyên tắc dòng 12).
 
 | Màn hình (UI_Design) | Route | Page Vue | Role | Mô tả |
 |---|---|---|---|---|
 | Danh mục VTYT | `/antmed/items` | `AntmedItemList.vue` | Thủ kho, Quản lý | List + chi tiết VTYT (lô, tồn, CO/CQ). |
 | Nhập kho | `/antmed/stock-entries/new?type=Nhập NCC` | `AntmedStockEntryForm.vue` | Thủ kho | Tạo phiếu nhập từ NCC (gắn lô, CO/CQ, HSD, ĐKLH). |
+| Phiếu xuất gần đây (list) | `/antmed/warehouse/stock-entries` | `AntmedStockEntries.vue` | Thủ kho, **NV Kinh doanh** | List phiếu kho (`list_stock_entries`); mỗi dòng drill-down sang chi tiết. |
+| **Chi tiết phiếu xuất / Vật tư đã chuẩn bị (§7.1, M03-8)** | `/antmed/warehouse/stock-entries/:name` | `AntmedStockEntryDetail.vue` | **NV Kinh doanh**, Thủ kho | Header phiếu (loại/BV/NV/ngày dự kiến dùng) + bảng dòng vật tư SKU/Tên/Lot/HSD/SL/ĐVT/chip CO-CQ. Mockup C2. |
 | Xuất kho cho NV (§4.2) | `/antmed/stock-entries/new?type=Xuất cho NV` | `AntmedStockEntryForm.vue` | Thủ kho | Chọn NV → quét lô → bảng Mã/Tên/Lot/HSD/SL/Đơn giá/Tổng; cột CO/CQ tick xanh, đỏ chặn; FIFO cảnh báo. |
 | Kho ký gửi tại BV (§4.3) | `/antmed/consignment` | `AntmedConsignmentList.vue` | Thủ kho, NV kinh doanh | Chọn BV → bảng tồn ký gửi (SL hệ thống / SL thực tế / chênh) + nút "Yêu cầu đối chiếu" + lọc cận date 30/60/90. |
 | Đối chiếu (form) | `/antmed/consignment/:name` | `AntmedReconciliationDetail.vue` | NV kinh doanh, Thủ kho | Cập nhật `counted_qty`, ảnh chứng minh, ký NV + ký ĐD → submit. |
@@ -205,6 +269,54 @@ scheduler_events = {
 | Kho cá nhân NV (mobile) | `/antmed/my-stock` | `AntmedMyStock.vue` | NV kinh doanh | Tồn kho cá nhân (SKU, lô, HSD) — feed M12 mobile, quét QR. |
 
 > A11y + nhãn 100% tiếng Việt qua `__()`; loading/error/empty mỗi resource; design token frappe-ui (KHÔNG hex thô). Route CRM gốc giữ NGUYÊN.
+
+### 7.1 `AntmedStockEntryDetail.vue` — Chi tiết phiếu xuất [M03-8]
+
+> Mockup C2 (Wizard bước 3 — card "Vật tư đã chuẩn bị — BV K · BS. Hùng"). Persona NV Kinh doanh (id=nvkd). Render trong `AntmedLayout` (isAntmedPath `/antmed/*`); KHÔNG dùng `antmedShell` (theo mẫu `AntmedStockEntries`/`AntmedLotTrace`: `meta: { role: 'warehouse' }`).
+
+**Route (APPEND `frontend/src/router.js`):**
+```js
+{
+  // M03-8: chi tiết phiếu xuất / "Vật tư đã chuẩn bị" (mockup C2) — real-data, AntmedLayout.
+  path: '/antmed/warehouse/stock-entries/:name',
+  name: 'AntmedStockEntryDetail',
+  meta: { role: 'warehouse' },
+  component: () => import('@/pages/AntmedStockEntryDetail.vue'),
+  props: true,            // :name → prop
+}
+```
+- Đặt route detail **SAU** route list `/antmed/warehouse/stock-entries` (cùng prefix; `:name` không bắt nhầm list vì path khác hẳn).
+- `name` route **`AntmedStockEntryDetail`** + params `{ name }` (Hyrum — drill-down từ list dùng đúng tên này).
+
+**Drill-down từ list (`AntmedStockEntries.vue`):** mỗi dòng bảng bọc `RouterLink`/`<router-link>` `:to="{ name: 'AntmedStockEntryDetail', params: { name: row.name } }"` (1 click 1 dòng → mở chi tiết). Giữ nguyên các cột/tri-branch list hiện có (no-regression).
+
+**Data wiring (`frontend/src/data/antmed.js`):** thêm `getStockEntry({ params, auto })` → `createResource({ url: 'antmed_crm.api.antmed.inventory.get_stock_entry', params: { name }, auto })`. Dict THƯỜNG → đọc `r.data.name` / `r.data.items` **TRỰC TIẾP** (KHÔNG `r.data.data`, KHÔNG `createListResource`).
+
+**Render — tri-branch + bảng:**
+- **loading** → `Đang tải phiếu…`
+- **error** → `Lỗi tải phiếu` + nút **Thử lại** (`resource.reload()`).
+  - **Phiếu không tồn tại** (`DoesNotExistError`) **VÀ** **noperm BR-13** (`PermissionError`/403) → map sang empty-state `Không tìm thấy phiếu` (KHÔNG hiện banner lỗi đỏ kỹ thuật; fail-closed — không phân biệt "không có" vs "không được xem" để khỏi rò sự tồn tại).
+- **data** → header card (loại phiếu = `entry_type`; BV = `hospital_name`||`hospital`||'—'; NV = `nv_employee_name`||`nv_employee`||'—'; Ngày dự kiến dùng = `fmtDate(expected_use_date)`; ngày lập = `fmtDate`/`formatStockTime(posting_datetime)`) + bảng dòng.
+- **bảng rỗng** (`items.length === 0`) → empty-row `Phiếu chưa có vật tư`.
+
+**Bảng dòng vật tư (cột mockup C2):**
+
+| Cột UI | Nguồn | Format |
+|---|---|---|
+| SKU | `item` | text thẳng |
+| Tên | `item_name` | text (fallback `item`) |
+| Lot | `lot_no` | text (fallback `lot`/'—') |
+| HSD | `expiry_date` | `fmtDate` (dd/MM/yyyy) **hoặc** `formatExpiryMonthYear` (MM/yyyy) — tái dùng helper có sẵn `utils/antmedUi.js` |
+| SL | `qty` | `fmtQty` (số gọn, mẫu `AntmedLotTrace.vue`) |
+| ĐVT | `uom` | text (fallback '—') |
+| CO/CQ | `cocq_ok` | **chip** (xem dưới) |
+
+**Chip CO-CQ (tái dùng `pillClass` — KHÔNG hex thô):**
+- `cocq_ok` truthy (1/true) → nhãn `CO/CQ ✓`, theme **ok** (`pillClass('ok')` = green).
+- `cocq_ok` falsy (0/false/None) → nhãn `Thiếu CO/CQ`, theme **warn** (`pillClass('warn')` = amber).
+- Chip LUÔN kèm CHỮ (không chỉ màu — WCAG AA).
+
+> **Boundaries — Always:** dùng `__()` mọi nhãn VI; loading/error/empty đủ 3 nhánh + bảng-rỗng nhánh 4; gọi đúng `antmed_crm.api.antmed.inventory.get_stock_entry`; tái dùng `pillClass`/`fmtDate`/`fmtQty` đã có. **Never:** hardcode mock data trong UI production; gọi `crm.api.*`/axios; tự sort/aggregate/đếm lại dòng ở FE (BE trả cố định theo phiếu); đọc `r.data.data` (dict thường, không bọc).
 
 ---
 
@@ -217,6 +329,7 @@ scheduler_events = {
 3. **M03-S3 — FIFO theo HSD (BR-08) + cận date:** `fifo_suggest`/`check_fifo` + warn ở `validate`; scheduler `check_near_expiry_90_60_30`. FE cảnh báo lô không ưu tiên + lọc cận date. Test FIFO ordering.
 4. **M03-S4 — Kho ký gửi + đối chiếu (BR-15):** `AntMed Consignment Reconciliation` (+child) + workflow + scheduler `weekly_consignment_reminder`. API start/submit/list_pending. FE `AntmedConsignmentList` + `AntmedReconciliationDetail`. Test variance + reminder.
 5. **M03-S5 — Truy vết lot + recall:** `AntMed Lot Trace Request` + `trace_lot` (lazy-import M04/M05) + `AntMed Recall Notification` + workflow + `broadcast_recall` (lazy M13). FE `AntmedLotTrace` (graph) + `AntmedRecallList`. Test trace graph + recall set recall_status.
+6. **M03-8 — Chi tiết phiếu xuất / "Vật tư đã chuẩn bị" (FE+BE, mockup C2; persona NV Kinh doanh):** BE endpoint MỚI `inventory.get_stock_entry(name)` (§5.1) — RAW dict header 11 key + items 10 key/dòng, batch resolve KHÔNG N+1, fail-closed BR-13 + `DoesNotExistError`. FE màn `AntmedStockEntryDetail.vue` route `AntmedStockEntryDetail` `/antmed/warehouse/stock-entries/:name` (§7.1) + drill-down từ list + `getStockEntry` resource + chip CO-CQ (`pillClass`). Test: BE `get_stock_entry` shape/batch/no-N+1/DoesNotExist/fail-closed; FE vitest màn detail + drill-down + tri-branch.
 
 ---
 
@@ -258,10 +371,12 @@ scheduler_events = {
 - **BR-15**: `weekly_consignment_reminder` chọn đúng kho ký gửi quá 7 ngày.
 - `trace_lot` trả graph NCC→NV→BV→ca→BS (lazy-import M04/M05 không lỗi khi M04/M05 chưa land → degrade gracefully).
 - **count == rows** cho mọi list endpoint (không phân trang).
+- **[M03-8] `get_stock_entry(name)`**: trả RAW dict header 11 key + `items` 10 key/dòng; `item_name`/`expiry_date`/`lot_no` resolve **batch** (1 get_all AntMed Lot theo `name IN` + 1 get_all AntMed Item theo `name IN` — **KHÔNG N+1**, assert qua đếm query / monkeypatch); phiếu KHÔNG tồn tại → `DoesNotExistError`; user noperm (BR-13) → `PermissionError` (fail-closed, KHÔNG rò header thật, KHÔNG 500); phiếu 0 dòng → `items == []` + `total_value == 0`; `items` count == số dòng child trên phiếu.
 - **No-regression**: `test_antmed_bootstrap` + `test_antmed_customer` + 4 test gốc CRM vẫn OK.
 
 **FE (vitest + build):** `cd frontend && yarn vitest run` xanh + `yarn build` xanh.
-- Route `/antmed/items`, `/antmed/stock-entries`, `/antmed/consignment`, `/antmed/lots`, `/antmed/lot-trace`, `/antmed/recalls`, `/antmed/my-stock` tồn tại (lazy); gọi đúng `crm.api.antmed.inventory.*`; KHÔNG `antmed_crm.api`/axios; route CRM gốc còn nguyên.
+- Route `/antmed/items`, `/antmed/stock-entries`, `/antmed/consignment`, `/antmed/lots`, `/antmed/lot-trace`, `/antmed/recalls`, `/antmed/my-stock` tồn tại (lazy); gọi đúng `antmed_crm.api.antmed.inventory.*`; KHÔNG `crm.api.*`/axios; route CRM gốc còn nguyên.
+- **[M03-8]** route `AntmedStockEntryDetail` `/antmed/warehouse/stock-entries/:name` tồn tại (lazy, `props:true`); list `AntmedStockEntries` có drill-down `RouterLink` `:to="{ name:'AntmedStockEntryDetail', params:{name} }"`; `getStockEntry` gọi `antmed_crm.api.antmed.inventory.get_stock_entry` (GET) đọc `r.data.*`/`r.data.items` (KHÔNG `r.data.data`); chip CO-CQ qua `pillClass` (ok/warn); tri-branch loading `Đang tải phiếu…` / error `Lỗi tải phiếu`+Thử lại / data, empty-state `Không tìm thấy phiếu` (DoesNotExist+noperm), bảng-rỗng `Phiếu chưa có vật tư`; **không hardcode mock** trong UI production; `yarn build` chunk chứa màn mới + url `get_stock_entry`.
 
 **Pixel (Playwright, sau USER reload):** `http://miyano/crm/antmed/items` render thật; xuất kho FIFO cảnh báo hiển thị; truy vết lot vẽ graph; 0 console error; API 200.
 

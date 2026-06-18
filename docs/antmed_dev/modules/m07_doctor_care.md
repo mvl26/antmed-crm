@@ -3,7 +3,7 @@
 | Mục | Giá trị |
 |---|---|
 | Module folder | `crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) — DocType tại `crm/antmed/doctype/<snake>/` |
-| Code path BE | `crm/antmed/doctype/antmed_doctor_visit/` … + endpoint `crm/api/antmed/doctor_care.py` (đường gọi `crm.api.antmed.doctor_care.<fn>`) |
+| Code path BE | `crm/antmed/doctype/antmed_doctor_visit/` … + endpoint `crm/api/antmed/doctor_care.py` (đường gọi `antmed_crm.api.antmed.doctor_care.<fn>`) |
 | Module hooks | business rule (BR-11) wiring qua `doc_events` trong `crm/hooks.py` → `crm/antmed/doctype/antmed_doctor_gift/antmed_doctor_gift.py:validate` |
 | Scheduler | nhắc lịch ghé thăm + nhắc sinh nhật trong `crm/antmed/doctor_care_scheduler.py` (wire `scheduler_events` ở `hooks.py`) |
 | FE pages | `frontend/src/pages/AntmedDoctorCare*.vue` (tab trong profile bác sỹ M01) + route `/antmed/doctors/:name` (mở rộng) · `/antmed/visits` |
@@ -122,7 +122,7 @@ State field đề xuất: **`status`** (Select; giữ field scaffold) — hoặc
 
 > File: `crm/api/antmed/doctor_care.py`. Mọi hàm `@frappe.whitelist(methods=["GET"|"POST"])`, **type-annotated** (`crm/hooks.py:28 require_type_annotated_api_methods=True`), trả **RAW dict/list** (KHÔNG `_ok/_err`/envelope). Lỗi nghiệp vụ = `frappe.throw(_("BR-XX: …"))`; permission = `frappe.throw(..., frappe.PermissionError)`. List endpoint giữ **count == rows** (`get_list(limit_page_length=0)` để đếm, không bị cắt phân trang).
 
-| Endpoint (`crm.api.antmed.doctor_care.<fn>`) | Verb | Mô tả |
+| Endpoint (`antmed_crm.api.antmed.doctor_care.<fn>`) | Verb | Mô tả |
 |---|---|---|
 | `list_visits` | GET | List ghé thăm (filter theo `doctor`/`sales_rep`/`hospital`/`status`/khoảng ngày). Trả `{ "data": [...], "total_count": int }`; **count == rows** khi không phân trang. Field item: `name`, `doctor`, `hospital`, `checked_in_at`, `topic`, `status`. |
 | `get_visit` | GET | Chi tiết 1 visit + ghi chú liên quan. `frappe.has_permission(..., doc=name)` → `PermissionError` nếu fail. |
@@ -162,7 +162,7 @@ State field đề xuất: **`status`** (Select; giữ field scaffold) — hoặc
 
 ## 7. UI
 
-> Vue 3 + frappe-ui SPA. Gọi `crm.api.antmed.doctor_care.*` qua `createResource`/`createListResource`. Route APPEND vào `frontend/src/router.js` (lazy). KHÔNG đụng route CRM gốc. Nhãn 100% tiếng Việt qua `__()`. Mobile-first (NV làm tại phòng mổ).
+> Vue 3 + frappe-ui SPA. Gọi `antmed_crm.api.antmed.doctor_care.*` qua `createResource`/`createListResource`. Route APPEND vào `frontend/src/router.js` (lazy). KHÔNG đụng route CRM gốc. Nhãn 100% tiếng Việt qua `__()`. Mobile-first (NV làm tại phòng mổ).
 
 Ground @ `UI_Design.md §3.4` ("Khách hàng — CRM bác sỹ") + §3.2 (GPS auto check-in):
 - **Profile bác sỹ** (mở rộng trang M01 `/antmed/doctors/:name`): thêm các **tab** — *Lịch sử ca mổ* / *Vật tư ưa dùng* (derive M03/M04) / *Ghi chú* (Care Note) / *Quà tặng đã gửi* (Doctor Gift) / *Khảo sát hài lòng* (Survey).
@@ -232,7 +232,7 @@ Theo SPEC §6 (DoD một lát cắt = BE test + FE vitest + build + pixel + no-r
 7. Scheduler `notify_doctor_birthdays`/`send_call_plan_today` chạy không lỗi (gọi qua `execute`, mock realtime).
 - **No-regression**: `test_antmed_bootstrap` (6) + `test_antmed_customer` + 4 test gốc CRM vẫn xanh.
 
-**FE (vitest xanh + build xanh):** `frontend/tests/unit/antmedDoctorCare.test.js` — route mới tồn tại (path/name/lazy); page gọi đúng `crm.api.antmed.doctor_care.*`; KHÔNG `antmed_crm.api`/axios/tanstack; route CRM gốc còn nguyên. `yarn build` emit chunk Antmed* không vỡ.
+**FE (vitest xanh + build xanh):** `frontend/tests/unit/antmedDoctorCare.test.js` — route mới tồn tại (path/name/lazy); page gọi đúng `antmed_crm.api.antmed.doctor_care.*`; KHÔNG `antmed_crm.api`/axios/tanstack; route CRM gốc còn nguyên. `yarn build` emit chunk Antmed* không vỡ.
 
 **Pixel (sau USER reload):** Playwright smoke `/antmed/visits` → check-in (GPS mock) → ghi chú; tab Quà tặng chặn lưu khi chưa duyệt; 0 console error; API 200.
 

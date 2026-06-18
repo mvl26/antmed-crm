@@ -61,13 +61,17 @@ describe('AntMed router guard — Gate-3 (allow-check additive)', () => {
   })
 
   // ── router.js wiring (regression: nhánh additive + CRM gốc giữ nguyên) ──
-  it('router.js wire nhánh additive qua shouldRedirectNotPermitted + giữ route CRM gốc', () => {
+  it('router.js wire guard qua shouldRedirectNotPermitted + CHỈ còn khu AntMed (Phase 2)', () => {
     expect(routerSrc).toMatch(/shouldRedirectNotPermitted/)
     expect(routerSrc).toMatch(/isAntmedUser/)
-    // route CRM gốc + route AntMed cùng tồn tại
-    expect(routerSrc).toMatch(/name:\s*['"]Leads['"]/)
+    // Phase 2 — bỏ UI CRM gốc: route CRM (Leads/Deals...) ĐÃ GỠ; chỉ còn AntmedHome + /antmed/*.
+    expect(routerSrc).not.toMatch(/name:\s*['"]Leads['"]/)
     expect(routerSrc).toMatch(/name:\s*['"]AntmedHome['"]/)
     // KHÔNG hardcode tên Role AntMed (VI) trong router
     expect(routerSrc).not.toMatch(/NV kinh doanh|Thủ kho|Quản lý/)
   })
 })
+
+// Phase 2 — bỏ UI CRM gốc: TOÀN BỘ 24 route mock prototype (/ceo,/sales/*,/rep/*,/warehouse/*,
+// /docs/*,/finance/*,/portal,/admin/*,/instruments) + AntmedScreenStub ĐÃ GỠ. Màn thật dùng
+// /antmed/* (xem antmedShell.test.js ANTMED_SECTIONS). Describe "24 màn prototype" gỡ theo.

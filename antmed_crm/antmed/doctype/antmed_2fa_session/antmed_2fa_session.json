@@ -1,0 +1,32 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-06-18 16:30:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["user", "action_label", "used", "column_break_2fa", "otp_hash", "expires_at"],
+ "fields": [
+  {"fieldname": "user", "fieldtype": "Link", "in_list_view": 1, "in_standard_filter": 1, "label": "Người dùng", "options": "User", "reqd": 1},
+  {"fieldname": "action_label", "fieldtype": "Data", "in_list_view": 1, "in_standard_filter": 1, "label": "Hành động", "reqd": 1},
+  {"default": "0", "fieldname": "used", "fieldtype": "Check", "in_list_view": 1, "label": "Đã dùng"},
+  {"fieldname": "column_break_2fa", "fieldtype": "Column Break"},
+  {"fieldname": "otp_hash", "fieldtype": "Data", "label": "OTP hash", "no_copy": 1, "read_only": 1},
+  {"fieldname": "expires_at", "fieldtype": "Datetime", "label": "Hết hạn", "read_only": 1}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-18 16:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "AntMed",
+ "name": "AntMed 2FA Session",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1}
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "user,action_label",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}

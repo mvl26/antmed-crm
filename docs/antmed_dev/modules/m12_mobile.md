@@ -3,7 +3,7 @@
 | Mục | Giá trị |
 |---|---|
 | Module folder | `crm/antmed/` (server-side phụ trợ) + **FE layer** `apps/crm/frontend/src` (PWA) |
-| Code path BE | `crm/antmed/doctype/antmed_mobile_*/` + endpoint `crm/api/antmed/mobile_sync.py` (đường gọi `crm.api.antmed.mobile_sync.<fn>`) |
+| Code path BE | `crm/antmed/doctype/antmed_mobile_*/` + endpoint `crm/api/antmed/mobile_sync.py` (đường gọi `antmed_crm.api.antmed.mobile_sync.<fn>`) |
 | Code path FE | `frontend/src/pages/AntmedMobile*.vue` · `frontend/src/data/mobileSync.js` · `frontend/src/sw.js` (service worker) · `frontend/src/utils/outbox.js` (IndexedDB) · route `/antmed/m/*` |
 | Wave (PLAN) | **W4 — Tăng trưởng & kiểm soát** (cross-cutting / aggregate, làm sau cùng) |
 | Role chính (VI) | `NV kinh doanh` (giao diện chính ngoài hiện trường) · `Quản lý` (chỉ giám sát sync log) |
@@ -30,7 +30,7 @@ Phạm vi nghiệp vụ M12 (ground @ Modules §12):
 - **Offline-first**: ghi nhận khi mất mạng, **sync khi có mạng** (outbox + delta pull).
 - **Đẩy thông báo** (push): yêu cầu mới, bộ mượn quá hạn, công nợ chạm ngưỡng.
 
-**Quyết định kiến trúc Phase 1 (chốt theo brief):** PWA offline-first = **service worker + IndexedDB outbox** TRÊN SPA Vue 3 / frappe-ui hiện có. **KHÔNG React Native ở Phase 1** (xem ADR-M12-01). Sync delta qua endpoint `crm.api.antmed.mobile_sync.*` (đề xuất).
+**Quyết định kiến trúc Phase 1 (chốt theo brief):** PWA offline-first = **service worker + IndexedDB outbox** TRÊN SPA Vue 3 / frappe-ui hiện có. **KHÔNG React Native ở Phase 1** (xem ADR-M12-01). Sync delta qua endpoint `antmed_crm.api.antmed.mobile_sync.*` (đề xuất).
 
 **Business value:** NV kinh doanh thao tác liền mạch tại phòng mổ kể cả khi mất sóng; thao tác xếp hàng cục bộ và tự đồng bộ — giảm rủi ro mất dữ liệu giao hàng / checklist bộ mượn ngay tại chỗ chặn sóng.
 
@@ -77,7 +77,7 @@ M12 **không thêm BR nghiệp vụ "cứng" mới** — mọi BR thực sự (B
 
 | Mã | Mô tả | Nơi enforce |
 |---|---|---|
-| BR-M12-1 (kỹ thuật) | **Idempotency**: cùng một `idempotency_key` push nhiều lần (do retry khi chập chờn sóng) chỉ tạo/áp **đúng một** bản ghi nghiệp vụ. | endpoint `crm.api.antmed.mobile_sync.apply_outbox` (check `idempotency_key` unique trên `AntMed Mobile Offline Queue` hoặc tra cờ đã xử lý trước khi gọi API M04/M05) |
+| BR-M12-1 (kỹ thuật) | **Idempotency**: cùng một `idempotency_key` push nhiều lần (do retry khi chập chờn sóng) chỉ tạo/áp **đúng một** bản ghi nghiệp vụ. | endpoint `antmed_crm.api.antmed.mobile_sync.apply_outbox` (check `idempotency_key` unique trên `AntMed Mobile Offline Queue` hoặc tra cờ đã xử lý trước khi gọi API M04/M05) |
 | BR-M12-2 (kỹ thuật) | **Server là trọng tài BR**: khi áp outbox, mọi `frappe.throw(_("BR-XX: …"))` của M04/M05 vẫn chạy. Nếu fail → ghi `status=Failed` + `error_log`, **trả lỗi về FE** để hiển thị, KHÔNG nuốt lỗi. | `apply_outbox` (lazy-import controller M04/M05) |
 | BR-M12-3 (kỹ thuật) | **Data-scope kế thừa BR-13**: pull delta chỉ trả các bản ghi user **được phép đọc** (qua `frappe.get_list` + permission engine / `permission_query_conditions` của M04/M05). Giữ invariant **count == rows**. | endpoint `pull_changes` (dùng `get_list(..., limit_page_length=0)`) |
 | BR-M12-4 (kỹ thuật) | **Xung đột (conflict)**: nếu bản ghi server đã đổi sau timestamp client mang theo → đánh dấu `Conflict` trong sync log, **không ghi đè mù**; trả về cho FE xử lý (last-write-wins có cảnh báo, hoặc để Quản lý quyết). | `apply_outbox` / `pull_changes` |
@@ -88,15 +88,15 @@ M12 **không thêm BR nghiệp vụ "cứng" mới** — mọi BR thực sự (B
 
 ## 5. API
 
-> File ĐỀ XUẤT: `crm/api/antmed/mobile_sync.py`, đường gọi `crm.api.antmed.mobile_sync.<fn>`. Mọi hàm `@frappe.whitelist(...)`, **type-annotated** (vì `crm/hooks.py` bật `require_type_annotated_api_methods`), trả **RAW dict/list** (KHÔNG `_ok/_err`/envelope). Lỗi nghiệp vụ = để `frappe.throw` của module nguồn nổi lên (Frappe trả exception JSON).
+> File ĐỀ XUẤT: `crm/api/antmed/mobile_sync.py`, đường gọi `antmed_crm.api.antmed.mobile_sync.<fn>`. Mọi hàm `@frappe.whitelist(...)`, **type-annotated** (vì `crm/hooks.py` bật `require_type_annotated_api_methods`), trả **RAW dict/list** (KHÔNG `_ok/_err`/envelope). Lỗi nghiệp vụ = để `frappe.throw` của module nguồn nổi lên (Frappe trả exception JSON).
 
 | Endpoint (ĐỀ XUẤT) | Verb | Mô tả |
 |---|---|---|
-| `crm.api.antmed.mobile_sync.bootstrap` | GET | Tải gói khởi tạo offline cho user hiện tại: tuyến BV/bác sỹ (M01), ca giao hôm nay (M04), bộ đang giữ (M05), tồn kho cá nhân (M03). Trả RAW dict gộp các list để FE nạp vào IndexedDB. **Mỗi list giữ count == rows** (`get_list(pluck=…, limit_page_length=0)`). |
-| `crm.api.antmed.mobile_sync.pull_changes` | GET | **Sync delta** từ server về client: tham số `since` (datetime client mang theo) + danh sách doctype quan tâm. Trả `{ "data": {<doctype>: [..rows..]}, "server_ts": <now>, "deleted": [...] }`. Lọc theo permission của user (BR-M12-3). |
-| `crm.api.antmed.mobile_sync.apply_outbox` | POST | **Push** danh sách thao tác offline đã xếp hàng. Body = `operations: list[dict]` mỗi op có `idempotency_key`, `operation`, `payload`. Với mỗi op: check idempotency (BR-M12-1) → lazy-import + gọi đúng API/controller M04/M05 → ghi `AntMed Mobile Sync Log`. Trả RAW `{ "results": [{"idempotency_key","status","name"?,"error"?}], "applied": int, "failed": int }`. |
-| `crm.api.antmed.mobile_sync.register_device` | POST | Đăng ký/cập nhật `AntMed Mobile Device` (device_id, push_token, platform, app_version) cho user — phục vụ push notification. Trả RAW `{ "device_id": ... }`. |
-| `crm.api.antmed.mobile_sync.scan_lot` | GET | Tra cứu 1 lot theo mã QR/barcode quét được (param `code`): trả `lot`, `item`, `hsd`/expiry, `co_cq_status`, tồn khả dụng trong kho cá nhân của user. Đọc dữ liệu M03 (read-only). Trả RAW dict (hoặc throw `frappe.DoesNotExistError` nếu mã không khớp). |
+| `antmed_crm.api.antmed.mobile_sync.bootstrap` | GET | Tải gói khởi tạo offline cho user hiện tại: tuyến BV/bác sỹ (M01), ca giao hôm nay (M04), bộ đang giữ (M05), tồn kho cá nhân (M03). Trả RAW dict gộp các list để FE nạp vào IndexedDB. **Mỗi list giữ count == rows** (`get_list(pluck=…, limit_page_length=0)`). |
+| `antmed_crm.api.antmed.mobile_sync.pull_changes` | GET | **Sync delta** từ server về client: tham số `since` (datetime client mang theo) + danh sách doctype quan tâm. Trả `{ "data": {<doctype>: [..rows..]}, "server_ts": <now>, "deleted": [...] }`. Lọc theo permission của user (BR-M12-3). |
+| `antmed_crm.api.antmed.mobile_sync.apply_outbox` | POST | **Push** danh sách thao tác offline đã xếp hàng. Body = `operations: list[dict]` mỗi op có `idempotency_key`, `operation`, `payload`. Với mỗi op: check idempotency (BR-M12-1) → lazy-import + gọi đúng API/controller M04/M05 → ghi `AntMed Mobile Sync Log`. Trả RAW `{ "results": [{"idempotency_key","status","name"?,"error"?}], "applied": int, "failed": int }`. |
+| `antmed_crm.api.antmed.mobile_sync.register_device` | POST | Đăng ký/cập nhật `AntMed Mobile Device` (device_id, push_token, platform, app_version) cho user — phục vụ push notification. Trả RAW `{ "device_id": ... }`. |
+| `antmed_crm.api.antmed.mobile_sync.scan_lot` | GET | Tra cứu 1 lot theo mã QR/barcode quét được (param `code`): trả `lot`, `item`, `hsd`/expiry, `co_cq_status`, tồn khả dụng trong kho cá nhân của user. Đọc dữ liệu M03 (read-only). Trả RAW dict (hoặc throw `frappe.DoesNotExistError` nếu mã không khớp). |
 
 **Quy ước:**
 - **Invariant count == rows**: `bootstrap` và `pull_changes` trả list KHÔNG được lệch số đếm; dùng `limit_page_length=0` và để permission engine lọc — `len(rows)` chính là tổng khớp filter (không cắt trang giữa chừng).
@@ -123,7 +123,7 @@ M12 **không thêm BR nghiệp vụ "cứng" mới** — mọi BR thực sự (B
 
 ## 7. UI
 
-> Vue 3 + frappe-ui SPA, **mobile-first** cho `NV kinh doanh` (UI_Design §0: mobile-first cho NV KD). Route mới APPEND vào `frontend/src/router.js` (lazy). Page đặt tên `AntmedMobile<Feature>.vue`. Gọi đúng `crm.api.antmed.mobile_sync.*` / `crm.api.antmed.<module>.*`. PWA: service worker + manifest + IndexedDB outbox.
+> Vue 3 + frappe-ui SPA, **mobile-first** cho `NV kinh doanh` (UI_Design §0: mobile-first cho NV KD). Route mới APPEND vào `frontend/src/router.js` (lazy). Page đặt tên `AntmedMobile<Feature>.vue`. Gọi đúng `antmed_crm.api.antmed.mobile_sync.*` / `antmed_crm.api.antmed.<module>.*`. PWA: service worker + manifest + IndexedDB outbox.
 
 ### Routes (THÊM mới — lazy import; prefix `/antmed/m/` cho lớp mobile)
 
@@ -138,13 +138,13 @@ M12 **không thêm BR nghiệp vụ "cứng" mới** — mọi BR thực sự (B
 **Thành phần PWA (FE):**
 - `frontend/src/sw.js` — service worker: cache app shell (precache) + chiến lược network-first cho API GET có fallback cache; đăng ký qua `vite-plugin-pwa` hoặc `workbox` `[cần khảo sát chọn lib]`.
 - `frontend/src/utils/outbox.js` — wrapper IndexedDB: enqueue thao tác (kèm `idempotency_key` sinh client), liệt kê, đánh dấu đã sync, retry.
-- `frontend/src/data/mobileSync.js` — store domain dùng `createResource`/`createListResource` gọi `crm.api.antmed.mobile_sync.*`; điều phối pull→merge IndexedDB và flush outbox khi `navigator.onLine`.
+- `frontend/src/data/mobileSync.js` — store domain dùng `createResource`/`createListResource` gọi `antmed_crm.api.antmed.mobile_sync.*`; điều phối pull→merge IndexedDB và flush outbox khi `navigator.onLine`.
 - `manifest.webmanifest` — tên app, icon, `display: standalone`, theme color (để "Add to Home Screen").
 
 **Boundaries UI:**
 - **Always** lazy import các page mới; **Always** `__()` cho nhãn VN; loading/error/empty + **banner offline** rõ ràng cho mỗi resource.
 - **Always** dùng frappe-ui resource (không axios trực tiếp); thao tác ghi khi offline → enqueue outbox, KHÔNG gọi API ngay.
-- **Never** sửa route/layout/sidebar/page CRM gốc; **Never** gọi `antmed_crm.api.*` (đúng là `crm.api.antmed.*`); **Never** nhân đôi luật nghiệp vụ M04/M05 ở FE (chỉ gọi server).
+- **Never** sửa route/layout/sidebar/page CRM gốc; **Never** gọi `crm.api.*` (đúng là `antmed_crm.api.antmed.*`); **Never** nhân đôi luật nghiệp vụ M04/M05 ở FE (chỉ gọi server).
 
 ---
 
@@ -190,7 +190,7 @@ M12 **không thêm BR nghiệp vụ "cứng" mới** — mọi BR thực sự (B
 - **No-regression**: `test_antmed_bootstrap` + `test_antmed_customer` + 4 test gốc CRM (Lead/Task/Organization/Territory) vẫn xanh; KHÔNG đụng route/test gốc.
 
 **FE (vitest + build):**
-- File ĐỀ XUẤT: `frontend/tests/unit/antmedMobile.test.js`. Assertion: route `/antmed/m*` tồn tại (path/name/lazy); page gọi đúng `crm.api.antmed.mobile_sync.*`; outbox enqueue/flush logic unit-test; KHÔNG `antmed_crm.api`/axios/tanstack.
+- File ĐỀ XUẤT: `frontend/tests/unit/antmedMobile.test.js`. Assertion: route `/antmed/m*` tồn tại (path/name/lazy); page gọi đúng `antmed_crm.api.antmed.mobile_sync.*`; outbox enqueue/flush logic unit-test; KHÔNG `antmed_crm.api`/axios/tanstack.
 - `yarn build` xanh, SFC compile sạch, **service worker + manifest emit** không vỡ chunk cũ; route CRM gốc còn nguyên.
 
 **Pixel / e2e (Playwright MCP, site `miyano` cổng 80, sau USER reload):**

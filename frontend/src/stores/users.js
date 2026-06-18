@@ -12,7 +12,7 @@ export const usersStore = defineStore('crm-users', () => {
   const router = useRouter()
 
   const users = createResource({
-    url: 'crm.api.session.get_users',
+    url: 'antmed_crm.api.session.get_users',
     cache: 'crm-users',
     initialData: [],
     auto: true,

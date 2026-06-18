@@ -5,7 +5,7 @@ Thư mục này chứa **tài liệu phát triển** do team sinh ra khi build A
 > ⛔ **Phân biệt với `docs/antmed_crm/`**: đó là **repo scaffold tham khảo + tài liệu NGUỒN BA gốc** (`AntMed_CRM_Modules.md`, `AntMed_CRM_UI_Design.md`, `BA_AntMed_CRM.docx`, mockups). Là **git repo riêng + bị gitignore** (`.gitignore:23`) ⇒ KHÔNG version-control cùng app `crm`. Chỉ **đọc tham khảo**; KHÔNG viết dev-doc vào đó.
 
 ## Quy ước nền (chốt 2026-06-17 — xem SPEC §5, §8)
-- **In-place** trong app `crm`: BE ở `crm/antmed/` + `crm/api/antmed/` → endpoint `crm.api.antmed.<module>.<fn>`. FE ở `frontend/src` (page `Antmed<Feature>.vue`, route `/antmed/*`). Site = `miyano`.
+- **In-place** trong app `crm`: BE ở `crm/antmed/` + `crm/api/antmed/` → endpoint `antmed_crm.api.antmed.<module>.<fn>`. FE ở `frontend/src` (page `Antmed<Feature>.vue`, route `/antmed/*`). Site = `miyano`.
 - DocType/Role prefix **`AntMed `** (KHÔNG `AM `). **Native-lite** (D1): KHÔNG ERPNext — tự xây `AntMed Item/Lot/Warehouse/Stock Entry/Delivery/Instrument Set…`. Workflow = **Frappe-native** (D2). Role **tiếng Việt** (DEC-A).
 - Mọi BE = Frappe-standard (KHÔNG 3-tier): whitelist trả raw dict; lỗi nghiệp vụ `frappe.throw(_("BR-XX: …"))`; business rule ở module hooks qua `doc_events`.
 

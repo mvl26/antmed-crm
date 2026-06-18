@@ -1,0 +1,28 @@
+{
+ "actions": [],
+ "creation": "2026-06-18 10:30:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": ["component_name", "expected", "condition", "signed_by", "photo"],
+ "fields": [
+  {"fieldname": "component_name", "fieldtype": "Data", "in_list_view": 1, "label": "Chi tiết", "reqd": 1},
+  {"default": "1", "fieldname": "expected", "fieldtype": "Int", "in_list_view": 1, "label": "SL kỳ vọng"},
+  {"default": "OK", "fieldname": "condition", "fieldtype": "Select", "in_list_view": 1, "label": "Tình trạng", "options": "OK\nMissing\nDamaged"},
+  {"fieldname": "signed_by", "fieldtype": "Data", "label": "Người ký"},
+  {"fieldname": "photo", "fieldtype": "Attach Image", "label": "Ảnh"}
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-06-18 10:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "AntMed",
+ "name": "AntMed Loan Checklist Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

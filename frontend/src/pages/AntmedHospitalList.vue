@@ -12,18 +12,27 @@
           {{ __('Danh mục khách hàng bệnh viện — Customer 360°') }}
         </p>
       </div>
-      <div class="w-full sm:w-72">
-        <FormControl
-          type="text"
-          :placeholder="__('Tìm theo tên bệnh viện…')"
-          :modelValue="search"
-          :aria-label="__('Tìm theo tên bệnh viện')"
-          @update:modelValue="onSearch"
-        >
-          <template #prefix>
-            <FeatherIcon name="search" class="h-4 w-4 text-ink-gray-5" />
-          </template>
-        </FormControl>
+      <div class="flex w-full items-center gap-2 sm:w-auto">
+        <div class="w-full sm:w-64">
+          <FormControl
+            type="text"
+            :placeholder="__('Tìm theo tên bệnh viện…')"
+            :modelValue="search"
+            :aria-label="__('Tìm theo tên bệnh viện')"
+            @update:modelValue="onSearch"
+          >
+            <template #prefix>
+              <FeatherIcon name="search" class="h-4 w-4 text-ink-gray-5" />
+            </template>
+          </FormControl>
+        </div>
+        <Button
+          variant="solid"
+          theme="teal"
+          class="shrink-0"
+          :label="__('+ Tạo bệnh viện')"
+          @click="openCreate"
+        />
       </div>
     </header>
 
@@ -78,9 +87,7 @@
         class="flex flex-col items-center gap-2 py-16 text-center text-ink-gray-6"
       >
         <p class="text-p-base">{{ __('Chưa có bệnh viện nào khớp điều kiện.') }}</p>
-        <p class="text-p-sm">
-          {{ __('Thêm bệnh viện trong Frappe Desk (AntMed Hospital) rồi tải lại.') }}
-        </p>
+        <Button variant="outline" :label="__('+ Tạo bệnh viện')" @click="openCreate" />
       </div>
 
       <!-- Data table -->
@@ -154,13 +161,68 @@
         {{ __('Tổng cộng') }}: {{ totalCount }} {{ __('bệnh viện') }}
       </p>
     </section>
+
+    <!-- Dialog tạo bệnh viện -->
+    <Dialog v-model="createDlg" :options="{ title: __('Tạo bệnh viện mới'), size: 'xl' }">
+      <template #body-content>
+        <div class="bg-surface-modal px-4 pb-6 pt-5 sm:px-6">
+          <div class="flex flex-col gap-4">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FormControl
+                :label="__('Mã bệnh viện') + ' *'"
+                v-model="cForm.hospital_code"
+                placeholder="BV-XXX"
+                required
+              />
+              <FormControl
+                :label="__('Tên bệnh viện') + ' *'"
+                v-model="cForm.hospital_name"
+                :placeholder="__('Bệnh viện Đa khoa…')"
+                required
+              />
+            </div>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FormControl
+                type="select"
+                :label="__('Hạng')"
+                v-model="cForm.rank"
+                :options="rankSelectOptions"
+              />
+              <FormControl
+                type="select"
+                :label="__('Trạng thái HĐ')"
+                v-model="cForm.contract_status"
+                :options="contractStatusOptions"
+              />
+            </div>
+            <FormControl :label="__('Mã số thuế')" v-model="cForm.tax_code" />
+            <FormControl
+              type="textarea"
+              :label="__('Địa chỉ')"
+              v-model="cForm.address"
+              :rows="2"
+            />
+          </div>
+          <div class="mt-6 flex justify-end gap-2 border-t border-outline-gray-1 pt-4">
+            <Button :label="__('Huỷ')" @click="createDlg = false" />
+            <Button
+              variant="solid"
+              theme="teal"
+              :loading="createRes.loading"
+              :label="__('Tạo bệnh viện')"
+              @click="onCreate"
+            />
+          </div>
+        </div>
+      </template>
+    </Dialog>
   </main>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Badge, Button, FormControl, FeatherIcon, toast } from 'frappe-ui'
+import { Badge, Button, Dialog, FormControl, FeatherIcon, createResource, toast } from 'frappe-ui'
 import LoadingIndicator from '@/components/Icons/LoadingIndicator.vue'
 import { listHospitals, RANK_THEME, CONTRACT_STATUS_THEME } from '@/data/antmed'
 
@@ -179,9 +241,16 @@ const rankOptions = [
 const search = ref('')
 const activeRank = ref('')
 
+// FE→BE contract: filters PHẢI là JSON-string (BE _coerce_filters dùng frappe.parse_json).
+// Truyền object thô → createResource GET serialize thành "[object Object]" → BE parse lỗi → mất data.
+function buildParams() {
+  const filters = activeRank.value ? { rank: activeRank.value } : {}
+  return { search: search.value, filters: JSON.stringify(filters) }
+}
+
 // Resource list — endpoint trả dict bọc { data, total_count }, đọc r.data.data.
 const hospitals = listHospitals({
-  params: { search: '', filters: {} },
+  params: buildParams(),
   auto: true,
 })
 
@@ -204,8 +273,7 @@ function contractTheme(status) {
 
 // Param phát đi == UI selection (chống dead-control): rebuild params từ search + rank.
 function refetch() {
-  const filters = activeRank.value ? { rank: activeRank.value } : {}
-  hospitals.submit({ search: search.value, filters })
+  hospitals.submit(buildParams())
 }
 
 let searchTimer = null
@@ -227,5 +295,52 @@ function openHospital(name) {
 // Surface lỗi BR-XX từ BE qua toast (ngoài banner tri-branch).
 hospitals.onError = (err) => {
   toast.error(err?.messages?.[0] || __('Không tải được danh sách bệnh viện'))
+}
+
+// ── Tạo bệnh viện (BE customer.create_hospital) ──
+const rankSelectOptions = [
+  { value: '', label: __('— Chọn hạng —') },
+  { value: 'Đặc biệt', label: __('Đặc biệt') },
+  { value: 'I', label: __('Hạng I') },
+  { value: 'II', label: __('Hạng II') },
+  { value: 'III', label: __('Hạng III') },
+  { value: 'Khác', label: __('Khác') },
+]
+const contractStatusOptions = [
+  { value: '', label: __('— Chọn trạng thái —') },
+  { value: 'Tiềm năng', label: __('Tiềm năng') },
+  { value: 'Đã ký', label: __('Đã ký') },
+  { value: 'Hết hạn', label: __('Hết hạn') },
+]
+const createDlg = ref(false)
+const emptyHospital = () => ({
+  hospital_code: '',
+  hospital_name: '',
+  rank: '',
+  contract_status: '',
+  tax_code: '',
+  address: '',
+})
+const cForm = ref(emptyHospital())
+const createRes = createResource({
+  url: 'antmed_crm.api.antmed.customer.create_hospital',
+  method: 'POST',
+  onSuccess() {
+    toast.success(__('Đã tạo bệnh viện mới'))
+    createDlg.value = false
+    hospitals.reload()
+  },
+  onError: (err) => toast.error(err?.messages?.[0] || __('Không tạo được bệnh viện')),
+})
+function openCreate() {
+  cForm.value = emptyHospital()
+  createDlg.value = true
+}
+function onCreate() {
+  if (!cForm.value.hospital_code || !cForm.value.hospital_name) {
+    toast.error(__('Nhập mã và tên bệnh viện'))
+    return
+  }
+  createRes.submit({ ...cForm.value })
 }
 </script>

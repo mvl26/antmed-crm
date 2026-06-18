@@ -4,7 +4,7 @@
 |---|---|
 | Module folder | `crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) |
 | DocType folder | `crm/antmed/doctype/antmed_kpi_definition/`, `…/antmed_kpi_score/`, `…/antmed_commission/`, `…/antmed_sales_employee/`, `…/antmed_employee_route/` |
-| API package | `crm/api/antmed/hr_kpi.py` (đường gọi `crm.api.antmed.hr_kpi.<fn>`) |
+| API package | `crm/api/antmed/hr_kpi.py` (đường gọi `antmed_crm.api.antmed.hr_kpi.<fn>`) |
 | FE pages | `frontend/src/pages/AntmedTeam.vue`, `AntmedSalesEmployeeDetail.vue`, `AntmedKpiBoard.vue`, `AntmedCommission.vue` + route `/antmed/team`, `/antmed/team/:name`, `/antmed/kpi`, `/antmed/commission` |
 | Wave (PLAN) | **W4 — Tăng trưởng & kiểm soát** |
 | Role chính (VI) | `Quản lý` (xem KPI đội + khóa kỳ hoa hồng); `NV kinh doanh` (xem KPI/hoa hồng của chính mình) — DEC-A. Có thể cần `Kế toán` [PLANNED] cho khóa kỳ + đẩy lương |
@@ -103,7 +103,7 @@ DocType M10 **không submit** (`is_submittable: 0`) → không dùng `docstatus`
 
 > File `crm/api/antmed/hr_kpi.py`. Mọi hàm `@frappe.whitelist(methods=["GET"|"POST"])`, **type-annotated** (`crm/hooks.py` `require_type_annotated_api_methods`), trả **RAW dict/list**. Lỗi nghiệp vụ = `frappe.throw(_("BR-M10-xx: …"))`. Aggregate nguồn dùng **lazy-import** module M04/M05/M09 (xem §6).
 
-| Endpoint (`crm.api.antmed.hr_kpi.…`) | Verb | Mô tả |
+| Endpoint (`antmed_crm.api.antmed.hr_kpi.…`) | Verb | Mô tả |
 |---|---|---|
 | `list_team` | GET | Danh sách NV của đội (`AntMed Sales Employee`): `name`, `employee_name`, `personal_warehouse`, `manager`, `active`. Lọc theo `manager` cho `Quản lý`. **count==rows.** Trả `{data, total_count}`. |
 | `get_sales_employee` | GET | `get_sales_employee(name: str) -> dict`: hồ sơ NV + tuyến (`routes` từ `AntMed Employee Route`) + KPI kỳ hiện tại (list) + hoa hồng kỳ. `frappe.has_permission`/`PermissionError` nếu không read được. |
@@ -147,7 +147,7 @@ M10 là **consumer cuối DAG** (PLAN §2): `M04, M05, M09 → M10 → M11`. M10
 
 ## 7. UI
 
-> Vue 3 + frappe-ui SPA. `createResource` gọi `crm.api.antmed.hr_kpi.*`, đọc `r.data.data`. Route APPEND vào `frontend/src/router.js` (lazy). Nhãn 100% tiếng Việt qua `__()`. KHÔNG đụng route CRM gốc; KHÔNG `antmed_crm.api.*`.
+> Vue 3 + frappe-ui SPA. `createResource` gọi `antmed_crm.api.antmed.hr_kpi.*`, đọc `r.data.data`. Route APPEND vào `frontend/src/router.js` (lazy). Nhãn 100% tiếng Việt qua `__()`. KHÔNG đụng route CRM gốc; KHÔNG `crm.api.*`.
 
 Màn hình ground @ `AntMed_CRM_UI_Design.md`:
 - **§2.3 "Đội ngũ"** (Trưởng phòng KD): bảng NV — ảnh, tuyến BV, kho cá nhân (số SKU + giá trị), bộ dụng cụ đang quản lý, KPI tháng (thanh ngang). Click NV → trang cá nhân (timeline check-in, lịch sử giao, công nợ giúp thu, doanh thu, khiếu nại).
@@ -216,7 +216,7 @@ Theo SPEC §6 — một slice "xong" khi: **BE run-tests `Ran N OK`** + **FE vit
 - BR-M10-05: user NV A gọi `list_commission` không thấy bản ghi của NV B (data-scope; count==rows theo user).
 - **No-regression**: `test_antmed_bootstrap` + `test_antmed_customer` + 4 test gốc CRM xanh.
 
-**FE test** (`frontend/tests/unit/antmedHrKpi.test.js`): 4 route mới tồn tại (path/name/lazy); page gọi đúng `crm.api.antmed.hr_kpi.*`; route CRM gốc còn; KHÔNG `antmed_crm.api`/axios. `yarn build` emit chunk `Antmed*` không vỡ.
+**FE test** (`frontend/tests/unit/antmedHrKpi.test.js`): 4 route mới tồn tại (path/name/lazy); page gọi đúng `antmed_crm.api.antmed.hr_kpi.*`; route CRM gốc còn; KHÔNG `antmed_crm.api`/axios. `yarn build` emit chunk `Antmed*` không vỡ.
 
 **Pixel (Playwright, sau reload)**: `/antmed/kpi` render bảng KPI đa chiều theo kỳ; `/antmed/commission` render hoa hồng + nút "Khóa kỳ"; 0 console error; API 200.
 

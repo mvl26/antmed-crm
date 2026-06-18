@@ -18,10 +18,10 @@
 | Module Frappe | `AntMed` (khai trong `crm/modules.txt`) | `AntMed` |
 | Thư mục code module | `crm/antmed/` | `crm/antmed/__init__.py` |
 | Package API | `crm/api/antmed/` (có `__init__.py`) | `crm/api/antmed/health.py` |
-| Đường gọi endpoint | `crm.api.antmed.<module>.<fn>` | `crm.api.antmed.health.ping` |
+| Đường gọi endpoint | `antmed_crm.api.antmed.<module>.<fn>` | `antmed_crm.api.antmed.health.ping` |
 | File api theo module nghiệp vụ (round sau) | `crm/api/antmed/<module>.py` | `crm/api/antmed/hospitals.py` |
 
-**Cấm**: `antmed_crm.api.*`, `assetcore.*`, app riêng `antmed_crm`. (ADR-M01-01)
+**Cấm**: `crm.api.*` (namespace cũ — app cài là `antmed_crm`), `assetcore.*`, app khác. (ADR-M01-01)
 
 ---
 
@@ -75,7 +75,7 @@
 | Route name | PascalCase tiền tố `Antmed` | `AntmedHome` |
 | Page component | `frontend/src/pages/Antmed<Feature>.vue` | `AntmedHome.vue` |
 | Store (round sau) | `frontend/src/stores/antmed<Feature>.js` → `useAntmed<Feature>Store` | `antmedHospitals.js` |
-| Resource call | `createResource({ url: 'crm.api.antmed.<module>.<fn>' })` | `crm.api.antmed.health.ping` |
+| Resource call | `createResource({ url: 'antmed_crm.api.antmed.<module>.<fn>' })` | `antmed_crm.api.antmed.health.ping` |
 
 **Cấm**: sửa/xoá route/page/store Frappe CRM gốc (Leads/Deals/Contacts/Tasks…). Chỉ THÊM route/page mới prefix `Antmed`.
 
@@ -91,7 +91,7 @@
 ## 7. Test
 
 - BE test: `crm/api/antmed/test_<module>.py` hoặc `crm/antmed/tests/test_<module>.py`.
-- Lệnh: `bench --site miyano run-tests --module crm.api.antmed.test_<module>`.
+- Lệnh: `bench --site miyano run-tests --module antmed_crm.api.antmed.test_<module>`.
 - Mỗi feature mới: ≥1 test mới, 0 fail, + chạy lại 4 test gốc (no-regression).
 
 ---

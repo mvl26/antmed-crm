@@ -4,7 +4,7 @@
 |---|---|
 | Module folder | `crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) |
 | DocType folder | `crm/antmed/doctype/antmed_delivery/`, `.../antmed_or_schedule/`, `.../antmed_sla_log/`, `.../antmed_delivery_item/` … (đề xuất) |
-| Code path BE | `crm/antmed/doctype/<snake>/` + `crm/api/antmed/delivery.py` (đường gọi `crm.api.antmed.delivery.<fn>`) |
+| Code path BE | `crm/antmed/doctype/<snake>/` + `crm/api/antmed/delivery.py` (đường gọi `antmed_crm.api.antmed.delivery.<fn>`) |
 | FE pages | `frontend/src/pages/Antmed*` + route `/antmed/deliveries`, `/antmed/deliveries/:name`, `/antmed/dispatch` (kanban) |
 | Wave (PLAN) | **W2 — Chuỗi vận hành lõi** (M04 → M06 → M09, tuần tự) |
 | Role chính (VI) | `NV kinh doanh` (giao tại phòng mổ), `Quản lý` (điều phối/gán NV, duyệt ngoài thầu); `Thủ kho` (xuất kho cá nhân) — [PLANNED] thêm `Trưởng phòng KD` nếu tách vai điều phối khỏi `Quản lý` |
@@ -14,7 +14,7 @@
 | Cập nhật | 2026-06-17 |
 
 > **Trạng thái: [PLANNED — chưa code]**
-> Tài liệu này là **blueprint phát triển (DESIGN / đề xuất)** — schema/API/workflow dưới đây **chưa được implement**. Mọi DocType/field/endpoint là *đề xuất*, ground @ scaffold tham chiếu (`docs/antmed_crm/antmed_crm/m04_or_delivery/`, bản app-riêng cũ) + `AntMed_CRM_Modules.md §4` + `AntMed_CRM_UI_Design.md`. Đã **adapt**: prefix `AM `→`AntMed `, ERPNext-reuse (`Customer`/`Item`/`Batch`/`Delivery Note`)→**native-lite** (`AntMed Hospital`/`AntMed Item`/`AntMed Lot`/`AntMed Delivery`), bỏ giả định app riêng (`antmed_crm.api.*`→`crm.api.antmed.*`, module `M04 OR Delivery`→`AntMed`).
+> Tài liệu này là **blueprint phát triển (DESIGN / đề xuất)** — schema/API/workflow dưới đây **chưa được implement**. Mọi DocType/field/endpoint là *đề xuất*, ground @ scaffold tham chiếu (`docs/antmed_crm/antmed_crm/m04_or_delivery/`, bản app-riêng cũ) + `AntMed_CRM_Modules.md §4` + `AntMed_CRM_UI_Design.md`. Đã **adapt**: prefix `AM `→`AntMed `, ERPNext-reuse (`Customer`/`Item`/`Batch`/`Delivery Note`)→**native-lite** (`AntMed Hospital`/`AntMed Item`/`AntMed Lot`/`AntMed Delivery`), bỏ giả định app riêng (`antmed_crm.api.*`→`antmed_crm.api.antmed.*`, module `M04 OR Delivery`→`AntMed`).
 
 ---
 
@@ -86,15 +86,15 @@ Vai trò trong 14 module (theo DAG `PLAN §2`): M04 nằm **giữa chuỗi vận
 
 ## 4. Business Rules
 
-> Enforce theo **Frappe-standard**: rule trong **module hooks** (`crm/antmed/m04_delivery_hooks.py` hoặc controller `antmed_delivery.py`) wired qua `doc_events` trong `crm/hooks.py`; lỗi nghiệp vụ = `frappe.throw(_("BR-XX: …tiếng Việt"))`. Adapt vị trí enforce từ README (cột "Vị trí" — đổi `AM Delivery Request`/`Delivery Note`→`AntMed Delivery`, `api/delivery`→`crm.api.antmed.delivery`).
+> Enforce theo **Frappe-standard**: rule trong **module hooks** (`crm/antmed/m04_delivery_hooks.py` hoặc controller `antmed_delivery.py`) wired qua `doc_events` trong `crm/hooks.py`; lỗi nghiệp vụ = `frappe.throw(_("BR-XX: …tiếng Việt"))`. Adapt vị trí enforce từ README (cột "Vị trí" — đổi `AM Delivery Request`/`Delivery Note`→`AntMed Delivery`, `api/delivery`→`antmed_crm.api.antmed.delivery`).
 
 | BR | Mô tả | Nơi enforce (đề xuất, native-lite) |
 |---|---|---|
 | **BR-01** | **Đối chiếu danh mục trúng thầu**: mọi `AntMed Delivery Item.item` phải thuộc danh mục vật tư trúng thầu của hợp đồng còn hiệu lực của BV (M02). Ngoài danh mục → set `out_of_contract_flag=1` + cảnh báo; chặn chuyển `Đã gán NV` cho tới khi `out_of_contract_approved_by` (Quản lý duyệt). | `AntMed Delivery.validate` (controller) — đối chiếu `AntMed Contract`/`AntMed Quota Item` của M02. *(scaffold: `AM Delivery Request.validate`)* |
 | **BR-06** | **Khoá quota chạm trần**: tổng SL đã giao + SL yêu cầu không vượt quota dòng hợp đồng (100% lock). Vượt → `frappe.throw`. | `AntMed Delivery.validate` (khi submit `Đã bàn giao`, đối chiếu lũy kế quota M02). *(scaffold: `Delivery Note.validate quota 100% lock`)* |
-| **BR-08** | **Gợi ý/cảnh báo FIFO–HSD**: khi chọn `lot` cho item, hệ thống gợi ý lot theo FIFO/HSD gần nhất (M03); chọn lot không-FIFO hoặc cận/hết HSD → **cảnh báo** (warn, không chặn cứng). | `crm.api.antmed.delivery.fifo_suggest` + `AntMed Delivery.validate` (warn). *(scaffold: `api/delivery.fifo_suggest + check_fifo warn`)* |
+| **BR-08** | **Gợi ý/cảnh báo FIFO–HSD**: khi chọn `lot` cho item, hệ thống gợi ý lot theo FIFO/HSD gần nhất (M03); chọn lot không-FIFO hoặc cận/hết HSD → **cảnh báo** (warn, không chặn cứng). | `antmed_crm.api.antmed.delivery.fifo_suggest` + `AntMed Delivery.validate` (warn). *(scaffold: `api/delivery.fifo_suggest + check_fifo warn`)* |
 | **BR-07** | **Chặn xóa DO đã ký/đã bàn giao**: `AntMed Delivery` ở trạng thái `Đã bàn giao`/`Đã đóng` (docstatus=1, có chữ ký) **không được xóa** — bằng chứng pháp lý. | `AntMed Delivery.on_trash` → `frappe.throw`. *(scaffold: `block_delete_signed_do trên Delivery Note.on_trash`)* |
-| **BR-10** | **Audit hash-chain**: thao tác gán/submit/đóng + hash chữ ký (`AntMed DO Signature.hash_sha256`) ghi `AntMed Audit Log` (M14). | lazy-import `crm.api.antmed` M14 trong `doc_events` (`on_update`/`on_submit`). [PLANNED — phụ thuộc M14] |
+| **BR-10** | **Audit hash-chain**: thao tác gán/submit/đóng + hash chữ ký (`AntMed DO Signature.hash_sha256`) ghi `AntMed Audit Log` (M14). | lazy-import `antmed_crm.api.antmed` M14 trong `doc_events` (`on_update`/`on_submit`). [PLANNED — phụ thuộc M14] |
 | **BR-13** | **Data-scope**: NV kinh doanh chỉ thấy `AntMed Delivery` của BV được giao / của chính mình (`assigned_employee`). | `permission_query_conditions` cho `AntMed Delivery` (M14/W4). **[ROADMAP]** — W2 chỉ giữ invariant `count == rows`; data-scope hoãn (như ADR-M01-05). |
 
 > **Invariant kỹ thuật bắt buộc** (gate, không phải BR nghiệp vụ): list endpoint giữ **count == rows** (`get_list(pluck=…, limit_page_length=0)` để khi W4 thêm `permission_query_conditions` không vỡ contract).
@@ -103,18 +103,18 @@ Vai trò trong 14 module (theo DAG `PLAN §2`): M04 nằm **giữa chuỗi vận
 
 ## 5. API
 
-> File: `crm/api/antmed/delivery.py`. Mọi hàm `@frappe.whitelist(methods=["GET"|"POST"])`, **type-annotated** (`crm/hooks.py:require_type_annotated_api_methods`), trả **RAW dict/list** (KHÔNG `_ok/_err` envelope). Lỗi nghiệp vụ/permission = `frappe.throw(...)` in-handler. Đường gọi `crm.api.antmed.delivery.<fn>`.
+> File: `crm/api/antmed/delivery.py`. Mọi hàm `@frappe.whitelist(methods=["GET"|"POST"])`, **type-annotated** (`crm/hooks.py:require_type_annotated_api_methods`), trả **RAW dict/list** (KHÔNG `_ok/_err` envelope). Lỗi nghiệp vụ/permission = `frappe.throw(...)` in-handler. Đường gọi `antmed_crm.api.antmed.delivery.<fn>`.
 
 | Endpoint (đề xuất) | Verb | Mô tả |
 |---|---|---|
-| `crm.api.antmed.delivery.list_deliveries` | GET | List phiếu giao (filter: `workflow_state`, `hospital`, `assigned_employee`, khoảng `surgery_datetime`, `sla_status`). Trả `{data, total_count}`; **count == rows** khi không phân trang. Field item: `name, hospital, hospital_name, doctor, surgery_datetime, sla_minutes, workflow_state, assigned_employee, sla_status, out_of_contract_flag`. |
-| `crm.api.antmed.delivery.get_delivery` | GET | Chi tiết 1 phiếu giao + `items` (gồm `requested/delivered/consumed/returned_qty`, `lot`), `photos`, `signatures`, GPS, SLA. `frappe.throw(PermissionError)` nếu thiếu read-perm. |
-| `crm.api.antmed.delivery.create_request` | POST | Tạo `AntMed Delivery` (Nháp) từ yêu cầu (source/hospital/doctor/surgery_datetime/items). Chạy BR-01 đối chiếu → trả về `out_of_contract` cảnh báo nếu có. |
-| `crm.api.antmed.delivery.fifo_suggest` | GET | Với `hospital`/`assigned_employee`/`item` → gợi ý lot theo FIFO/HSD (M03 native), cảnh báo cận/hết HSD (BR-08). Trả list lot {`lot`, `qty_available`, `expiry`, `co_cq_status`}. |
-| `crm.api.antmed.delivery.assign` | POST | Gán `assigned_employee` + chuyển `Đã gán NV` (gate BR-01: nếu ngoài thầu phải đã duyệt). Ghi `AntMed SLA Log` (Assigned). |
-| `crm.api.antmed.delivery.start_transit` | POST | Chuyển `Đang giao` + GPS check-in. Ghi `AntMed SLA Log` (EnRoute). |
-| `crm.api.antmed.delivery.handover` | POST | Bàn giao: nhận `signatures` (≥1), `photos` (≥2), `gps_*`, `consumed/returned_qty` từng item → **submit** (`Đã bàn giao`), tính `sla_status` (so `delivered_at` vs `surgery_datetime`), ghi `AntMed SLA Log` (Delivered). Gate bắt buộc chữ ký + ảnh + GPS. |
-| `crm.api.antmed.delivery.dispatch_board` | GET | Dữ liệu kanban điều phối: nhóm theo `workflow_state` (Mới tiếp nhận/Đã gán NV/Đang giao/Đã bàn giao) + đồng hồ đếm ngược tới `surgery_datetime`. |
+| `antmed_crm.api.antmed.delivery.list_deliveries` | GET | List phiếu giao (filter: `workflow_state`, `hospital`, `assigned_employee`, khoảng `surgery_datetime`, `sla_status`). Trả `{data, total_count}`; **count == rows** khi không phân trang. Field item: `name, hospital, hospital_name, doctor, surgery_datetime, sla_minutes, workflow_state, assigned_employee, sla_status, out_of_contract_flag`. |
+| `antmed_crm.api.antmed.delivery.get_delivery` | GET | Chi tiết 1 phiếu giao + `items` (gồm `requested/delivered/consumed/returned_qty`, `lot`), `photos`, `signatures`, GPS, SLA. `frappe.throw(PermissionError)` nếu thiếu read-perm. |
+| `antmed_crm.api.antmed.delivery.create_request` | POST | Tạo `AntMed Delivery` (Nháp) từ yêu cầu (source/hospital/doctor/surgery_datetime/items). Chạy BR-01 đối chiếu → trả về `out_of_contract` cảnh báo nếu có. |
+| `antmed_crm.api.antmed.delivery.fifo_suggest` | GET | Với `hospital`/`assigned_employee`/`item` → gợi ý lot theo FIFO/HSD (M03 native), cảnh báo cận/hết HSD (BR-08). Trả list lot {`lot`, `qty_available`, `expiry`, `co_cq_status`}. |
+| `antmed_crm.api.antmed.delivery.assign` | POST | Gán `assigned_employee` + chuyển `Đã gán NV` (gate BR-01: nếu ngoài thầu phải đã duyệt). Ghi `AntMed SLA Log` (Assigned). |
+| `antmed_crm.api.antmed.delivery.start_transit` | POST | Chuyển `Đang giao` + GPS check-in. Ghi `AntMed SLA Log` (EnRoute). |
+| `antmed_crm.api.antmed.delivery.handover` | POST | Bàn giao: nhận `signatures` (≥1), `photos` (≥2), `gps_*`, `consumed/returned_qty` từng item → **submit** (`Đã bàn giao`), tính `sla_status` (so `delivered_at` vs `surgery_datetime`), ghi `AntMed SLA Log` (Delivered). Gate bắt buộc chữ ký + ảnh + GPS. |
+| `antmed_crm.api.antmed.delivery.dispatch_board` | GET | Dữ liệu kanban điều phối: nhóm theo `workflow_state` (Mới tiếp nhận/Đã gán NV/Đang giao/Đã bàn giao) + đồng hồ đếm ngược tới `surgery_datetime`. |
 
 > Bất biến **count == rows** áp cho `list_deliveries` (và mọi list). `handover`/`assign`/`start_transit` là POST đổi trạng thái → kiểm `frappe.has_permission(..., "submit"/"write")` + tôn trọng transition workflow.
 
@@ -149,7 +149,7 @@ doc_events = {
 
 ## 7. UI
 
-> Vue 3 + frappe-ui SPA, gọi `crm.api.antmed.delivery.*`. Route mới **APPEND** vào `frontend/src/router.js` (lazy). KHÔNG đụng route CRM gốc. Nhãn 100% tiếng Việt qua `__()`. Mobile-first cho NV; desktop cho điều phối.
+> Vue 3 + frappe-ui SPA, gọi `antmed_crm.api.antmed.delivery.*`. Route mới **APPEND** vào `frontend/src/router.js` (lazy). KHÔNG đụng route CRM gốc. Nhãn 100% tiếng Việt qua `__()`. Mobile-first cho NV; desktop cho điều phối.
 
 | Màn hình (UI_Design) | Route (đề xuất) | Page Vue | Role dùng |
 |---|---|---|---|
@@ -161,7 +161,7 @@ doc_events = {
 - **Kanban** (§2.2): thẻ hiển thị BV, bác sỹ, giờ mổ, NV, **đồng hồ đếm ngược** (xanh ≥1h, cam <1h, đỏ trễ — accent cam `#F97316` cho cảnh báo SLA). Kéo-thả thẻ → modal xác nhận gán NV + check tồn kho NV đang giữ.
 - **Wizard mobile** (§3.2): Stepper 4 bước; cảnh báo đỏ nếu vật tư **ngoài danh mục HĐ** (BR-01); quét QR/barcode lấy lot (cảnh báo FIFO BR-08); **Signature pad** + bắt buộc **≥2 ảnh** + GPS auto check-in; lựa chọn "Hoàn tất / một phần — còn lại trả kho ký gửi" (→ `consumed`/`returned`).
 - Component dùng: Stepper, Signature pad, Scanner overlay, Status pill (state workflow VI), DatePicker preset giờ ca, Table sticky. Mỗi resource có loading/error/empty; A11y AA; thao tác submit (bàn giao) có double-confirm + audit.
-- **Cấm**: axios/tanstack/`frappe.client.*` trực tiếp; `antmed_crm.api.*`; sửa route/page/store CRM gốc.
+- **Cấm**: axios/tanstack/`frappe.client.*` trực tiếp; `crm.api.*` (namespace cũ — đúng là `antmed_crm.api.antmed.*`); sửa route/page/store CRM gốc.
 
 ---
 
@@ -212,7 +212,7 @@ Theo **SPEC §6**. Một slice M04 "xong" khi:
    - `handover` thiếu chữ ký/ảnh/GPS → throw; đủ → submit + `sla_status` đúng (so giờ mổ).
    - `list_deliveries`: trả `{data,total_count}`, **`len(data)==total_count`** khi không phân trang.
    - Permission: user thiếu read-perm gọi `get_delivery` → `frappe.PermissionError`.
-2. **FE**: `yarn vitest run` xanh (route `/antmed/dispatch|deliveries|...` tồn tại + lazy; gọi đúng `crm.api.antmed.delivery.*`; KHÔNG `antmed_crm.api`/axios/tanstack) + `yarn build` xanh (chunk `Antmed*` không vỡ).
+2. **FE**: `yarn vitest run` xanh (route `/antmed/dispatch|deliveries|...` tồn tại + lazy; gọi đúng `antmed_crm.api.antmed.delivery.*`; KHÔNG `antmed_crm.api`/axios/tanstack) + `yarn build` xanh (chunk `Antmed*` không vỡ).
 3. **Pixel verify** (sau USER reload gunicorn): `http://miyano/crm/antmed/dispatch` render kanban thật + đồng hồ đếm ngược; mở 1 phiếu → wizard bàn giao (ký + ảnh + GPS); 0 console error; API 200.
 4. **No-regression**: bootstrap M01 + 4 test gốc CRM (Lead/Task/Territory/org-hierarchy) vẫn xanh; route/doctype CRM gốc nguyên vẹn.
 

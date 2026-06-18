@@ -3,15 +3,15 @@
 | Mục | Giá trị |
 |---|---|
 | Module folder | `crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) — DocType M09 đặt tại `crm/antmed/doctype/antmed_order/`, `crm/antmed/doctype/antmed_ar_entry/`, … |
-| Code path BE | `crm/antmed/doctype/<snake>/` + endpoint `crm/api/antmed/orders_ar.py` (đường gọi `crm.api.antmed.orders_ar.<fn>`) |
+| Code path BE | `crm/antmed/doctype/<snake>/` + endpoint `crm/api/antmed/orders_ar.py` (đường gọi `antmed_crm.api.antmed.orders_ar.<fn>`) |
 | Module hooks (BR) | `doc_events` wiring trong `crm/hooks.py` → `crm/antmed/<module hooks>.py` (vd `crm.antmed.orders_ar_hooks.*`) |
 | FE pages | `frontend/src/pages/Antmed*` + route `/antmed/orders`, `/antmed/ar`, `/antmed/ar/:hospital` |
 | Wave (PLAN) | **W2 — Chuỗi vận hành lõi** (sau M04 → M06 → **M09**) |
 | Role chính (VI) | `Kế toán` **[PLANNED — chưa có trong fixture]**, `Quản lý` (override BR-14) · phụ: `NV kinh doanh` (xem AR theo tuyến), `System Manager` |
 | Phụ thuộc | **M02** (Hợp đồng/Quota — đơn giá, hạn TT), **M04** (Giao phòng mổ — DO tiêu hao thực) |
 | Cấp dữ liệu cho | **M10** (KPI doanh thu/hoa hồng), **M11** (Dashboard công nợ/AR aging) |
-| Trạng thái | **PLANNED — chưa code** (chưa có DocType/API/test trên site `miyano`) |
-| Cập nhật | 2026-06-17 |
+| Trạng thái | **PLANNED — chưa code** cho S1–S5 (DocType `AntMed Order`/AR). **Slice M09-1 (widget Hoa hồng NV flat-rate, §7bis) = READY TO BUILD** — KHÔNG DocType, endpoint `antmed_crm.api.antmed.finance.commission_summary` |
+| Cập nhật | 2026-06-18 |
 
 > **Trạng thái: [PLANNED — chưa code]**
 > Toàn bộ schema/API/workflow/BR dưới đây là **DESIGN (đề xuất)** — *spec-before-code*, factory sẽ build từ tài liệu này. Chưa có DocType `AntMed Order`/`AntMed AR Entry` nào tồn tại trên site `miyano`. Mọi đề xuất được ground từ: PLAN component-inventory (dòng M09), `AntMed_CRM_Modules.md §9`, reference scaffold `m09_orders_ar/` (bản app-riêng cũ — đã **adapt** `AM `→`AntMed `, ERPNext-reuse→native-lite), `AntMed_CRM_UI_Design.md §6` (màn Kế toán), và `m01_customer360.md` (house style + hợp đồng API Frappe-standard).
@@ -108,7 +108,7 @@ M09 dùng **docstatus** (Frappe-native submit) cho các txn, và **một Workflo
 
 > File: `crm/api/antmed/orders_ar.py`. Mọi hàm `@frappe.whitelist(methods=["GET"|"POST"])`, **type-annotated** (`crm/hooks.py:28 require_type_annotated_api_methods = True`), trả **RAW dict/list** (KHÔNG `_ok/_err`/envelope). Lỗi nghiệp vụ = `frappe.throw(_("BR-XX: …"))`. List giữ **count == rows**.
 
-| Endpoint (`crm.api.antmed.orders_ar.<fn>`) | Verb | Mô tả |
+| Endpoint (`antmed_crm.api.antmed.orders_ar.<fn>`) | Verb | Mô tả |
 |---|---|---|
 | `list_orders` | GET | List đơn `{data, total_count}`; filter `hospital`/`status`/khoảng ngày. **count == rows** khi không phân trang. |
 | `get_order` | GET | Chi tiết 1 đơn + child items + link DO/HĐ/AR. `frappe.has_permission(... , doc=name)` → throw `PermissionError`. |
@@ -148,7 +148,7 @@ M09 dùng **docstatus** (Frappe-native submit) cho các txn, và **một Workflo
 
 ## 7. UI
 
-> Vue 3 + frappe-ui SPA. Gọi đúng `crm.api.antmed.orders_ar.*` qua `createResource`/`createListResource`. Route mới **APPEND** vào `frontend/src/router.js` (lazy). KHÔNG đụng route CRM gốc. Nhãn 100% tiếng Việt qua `__()`; tiền VND `1.234.567 ₫`, số `tabular-nums`. Persona chính = **Kế toán** (desktop-first — UI §6).
+> Vue 3 + frappe-ui SPA. Gọi đúng `antmed_crm.api.antmed.orders_ar.*` qua `createResource`/`createListResource`. Route mới **APPEND** vào `frontend/src/router.js` (lazy). KHÔNG đụng route CRM gốc. Nhãn 100% tiếng Việt qua `__()`; tiền VND `1.234.567 ₫`, số `tabular-nums`. Persona chính = **Kế toán** (desktop-first — UI §6).
 
 ### Routes (THÊM mới — lazy)
 
@@ -160,7 +160,154 @@ M09 dùng **docstatus** (Frappe-native submit) cho các txn, và **một Workflo
 | `/antmed/ar/:hospital` | `AntmedARDetail` | `pages/AntmedARDetail.vue` | Chi tiết 1 BV: timeline hóa đơn → thanh toán → còn lại + file biên bản đối chiếu | Kế toán |
 | `/antmed/ar/export` | `AntmedAccountingExport` | `pages/AntmedAccountingExport.vue` | Xuất kế toán MISA/Fast/Bravo theo kỳ + lịch sử export | Kế toán |
 
-> Ground @ `AntMed_CRM_UI_Design.md §6` (Kế toán): sidebar *Hóa đơn / Công nợ phải thu / Đối soát ngân hàng / Hoa hồng NV / Xuất kế toán (MISA/Fast)*; §6.2 bảng công nợ tuổi nợ 4 khoảng heatmap + 3 nút hành động + click BV → chi tiết; §9 hàng "9. Đơn hàng & Công nợ → Bảng công nợ, Hóa đơn → Kế toán, CEO". Hoa hồng NV (§6.3) = **M10**, không thuộc M09.
+> Ground @ `AntMed_CRM_UI_Design.md §6` (Kế toán): sidebar *Hóa đơn / Công nợ phải thu / Đối soát ngân hàng / Hoa hồng NV / Xuất kế toán (MISA/Fast)*; §6.2 bảng công nợ tuổi nợ 4 khoảng heatmap + 3 nút hành động + click BV → chi tiết; §9 hàng "9. Đơn hàng & Công nợ → Bảng công nợ, Hóa đơn → Kế toán, CEO". Hoa hồng NV (§6.3) = bản ĐẦY ĐỦ (tier × nhóm VT × NV, khóa kỳ) thuộc **M10**; **M09-1 dưới đây** chỉ là **widget tổng quan flat-rate** mở persona Kế toán (xem §7bis).
+
+---
+
+## 7bis. Slice M09-1 — Widget "Hoa hồng NV" (mockup F2, persona Kế toán) — [READY TO BUILD]
+
+> ⚠️ **Self-Correction / Ground-truth path (đọc TRƯỚC khi build).** Repo này là **app riêng `antmed_crm`** (KHÔNG in-place `crm`). Các path `crm/antmed/…` và `crm.api.antmed.*` trong §1–§10 (viết theo template system-prompt mặc định) **KHÔNG đúng repo này** — phần §7bis dưới đây dùng đường thật đã verify trong code: BE = `antmed_crm/api/antmed/<module>.py`, URL resource = `antmed_crm.api.antmed.<module>.<fn>`, test = `antmed_crm/tests/test_antmed_<module>.py`, FE data layer = `frontend/src/data/antmed.js`. Khi build slice khác của M09, áp cùng quy ước này.
+
+### 7bis.1 Scope (Boundaries)
+
+Mục tiêu vòng 26: mở **persona Kế toán** bằng màn MỚI `/antmed/finance/commission` (mockup F2 "Hoa hồng Nhân viên" — header card pair), wire **endpoint MỚI** `finance.commission_summary`. Widget gồm **2 thẻ header**: trái = "Tổng hoa hồng kỳ" (số tiền), phải = "Quy tắc kỳ <period_label>" (list quy tắc flat-rate).
+
+- **Always:**
+  - Hoa hồng kỳ = `round(SUM(deal_value × FLAT_RATE))` trên **CRM Deal** có `status` thuộc **type 'Won'** & `closed_date` trong **tháng hiện tại** (`[get_first_day .. get_last_day]` của `nowdate()`).
+  - Đọc deal qua `frappe.get_list(... limit_page_length=0)` (tôn trọng DocPerm + `permission_query_conditions` BR-13) — gộp ở Python. KHÔNG raw SQL / KHÔNG f-string injection.
+  - Endpoint trả **RAW dict** (KHÔNG envelope `_ok/_err`, KHÔNG `MSG.*`). FE đọc `r.data.<key>` (KHÔNG `r.data.data`).
+  - Fail-closed BR-13: thiếu read-perm CRM Deal → `get_list` raise `PermissionError` → trả `_empty_commission()` (mọi số = 0, `rules` GIỮ NGUYÊN), KHÔNG 500.
+  - FLAT_RATE + danh sách `rules` = **hằng số module** (constant trong `finance.py`) — KHÔNG đọc DocType.
+- **Never:**
+  - KHÔNG tạo DocType mới (`AntMed Commission`/`AntMed Commission Rule` = **[ROADMAP — M10]**, KHÔNG build ở slice này).
+  - KHÔNG tạo module mới (đặt trong M09 / file `finance.py`).
+  - KHÔNG per-category bonus engine, KHÔNG tier table (đó là M10 `compute_commission` BR-M10-04).
+  - KHÔNG đổi stub cũ `/finance/commission` thành … (xem 7bis.5 — giữ NGUYÊN, no-regression).
+  - KHÔNG hardcode số liệu mock trong UI production; KHÔNG hardcode JSX `rules` trong template (render từ data thật).
+
+### 7bis.2 DocTypes
+
+**KHÔNG có DocType mới.** Nguồn dữ liệu = **`CRM Deal`** (đọc, không sửa) — fields `deal_value` (Currency), `status` (Link → `CRM Deal Status`), `closed_date` (Date), `deal_owner` (Link → User). Phân loại Won qua **`CRM Deal Status`** (field `type` Select, giá trị `Won` — đã verify `crm_deal_status.json`).
+
+> `flat_rate_pct` + `rules` là tham số **flat-rate phẳng** đặt cứng trong code (KHÔNG `AntMed Commission Rule`). Khi M10 build engine tier đầy đủ → endpoint này có thể đọc `AntMed Commission Rule` active; tới lúc đó là **[ROADMAP — M10]**, đánh dấu nợ kỹ thuật.
+
+### 7bis.3 API — `antmed_crm/api/antmed/finance.py` (FILE MỚI)
+
+| Endpoint (`antmed_crm.api.antmed.finance.<fn>`) | Verb | Mô tả |
+|---|---|---|
+| `commission_summary(period: str \| None = None) -> dict` | GET | Tổng hoa hồng + quy tắc kỳ (flat-rate) cho widget F2. `period` tùy chọn (mặc định = tháng hiện tại; reserved cho chọn kỳ — slice này chỉ cần default đúng). Type-annotated (require_type_annotated_api_methods). |
+
+**Shape RAW dict trả về** (key ổn định — Hyrum; FE đọc `r.data.<key>`, KHÔNG `.data.data`):
+
+```python
+{
+  "total_commission": float,   # round(SUM(deal_value × FLAT_RATE)) deal Won closed_date trong kỳ. Kỳ rỗng → 0 (KHÔNG None)
+  "total_revenue":    float,   # SUM(deal_value) deal Won closed_date trong kỳ. Kỳ rỗng → 0
+  "rep_count":        int,     # số deal_owner PHÂN BIỆT có ≥1 deal Won trong kỳ. Kỳ rỗng → 0
+  "group_count":      int,     # = len(rules) (số nhóm vật tư trong quy tắc kỳ — flat-rate hiện 1 nhóm)
+  "period_label":     str,     # "T<m>/<yyyy>" (vd "T6/2026") — KHỚP regex 'T\d{1,2}/\d{4}'
+  "flat_rate_pct":    float,   # = FLAT_RATE × 100 (vd 0.05 → 5.0) — % hiển thị
+  "currency":         "VND",
+  "rules": [                   # list mô tả quy tắc kỳ (render thẻ phải) — KHÔNG hardcode trong template FE
+    {"label": str, "rate_pct": float},   # vd {"label": "Hoa hồng phẳng (toàn nhóm vật tư)", "rate_pct": 5.0}
+  ],
+}
+```
+
+**Hằng số module (đặt đầu `finance.py`):**
+
+```python
+COMMISSION_FLAT_RATE = 0.05   # 5% — flat-rate phẳng (cần khảo sát baseline thực tế với Kế toán)  [UNVERIFIED]
+COMMISSION_CURRENCY = "VND"
+# rules: SSoT cho thẻ "Quy tắc kỳ" — group_count = len(COMMISSION_RULES). Label tiếng Việt.
+COMMISSION_RULES = [
+    {"label": "Hoa hồng phẳng (toàn nhóm vật tư)", "rate_pct": COMMISSION_FLAT_RATE * 100},
+]
+COMMISSION_SUMMARY_KEYS = ("total_commission", "total_revenue", "rep_count", "group_count",
+                           "period_label", "flat_rate_pct", "currency", "rules")
+```
+
+> ⚠️ `COMMISSION_FLAT_RATE = 5%` là **[UNVERIFIED — cần khảo sát baseline]** với Kế toán AntMed (chưa có chứng từ chốt %). Build dùng 5% làm placeholder hợp lý; ghi nợ khảo sát. KHÔNG để engine suy ra % từ nguồn khác.
+
+**Thuật toán `commission_summary` (mirror `contract.monthly_revenue` + `sales_team.team_roster`):**
+
+1. `this_month = getdate(nowdate())`; `month_start = str(get_first_day(nowdate()))`; `month_end = str(get_last_day(nowdate()))`. `period_label = f"T{this_month.month}/{this_month.year:04d}"`.
+2. `try: deals = frappe.get_list("CRM Deal", fields=["deal_owner","deal_value","status","closed_date"], limit_page_length=0)` — **fail-closed**: `except frappe.PermissionError: return _empty_commission()`.
+3. `won_statuses = _statuses_of_type(["Won"])` — tái dùng helper (đã có trong `sales_team.py`; M09 finance gọi `frappe.get_all("CRM Deal Status", filters={"type": ["in", ["Won"]]}, pluck="name", limit_page_length=0)` **inline** để KHÔNG cross-import API module). Phân loại trên doctype cấu hình → KHÔNG bị data-scope.
+4. Lặp deals: nếu `status in won_statuses` **và** `closed and month_start <= str(closed_date) <= month_end` → cộng `deal_value or 0` vào `total_revenue`; thêm `deal_owner` (nếu truthy) vào `set` reps.
+5. `total_revenue = round(total_revenue)` (hoặc giữ float); `total_commission = round(total_revenue * COMMISSION_FLAT_RATE)`; `rep_count = len(reps)`; `group_count = len(COMMISSION_RULES)`.
+6. Trả dict theo shape trên (`rules = COMMISSION_RULES`, `flat_rate_pct = COMMISSION_FLAT_RATE * 100`, `currency = COMMISSION_CURRENCY`).
+
+**`_empty_commission()`** (kỳ rỗng / fail-closed): `total_commission=0`, `total_revenue=0`, `rep_count=0`, `group_count=len(COMMISSION_RULES)`, `period_label` = tháng hiện tại hợp lệ, `flat_rate_pct=COMMISSION_FLAT_RATE*100`, `currency`, `rules=COMMISSION_RULES`. **KHÔNG None, KHÔNG raise.**
+
+> **403 phân biệt:** dispatcher-403 (guest/no session) do Frappe trả trước handler; **in-handler** thiếu read-perm CRM Deal KHÔNG raise 403 mà **fail-closed → `_empty_commission()`** (BR-13, mọi số 0). Endpoint là read-only GET, KHÔNG có in-handler permission-throw riêng.
+>
+> **Invariant count==rows:** không có list endpoint ở slice này (chỉ summary). `rep_count`/`total_revenue` tính DƯỚI `permission_query_conditions` (get_list) → khi M14 bật data-scope, NV chỉ thấy deal của BV được giao ⇒ số tự thu hẹp đúng, KHÔNG rò.
+
+### 7bis.4 Business Rules
+
+| BR | Áp dụng M09-1 | Nơi enforce |
+|---|---|---|
+| **BR-13** (data-scope, fail-closed) | `get_list("CRM Deal")` raise `PermissionError` → `_empty_commission()` (zero, rules giữ nguyên), KHÔNG 500. Khi data-scope bật, `total_*`/`rep_count` chỉ tính trên deal user đọc được. | `commission_summary` try/except `frappe.PermissionError`. |
+| BR-10 (audit) | KHÔNG áp — endpoint read-only, không ghi/đổi tiền. | — |
+| BR-12 (2FA) | KHÔNG áp — không thao tác nhạy cảm. | — |
+
+> Không có `frappe.throw` nghiệp vụ ở slice này (read-only summary). Lỗi nghiệp vụ tương lai (vd khóa kỳ M10) = `frappe.throw(_("BR-M10-03: …"))`.
+
+### 7bis.5 UI / Route / Nav
+
+**Route (`frontend/src/router.js`):** THÊM route real-data MỚI, GIỮ stub cũ (no-regression).
+
+| path | name | meta | component | mô tả |
+|---|---|---|---|---|
+| `/antmed/finance/commission` | `AntmedCommissionPage` (đề xuất — name DUY NHẤT) | `{ antmedShell: true, role: 'finance' }` | `() => import('@/pages/AntmedCommission.vue')` (page MỚI, lazy) | Màn real-data widget F2 — render trong **AntmedLayout** (isAntmedPath `/antmed/*` + `meta.antmedShell`), sidebar **Kế toán** (role='finance'). |
+
+- **Stub cũ `/finance/commission`** (name `AntmedCommission`, component `antmedStub`, dòng router.js:259) **GIỮ NGUYÊN** — KHÔNG đổi path/component → no-regression PROTO test còn xanh. (Nếu name mới trùng `AntmedCommission` thì đổi name stub cũ → `AntmedCommissionMock` như tiền lệ M10-2 `AntmedDispatch`→`AntmedDispatchMock`; ưu tiên đặt name page mới **khác** để KHỎI đụng stub.)
+- **Nav (`frontend/src/data/antmedNav.js`):** mục `fin-commission` (label "Hoa hồng NV") đổi `to: '/finance/commission'` → **`to: '/antmed/finance/commission'`** và `enabled: false` → **`enabled: true`** (mở persona Kế toán). KHÔNG đổi `fin-invoices`/`fin-receivables` (vẫn `enabled: false`, trỏ `/finance/receivables`).
+
+**Data layer (`frontend/src/data/antmed.js`):** THÊM `getCommissionSummary({ auto, onError })` = `createResource({ url: 'antmed_crm.api.antmed.finance.commission_summary', method: 'GET', auto, onError })` — mirror `getMonthlyRevenue`/`getDispatchBoard`. FE đọc `r.data.total_commission` … (RAW dict, **KHÔNG** `r.data.data`).
+
+**Page `frontend/src/pages/AntmedCommission.vue` (MỚI):**
+- Breadcrumb "Trang chủ › Hoa hồng NV"; tiêu đề "Hoa hồng Nhân viên" (khớp mockup F2).
+- **Header card pair** (2 thẻ):
+  - **Thẻ trái "Tổng hoa hồng kỳ"**: value = `formatVnMoney(total_commission) + ' ₫'` (tái dùng `utils/antmedUi.js::formatVnMoney`; `total_commission=0` → **'0 ₫'** số THẬT, KHÔNG 'Sắp có'/'Chưa có'). Dòng phụ = `'<rep_count> NV · <group_count> nhóm vật tư'` (khớp nhãn mockup F2). Có thể dùng `AntmedKpiCard` (props `label`/`value`/`sub`) hoặc card riêng.
+  - **Thẻ phải "Quy tắc kỳ <period_label>"**: tiêu đề chèn `period_label` thật; body = `v-for` qua `rules` → mỗi dòng `'<label> · <rate_pct>%'`. **KHÔNG hardcode JSX** danh sách trong template — render từ `data.rules`.
+- **Tri-branch (bắt buộc):** `loading` → empty 'Đang tải…' · `error` → empty 'Lỗi tải hoa hồng' · `v-else` (có data) → 2 thẻ. KHÔNG hardcode mock số liệu trong UI production. KHÔNG `sort/reduce/aggregate` ở FE (BE đã gộp).
+
+> Ground @ `AntMed_CRM_UI_Design.md §6.3` (Hoa hồng NV, persona Kế toán). Slice này chỉ dựng **header card pair** (tổng quan flat-rate); bảng chi tiết NV × nhóm VT × tier + nút "Khóa kỳ" = **[ROADMAP — M10]**.
+
+### 7bis.6 ADR
+
+#### ADR-M09-03: Commission widget M09-1 = flat-rate **hằng số trong code**, KHÔNG DocType, KHÔNG engine tier (M10)
+- **Status**: Accepted (vòng 26)
+- **Date**: 2026-06-18
+- **Context**: Mockup F2 cần mở persona Kế toán nhanh với 2 thẻ tổng quan hoa hồng kỳ. Engine hoa hồng đầy đủ (tier × nhóm VT × NV, khóa kỳ, đẩy lương) đã đặc tả ở M10 (`AntMed Commission`/`AntMed Commission Rule`/BR-M10-04) nhưng CHƯA build (M10 = Wave 4). Yêu cầu vòng 26: KHÔNG new DocType, KHÔNG new module, KHÔNG per-category bonus engine.
+- **Decision**: Đặt endpoint `finance.commission_summary` trong M09 (file `finance.py` mới), tính `total_commission = round(SUM(deal_value × FLAT_RATE))` trên CRM Deal Won kỳ hiện tại; `FLAT_RATE` + `rules` là **hằng số module**. Thẻ "Quy tắc kỳ" render từ `rules` (data thật, KHÔNG hardcode template).
+- **Alternatives**: (a) Build ngay `AntMed Commission Rule` + engine tier — loại: vượt scope vòng 26, đụng Wave 4, rủi ro migration. (b) Đặt trong M10 module mới — loại: yêu cầu KHÔNG new module. (c) Đọc % từ Settings DocType — loại: vẫn là DocType phụ, chưa cần.
+- **Consequences**: (+) mở persona Kế toán + thẻ F2 ngay, không nợ DB; render `rules` từ data → khi nâng M10 chỉ đổi nguồn `rules`/`flat_rate` mà KHÔNG đổi contract FE. (−) `FLAT_RATE=5%` là placeholder `[UNVERIFIED]`; hoa hồng theo nhóm VT thật chỉ đến khi M10 engine tier xong (nợ kỹ thuật ghi rõ). (−) endpoint nằm ở M09 `finance.py` dù nghiệp vụ hoa hồng "thuần" thuộc M10 — chấp nhận vì widget mở persona Kế toán (§6.3) và M09 là module Kế toán.
+
+#### ADR-M09-04: BE finance API ở **`antmed_crm/api/antmed/finance.py`** (app riêng), KHÔNG `crm.api.antmed`
+- **Status**: Accepted (vòng 26) — **Self-Correction** so với §1–§10 (viết theo template `crm.*`).
+- **Date**: 2026-06-18
+- **Context**: §1/§5/§10 ghi path `crm/antmed/…` + `crm.api.antmed.orders_ar.*` (template system-prompt mặc định: in-place app `crm`). Nhưng repo thực = app riêng `antmed_crm` (verify: `antmed_crm/api/antmed/{contract,sales_team,…}.py`, URL resource `antmed_crm.api.antmed.*` trong `frontend/src/data/antmed.js`, test `antmed_crm/tests/test_antmed_*`).
+- **Decision**: File mới = `antmed_crm/api/antmed/finance.py`; URL whitelist = `antmed_crm.api.antmed.finance.commission_summary`; test = `antmed_crm/tests/test_antmed_finance.py`. Áp cùng quy ước cho mọi slice M09 khác (orders/AR khi build thật → `antmed_crm/api/antmed/orders_ar.py`).
+- **Alternatives**: theo nguyên văn `crm.api.antmed.orders_ar` — loại: sai app, FE resource sẽ 404.
+- **Consequences**: (+) endpoint callable đúng repo; (−) §1–§10 cũ còn chữ `crm.*` (giữ — light-touch, KHÔNG rewrite; §7bis + 2 ADR này là nguồn chốt cho slice). Backlog: khi build orders/AR thật, normalize path §1/§5/§10 sang `antmed_crm.*`.
+
+### 7bis.7 Acceptance / DoD (slice M09-1)
+
+1. **BE run-tests xanh**: `bench --site miyano run-tests --module antmed_crm.tests.test_antmed_finance` → `Ran N tests … OK`. TC tối thiểu:
+   - Shape: trả đủ 8 key (`COMMISSION_SUMMARY_KEYS`); `currency=='VND'`; `period_label` khớp `T\d{1,2}/\d{4}`; `rules` là list `{label, rate_pct}`; `group_count == len(rules)`.
+   - `total_commission == round(total_revenue × FLAT_RATE)`; `total_revenue == SUM(deal_value)` deal Won `closed_date` trong [đầu..cuối tháng]; deal Won tháng KHÁC / status KHÁC Won KHÔNG cộng.
+   - `rep_count` = số `deal_owner` phân biệt có Won trong kỳ (deal_owner rỗng KHÔNG đếm).
+   - Kỳ rỗng → `total_commission=0`/`total_revenue=0`/`rep_count=0` (KHÔNG None, KHÔNG raise); `rules`/`group_count` giữ nguyên.
+   - **Fail-closed BR-13**: monkeypatch `frappe.get_list` raise `PermissionError` → trả `_empty_commission()` (mọi số 0, rules giữ), KHÔNG 500.
+   - KHÔNG raw SQL (grep `frappe.db.sql` vắng trong `finance.py`); chỉ `get_list`/`get_all`.
+   - (Khuyến nghị) chạy giá trị dưới NV scoped để xác nhận data-scope thu hẹp đúng (mirror test M02-8).
+2. **FE vitest xanh** (`cd frontend && yarn vitest run`): route `AntmedCommissionPage` `/antmed/finance/commission` tồn tại (meta.antmedShell+role='finance', lazy); stub cũ `/finance/commission` còn nguyên; `getCommissionSummary` url `antmed_crm.api.antmed.finance.commission_summary` method GET; page đọc `r.data.total_commission`… (KHÔNG `.data.data`); thẻ trái render `formatVnMoney+' ₫'` (0→'0 ₫') + dòng phụ `'<n> NV · <m> nhóm vật tư'`; thẻ phải v-for `rules`; tri-branch loading/error/data; KHÔNG mock số liệu/KHÔNG sort/reduce. nav `fin-commission` enabled+to `/antmed/finance/commission`.
+3. **FE build xanh**: `yarn build` emit chunk `AntmedCommission` chứa 'Hoa hồng', 'Tổng hoa hồng kỳ', 'Quy tắc kỳ', 'Lỗi tải hoa hồng', 'Đang tải…'.
+4. **Pixel/LIVE** (sau USER reload): `http://miyano/crm/antmed/finance/commission` mở trong AntmedLayout, sidebar Kế toán, 2 thẻ render data thật, 0 console error, API 200 (KHÔNG còn trỏ antmedStub).
+5. **No-regression**: test bootstrap + Customer 360° + 4 test gốc CRM + suite sales_team/contract còn xanh; route/stub CRM gốc nguyên vẹn.
 
 ---
 
@@ -168,6 +315,7 @@ M09 dùng **docstatus** (Frappe-native submit) cho các txn, và **một Workflo
 
 | Slice | Mục tiêu | BE | FE | Gate |
 |---|---|---|---|---|
+| **M09-1 — Widget Hoa hồng NV** (vòng 26, **§7bis**, mockup F2) | Mở persona Kế toán: 2 thẻ header "Tổng hoa hồng kỳ" + "Quy tắc kỳ" flat-rate. KHÔNG DocType/module/tier engine | `finance.py` MỚI: `commission_summary` (RAW dict 8 key) + `_empty_commission` + hằng `COMMISSION_FLAT_RATE`/`COMMISSION_RULES`/`COMMISSION_SUMMARY_KEYS` | route `/antmed/finance/commission` (`AntmedCommission.vue` MỚI) + `getCommissionSummary` + nav `fin-commission` enabled | `test_antmed_finance` Ran N OK (shape/Won-kỳ/rep_count/empty/fail-closed/no-SQL) + vitest + build; stub cũ giữ nguyên |
 | **S1 — Đơn từ DO** | Dựng `AntMed Order`(+item) từ DO tiêu hao, list/detail | DocType `AntMed Order`/`AntMed Order Item`; `list_orders`/`get_order`/`create_order_from_delivery`; DocPerm | `AntmedOrders.vue` + `AntmedOrderDetail.vue` (list+detail) | BE test (count==rows, dựng đơn từ DO) + FE vitest + build |
 | **S2 — AR ledger + aging** | `AntMed AR Entry` ledger + submit đơn sinh AR + aging 4 khoảng | DocType `AntMed AR Entry`; `submit_order` (on_submit→AR); `get_ar_aging`/`get_ar_ledger` | `AntmedAR.vue` (heatmap 4 khoảng) + `AntmedARDetail.vue` | test aging math + count==rows + pixel heatmap |
 | **S3 — BR-14 chặn đơn** | Chặn đơn theo công nợ + override Quản lý | `AntMed Debt Threshold Block`; hook `check_debt_threshold_block` (validate); `unblock_hospital` | nút/khóa trạng thái `Bị chặn` + dialog mở khóa (Quản lý) | test BR-14 throw + override + role gate |
@@ -207,7 +355,7 @@ Một slice M09 "xong" khi đạt **toàn bộ**:
    - `get_ar_aging` chia đúng 4 khoảng 0–30/31–60/61–90/>90; tổng khớp; **`len(data) == total_count`** (count==rows).
    - **BR-14**: submit đơn cho BV vượt ngưỡng → `frappe.throw` chứa `BR-14`; `Quản lý` override được; role khác KHÔNG.
    - `record_payment` giảm đúng `outstanding_amount`; scheduler `send_payment_reminders` chống trùng `(ar_entry, days_overdue)`.
-2. **FE vitest xanh** (`yarn vitest run`): route mới tồn tại (path/name/lazy); page gọi đúng `crm.api.antmed.orders_ar.*`; KHÔNG `antmed_crm.api.*`/axios/tanstack; route CRM gốc còn nguyên.
+2. **FE vitest xanh** (`yarn vitest run`): route mới tồn tại (path/name/lazy); page gọi đúng `antmed_crm.api.antmed.orders_ar.*`; KHÔNG `crm.api.*`/axios/tanstack; route CRM gốc còn nguyên.
 3. **FE build xanh**: `yarn build` emit chunk `Antmed*` không vỡ.
 4. **Pixel verify** (sau USER reload gunicorn): `http://miyano/crm/antmed/ar` render Bảng công nợ thật, heatmap 4 khoảng đúng màu, nút "Gửi nhắc"/"Ghi nhận thu" hoạt động, click BV → chi tiết; 0 console error; API 200.
 5. **No-regression**: `test_antmed_bootstrap` + `test_antmed_customer` + 4 test gốc CRM (`test_org_hierarchy`, `test_crm_lead`, `test_crm_task`, `test_crm_territory`) vẫn xanh; route/doctype Frappe CRM gốc nguyên vẹn.

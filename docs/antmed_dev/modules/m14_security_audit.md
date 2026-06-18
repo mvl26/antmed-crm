@@ -5,7 +5,7 @@
 | Module folder | `crm/antmed/` (module Frappe **`AntMed`**) — trục cross-cutting nền (Security/RBAC/Audit) |
 | DocType folder | `crm/antmed/doctype/antmed_audit_log/`, `.../antmed_data_scope/`, `.../antmed_2fa_session/` *(PLANNED — W4)* |
 | Code path | `crm/api/antmed/rbac.py` (đã có, W0-2) · `crm/api/antmed/audit.py` *(PLANNED)* · module hooks `crm/antmed/<module>_hooks.py` qua `doc_events` |
-| API package | `crm/api/antmed/audit.py` → đường gọi `crm.api.antmed.audit.<fn>` (W4) |
+| API package | `crm/api/antmed/audit.py` → đường gọi `antmed_crm.api.antmed.audit.<fn>` (W4) |
 | FE pages | `frontend/src/pages/AntmedAuditLog.vue`, `AntmedUserRole.vue` *(PLANNED — W4)* + route `/antmed/admin/audit`, `/antmed/admin/users` |
 | Wave (PLAN) | **W0 (done)** RBAC nền + audit-lite · **W4 (full)** 2FA + data-scope BR-13 + audit hash-chain hoàn chỉnh |
 | Role chính (VI) | `Quản lý` (admin/audit), `NV kinh doanh`, `Thủ kho`; mở rộng `[PLANNED]` `CEO`/`Kế toán`/`Chứng từ`/`System Admin` |
@@ -95,7 +95,7 @@ M14 là **trục cross-cutting nền** trong 14 module: không phải feature ng
 
 > File **[PLANNED — W4]**: `crm/api/antmed/audit.py`. Mọi hàm `@frappe.whitelist(methods=[...])`, **type-annotated** (`crm/hooks.py: require_type_annotated_api_methods = True`), trả **RAW dict/list** (KHÔNG `_ok/_err`/envelope). Lỗi nghiệp vụ/permission = `frappe.throw(...)` in-handler.
 
-| Endpoint (`crm.api.antmed.audit.*`) | Verb | Mô tả (ĐỀ XUẤT) |
+| Endpoint (`antmed_crm.api.antmed.audit.*`) | Verb | Mô tả (ĐỀ XUẤT) |
 |---|---|---|
 | `audit.write_log` | (server-side, **không** whitelist — gọi từ `doc_events`/handler) | Ghi 1 bản ghi `AntMed Audit Log`: tính `prev_hash` = `hash_sha256` của log gần nhất, `hash_sha256 = sha256(prev_hash + canonical_payload)`. Idempotent theo `(ref_doctype, ref_name, action, ts)`. **BR-10**. |
 | `audit.verify_chain` | (server-side / `bench execute`) | Duyệt toàn bộ log theo thứ tự `ts`, tái tính hash từng bước; trả `{ "ok": bool, "broken_at": str\|None, "count": int }`. Phát hiện điểm gãy chuỗi. **BR-10**. |
@@ -105,7 +105,7 @@ M14 là **trục cross-cutting nền** trong 14 module: không phải feature ng
 | `audit.confirm_2fa` | POST | Xác nhận OTP cho session: so `otp_hash`, check chưa `used` & chưa hết hạn → set `used=1`; trả `{ "ok": true }`. Sai/hết hạn → `frappe.throw(_("BR-12: Mã OTP không hợp lệ hoặc đã hết hạn."))`. |
 | `audit.require_2fa_and_log` | (server-side helper) | Gate dùng trong handler thao tác nguy hiểm: kiểm tra có 2FA session `used` hợp lệ trong TTL cho action; nếu chưa → throw BR-12; nếu có → `write_log` rồi cho qua. |
 
-> **Lưu ý namespace**: scaffold cũ ghi `antmed_crm.m14_security_audit.audit.*` / `antmed_crm.api.*` — **SAI** ở build in-place. Đúng = **`crm.api.antmed.audit.*`**.
+> **Lưu ý namespace**: scaffold cũ ghi `antmed_crm.m14_security_audit.audit.*` / bare `antmed_crm.api.*` (thiếu `.antmed`) — **SAI**. Đúng = **`antmed_crm.api.antmed.audit.*`**.
 >
 > **W0 hiện có** (verify @source `crm/api/antmed/rbac.py`): helper **nội bộ** (không whitelist) `is_antmed_user`, `is_crm_or_antmed_user`, hằng `ANTMED_ALLOWED_ROLES`. Không phải endpoint nghiệp vụ — phục vụ boot gate (xem `./m14_rbac_w0_antmed_boot.md`).
 
@@ -126,10 +126,10 @@ M14 là **trục cross-cutting nền** trong 14 module: không phải feature ng
       # chứng từ CO/CQ/HĐĐT (M06): "AntMed Document": {...}
   }
   ```
-  Mỗi hook **lazy-import** `from crm.api.antmed import audit` rồi `audit.write_log(doc.doctype, doc.name, action, before, after)` — truyền **PK + payload**, không truyền object nặng.
+  Mỗi hook **lazy-import** `from antmed_crm.api.antmed import audit` rồi `audit.write_log(doc.doctype, doc.name, action, before, after)` — truyền **PK + payload**, không truyền object nặng.
 - **2FA gate (BR-12)** — handler thao tác nguy hiểm ở M03/M04/M06 gọi `audit.require_2fa_and_log(action_label=...)` **đầu** hàm (trước khi mutate). M14 cung cấp helper; module gọi.
 - **Data-scope (BR-13)** — `permission_query_conditions` map trong `crm/hooks.py` (THÊM key cho doctype AntMed scoped) → hàm trong `crm.antmed.data_scope.get_<doctype>_query_conditions(user)` đọc `AntMed Data Scope`. Là **gate compliance** cho mọi list của các module gắn scope.
-- **RBAC boot (W0, đã có)** — `crm/api/__init__.py::check_app_permission`, `crm/api/session.py::get_session_role_flags`, `crm/www/crm.py::get_boot`, `frontend/src/router.js` đều OR-thêm nhánh AntMed qua `crm.api.antmed.rbac` (single-source). Chi tiết: `./m14_rbac_w0_antmed_boot.md`.
+- **RBAC boot (W0, đã có)** — `crm/api/__init__.py::check_app_permission`, `crm/api/session.py::get_session_role_flags`, `crm/www/crm.py::get_boot`, `frontend/src/router.js` đều OR-thêm nhánh AntMed qua `antmed_crm.api.antmed.rbac` (single-source). Chi tiết: `./m14_rbac_w0_antmed_boot.md`.
 
 > **Gate compliance ngoài**: audit phục vụ thanh kiểm tra ngành y tế (export theo yêu cầu thanh tra) — gắn với compliance chứng từ M06 (CO/CQ/ĐKLH/HĐĐT). M14 không tự sinh chứng từ, chỉ ghi vết & chặn 2FA khi phát hành.
 
@@ -137,7 +137,7 @@ M14 là **trục cross-cutting nền** trong 14 module: không phải feature ng
 
 ## 7. UI
 
-> Vue 3 + frappe-ui SPA. Route mới APPEND vào `frontend/src/router.js` (lazy), gọi `crm.api.antmed.audit.*`. Vai trò dùng: **`Quản lý`** (admin/audit), `[PLANNED]` CEO/System Admin. Ground @ `AntMed_CRM_UI_Design.md §8` (System Admin / Quản trị) + §9 dòng 14.
+> Vue 3 + frappe-ui SPA. Route mới APPEND vào `frontend/src/router.js` (lazy), gọi `antmed_crm.api.antmed.audit.*`. Vai trò dùng: **`Quản lý`** (admin/audit), `[PLANNED]` CEO/System Admin. Ground @ `AntMed_CRM_UI_Design.md §8` (System Admin / Quản trị) + §9 dòng 14.
 
 | Route (THÊM mới — lazy) | Page (`pages/Antmed*.vue`) | Màn hình (UI_Design) | Role dùng |
 |---|---|---|---|
@@ -145,9 +145,9 @@ M14 là **trục cross-cutting nền** trong 14 module: không phải feature ng
 | `/antmed/admin/users` | `AntmedUserRole.vue` | **§9 dòng 14 "User & Role"** — gán user ↔ Role VI ↔ data-scope (BV được giao) | `Quản lý`, `[PLANNED]` System Admin |
 | *(không có route mới)* | component 2FA modal | OTP modal bật khi thao tác nguy hiểm (xuất kho/phát hành HĐĐT/xóa chứng từ) — gọi `request_2fa`/`confirm_2fa` | tất cả thao tác viên |
 
-- **Audit log page**: dùng `createResource({ url: 'crm.api.antmed.audit.list_logs', ... })` (shape bọc `{data,total_count}` như M01); click 1 dòng → `get_log` hiển thị `diff_json` (Audit timeline component, UI_Design §10.x). Export = nút gọi endpoint export (hoặc Frappe report export).
+- **Audit log page**: dùng `createResource({ url: 'antmed_crm.api.antmed.audit.list_logs', ... })` (shape bọc `{data,total_count}` như M01); click 1 dòng → `get_log` hiển thị `diff_json` (Audit timeline component, UI_Design §10.x). Export = nút gọi endpoint export (hoặc Frappe report export).
 - **Nút thao tác nguy hiểm**: theo UI_Design §A11y "mọi nút thao tác nguy hiểm có double-confirm + audit" → 2FA modal là lớp confirm cho 3 action BR-12.
-- **Boundaries UI**: lazy import; `__()` cho nhãn VN; **Never** gọi `antmed_crm.api.*` (đúng = `crm.api.antmed.*`); **Never** sửa route/sidebar CRM gốc.
+- **Boundaries UI**: lazy import; `__()` cho nhãn VN; **Never** gọi `crm.api.*` (đúng = `antmed_crm.api.antmed.*`); **Never** sửa route/sidebar CRM gốc.
 
 ---
 
@@ -209,10 +209,10 @@ Theo SPEC §6 — một lát cắt "xong" = BE test xanh THẬT + FE vitest + bu
 - FE: `yarn vitest run` ≥ baseline (≥138 gồm guard) + `yarn build` xanh.
 
 **W4 (M14-full — DoD đề xuất, [PLANNED]):**
-1. **BR-10**: `bench --site miyano run-tests --module crm.tests.test_antmed_audit` → `Ran N OK`. TC: write_log nối chuỗi đúng (`prev_hash` của log sau == `hash_sha256` của log trước); `verify_chain().ok == True` với N log; sửa/chèn 1 bản ghi → `ok == False` + `broken_at` đúng; `bench --site miyano execute crm.api.antmed.audit.verify_chain` chạy được.
+1. **BR-10**: `bench --site miyano run-tests --module crm.tests.test_antmed_audit` → `Ran N OK`. TC: write_log nối chuỗi đúng (`prev_hash` của log sau == `hash_sha256` của log trước); `verify_chain().ok == True` với N log; sửa/chèn 1 bản ghi → `ok == False` + `broken_at` đúng; `bench --site miyano execute antmed_crm.api.antmed.audit.verify_chain` chạy được.
 2. **BR-12**: test `request_2fa` → `confirm_2fa` (đúng OTP, trong TTL) → `used=1`; OTP sai/hết hạn/replay (`used=1`) → `frappe.throw` BR-12; thao tác nguy hiểm thiếu 2FA hợp lệ → bị chặn.
 3. **BR-13**: test 2 NV khác BV phụ trách → mỗi NV `list_*` chỉ thấy BV được giao; **`len(data) == total_count`** theo từng NV (count==rows sau scope); user không scope → không rò rỉ.
-4. **FE**: vitest cho `AntmedAuditLog`/`AntmedUserRole` (route/lazy, gọi đúng `crm.api.antmed.audit.*`, KHÔNG `antmed_crm.api`/axios) + `yarn build` xanh.
+4. **FE**: vitest cho `AntmedAuditLog`/`AntmedUserRole` (route/lazy, gọi đúng `antmed_crm.api.antmed.audit.*`, KHÔNG `antmed_crm.api`/axios) + `yarn build` xanh.
 5. **No-regression**: toàn bộ test W0 + test gốc CRM còn xanh; `permission_query_conditions` CRM gốc (`CRM Lead`/`CRM Deal`) KHÔNG đổi.
 6. **Pixel (sau USER reload)**: `/antmed/admin/audit` render bảng lọc + diff; 2FA modal hiện đúng khi thao tác nguy hiểm; 0 console error.
 
@@ -222,6 +222,6 @@ Theo SPEC §6 — một lát cắt "xong" = BE test xanh THẬT + FE vitest + bu
 - Sources: `../SPEC_AntMed_CRM.md` (§6 Testing/DoD), `../PLAN_AntMed_CRM.md` (M14 wave W0/W4, D4 audit hash-chain), `../../antmed_crm/docs/AntMed_CRM_Modules.md` (§14 Phân quyền/Bảo mật/Audit), `../../antmed_crm/docs/AntMed_CRM_UI_Design.md` (§8 System Admin, §8.2 Audit log, §9 dòng 14).
 - **2 slice doc W0 (đã/đang hiện thực — nguồn quyết định, KHÔNG rewrite ở Core Doc này):** `./m14_rbac_w0_role_naming.md` (DEC-A, 3 Role VI, ADR-M14W0-01/02), `./m14_rbac_w0_antmed_boot.md` (DEC-B, allow-check additive, ADR-M14W0-03/04).
 - Module liên quan: `./m01_customer360.md` (BR-13 hoãn — ADR-M01-05, invariant count==rows), `./m01_bootstrap.md` (namespace `crm/antmed/`, 3 Role).
-- Reference scaffold (app-tách cũ, adapt `AM `→`AntMed `, ERPNext→native-lite, namespace `antmed_crm.*`→`crm.api.antmed.*`): `docs/antmed_crm/antmed_crm/m14_security_audit/doctype/` (`am_audit_log`, `am_data_scope`, `am_2fa_session`, `am_role_profile_seed`).
+- Reference scaffold (app-tách cũ, adapt `AM `→`AntMed `, ERPNext→native-lite, namespace `antmed_crm.*`→`antmed_crm.api.antmed.*`): `docs/antmed_crm/antmed_crm/m14_security_audit/doctype/` (`am_audit_log`, `am_data_scope`, `am_2fa_session`, `am_role_profile_seed`).
 - README BR map: `docs/antmed_crm/README.md` (BR-10 hash chain, BR-12 2FA, BR-13 permission_query_conditions 5 doctype).
 - Source thật W0 (verify): `crm/fixtures/role.json`, `crm/api/antmed/rbac.py`, `crm/api/__init__.py`, `crm/api/session.py`, `crm/www/crm.py`, `frontend/src/router.js`.
