@@ -14,8 +14,10 @@ no_cache = 1
 def get_context():
 	from antmed_crm.api import check_app_permission
 
-	if not check_app_permission():
-		frappe.throw(_("You do not have permission to access Frappe CRM"), frappe.PermissionError)
+	# Guest → vẫn serve shell để SPA tự render trang login AntMed (/antmed/login).
+	# User ĐÃ đăng nhập nhưng thiếu quyền AntMed/CRM → chặn (Not Permitted).
+	if frappe.session.user != "Guest" and not check_app_permission():
+		frappe.throw(_("You do not have permission to access AntMed CRM"), frappe.PermissionError)
 
 	frappe.db.commit()
 	context = frappe._dict()
