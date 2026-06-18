@@ -154,9 +154,10 @@
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormControl
                 type="email"
-                :label="__('Email')"
+                :label="__('Email') + ' *'"
                 v-model="createForm.email"
                 placeholder="ten@antmed.vn"
+                required
               />
               <FormControl
                 type="text"
