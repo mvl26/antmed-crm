@@ -17,6 +17,19 @@ GIFT_DOCTYPE = "AntMed Doctor Gift"
 SURVEY_DOCTYPE = "AntMed Satisfaction Survey"
 CALL_PLAN_DOCTYPE = "AntMed Call Plan"
 
+CALL_LOG_DOCTYPE = "CRM Call Log"
+CALL_OUTCOME_TO_STATUS = {
+	"Nghe máy": "Completed",
+	"Không nghe": "No Answer",
+	"Máy bận": "Busy",
+	"Hộp thư": "No Answer",
+}
+CALL_STATUS_TO_OUTCOME = {"Completed": "Nghe máy", "No Answer": "Không nghe", "Busy": "Máy bận"}
+CALL_LOG_LIST_FIELDS = [
+	"name", "id", "type", "status", "duration", "start_time",
+	"caller", "caller.full_name as caller_name", "note", "note.content as note_text",
+]
+
 GIFT_LIST_FIELDS = ["name", "doctor", "gift_date", "item_or_text", "value_vnd", "approved_by"]
 GIFT_LIST_ITEM_KEYS = ("name", "doctor", "gift_date", "item_or_text", "value_vnd", "approved_by")
 
@@ -235,6 +248,96 @@ def send_call_plan_today() -> dict:
 		except Exception:
 			frappe.log_error(frappe.get_traceback(), "M07 send_call_plan_today")
 	return {"count": len(due), "due": due}
+
+
+@frappe.whitelist(methods=["POST"])
+def log_call(
+	doctor: str,
+	outcome: str,
+	duration_sec: int | str | None = None,
+	note: str | None = None,
+	to_number: str | None = None,
+	called_at: str | None = None,
+) -> dict:
+	"""Ghi 1 cuộc gọi thủ công (tel:) vào CRM Call Log, link Dynamic → AntMed Doctor.
+
+	BR-13: gate trên quyền đọc AntMed Doctor (User Permission allow=AntMed Hospital scope
+	doctor qua hospital). CRM Call Log tạo ignore_permissions sau khi đã gate (tránh phải
+	cấu hình DocPerm CRM Call Log cho role 'NV kinh doanh').
+	"""
+	if not frappe.has_permission(DOCTOR_DOCTYPE, "read", doc=doctor):
+		frappe.throw(_("Bạn không có quyền với bác sỹ này."), frappe.PermissionError)
+
+	status = CALL_OUTCOME_TO_STATUS.get(outcome)
+	if not status:
+		frappe.throw(_("Kết quả cuộc gọi không hợp lệ."))
+
+	to = (to_number or frappe.db.get_value(DOCTOR_DOCTYPE, doctor, "phone") or "").strip()
+	if not to:
+		frappe.throw(_("Bác sỹ chưa có số điện thoại."))
+
+	from_no = frappe.db.get_value("User", frappe.session.user, "mobile_no") or frappe.session.user
+
+	try:
+		duration = int(duration_sec) if duration_sec not in (None, "") else 0
+	except (TypeError, ValueError):
+		duration = 0
+
+	call = frappe.get_doc(
+		{
+			"doctype": CALL_LOG_DOCTYPE,
+			"type": "Outgoing",
+			"telephony_medium": "Manual",
+			"status": status,
+			"from": from_no,
+			"to": to,
+			"caller": frappe.session.user,
+			"duration": max(0, duration),
+			"start_time": called_at or now_datetime(),
+			"reference_doctype": DOCTOR_DOCTYPE,
+			"reference_docname": doctor,
+		}
+	)
+
+	if note:
+		fcrm_note = frappe.get_doc(
+			{
+				"doctype": "FCRM Note",
+				"title": _("Ghi chú cuộc gọi"),
+				"content": note,
+				"reference_doctype": DOCTOR_DOCTYPE,
+				"reference_docname": doctor,
+			}
+		).insert(ignore_permissions=True)
+		call.note = fcrm_note.name
+
+	call.insert(ignore_permissions=True)
+	return {"call_log": call.name, "status": status}
+
+
+@frappe.whitelist(methods=["GET"])
+def list_call_logs(doctor: str, start: int = 0, page_length: int = 20) -> dict:
+	"""Nhật ký cuộc gọi của 1 bác sỹ (CRM Call Log reference = AntMed Doctor). BR-13 gate read."""
+	if not frappe.has_permission(DOCTOR_DOCTYPE, "read", doc=doctor):
+		frappe.throw(_("Bạn không có quyền với bác sỹ này."), frappe.PermissionError)
+
+	conditions = {"reference_doctype": DOCTOR_DOCTYPE, "reference_docname": doctor}
+	start = max(0, int(start))
+	page_length = max(0, int(page_length))
+
+	rows = frappe.get_all(
+		CALL_LOG_DOCTYPE,
+		filters=conditions,
+		fields=CALL_LOG_LIST_FIELDS,
+		order_by="start_time desc",
+		limit_start=start,
+		limit_page_length=page_length or 0,
+	)
+	for r in rows:
+		r["outcome"] = CALL_STATUS_TO_OUTCOME.get(r.get("status"), r.get("status"))
+		r["direction"] = "Gọi đi" if r.get("type") == "Outgoing" else "Gọi đến"
+
+	return {"data": rows, "total_count": frappe.db.count(CALL_LOG_DOCTYPE, conditions)}
 
 
 def notify_doctor_birthdays(within_days: int = 7) -> dict:
