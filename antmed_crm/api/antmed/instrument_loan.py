@@ -13,6 +13,7 @@ from frappe.utils import now_datetime
 
 SET_DOCTYPE = "AntMed Instrument Set"
 LOAN_DOCTYPE = "AntMed Instrument Loan"
+STERILIZATION_DOCTYPE = "AntMed Sterilization"
 
 LOAN_LIST_FIELDS = ["name", "instrument_set", "hospital", "status", "employee", "booked_at", "due_return_at"]
 LOAN_LIST_ITEM_KEYS = ("name", "instrument_set", "hospital", "status", "employee", "booked_at", "due_return_at")
@@ -232,3 +233,51 @@ def get_loan(name: str) -> dict:
 		for c in (doc.get("return_checklist") or [])
 	]
 	return result
+
+
+@frappe.whitelist(methods=["POST"])
+def sterilize(
+	loan: str,
+	method: str | None = None,
+	result: str = "Pass",
+	operator: str | None = None,
+	started_at: str | None = None,
+	ended_at: str | None = None,
+) -> dict:
+	"""Ghi 1 bản ghi tiệt khuẩn cho lượt đã trả → loan 'Đang xử lý/tiệt khuẩn'. Sync Set."""
+	_check_loan_write(loan)
+	loan_doc = frappe.get_doc(LOAN_DOCTYPE, loan)
+	if loan_doc.status not in ("Đã trả về NV KD", "Đang xử lý/tiệt khuẩn"):
+		frappe.throw(_("Chỉ tiệt khuẩn lượt đã 'Đã trả về NV KD' (hiện: {0}).").format(loan_doc.status))
+	str_doc = frappe.get_doc(
+		{
+			"doctype": STERILIZATION_DOCTYPE,
+			"loan": loan,
+			"instrument_set": loan_doc.instrument_set,
+			"method": method,
+			"result": result,
+			"operator": operator,
+			"started_at": started_at,
+			"ended_at": ended_at,
+		}
+	)
+	str_doc.insert(ignore_permissions=True)
+	frappe.db.set_value(LOAN_DOCTYPE, loan, "status", "Đang xử lý/tiệt khuẩn", update_modified=False)
+	frappe.db.set_value(
+		SET_DOCTYPE, loan_doc.instrument_set, "current_status", "Đang xử lý/tiệt khuẩn", update_modified=False
+	)
+	return {"sterilization": str_doc.name, "result": result, "status": "Đang xử lý/tiệt khuẩn"}
+
+
+@frappe.whitelist(methods=["POST"])
+def mark_ready(loan: str) -> dict:
+	"""BR-09: chỉ cho bộ về 'Sẵn sàng' khi lượt có ≥1 tiệt khuẩn result=Pass. Đóng lượt."""
+	_check_loan_write(loan)
+	loan_doc = frappe.get_doc(LOAN_DOCTYPE, loan)
+	if loan_doc.status != "Đang xử lý/tiệt khuẩn":
+		frappe.throw(_("Chỉ hoàn tất lượt đang 'Đang xử lý/tiệt khuẩn' (hiện: {0}).").format(loan_doc.status))
+	if not frappe.db.exists(STERILIZATION_DOCTYPE, {"loan": loan, "result": "Pass"}):
+		frappe.throw(_("BR-09: Bộ phải có kết quả tiệt khuẩn Pass trước khi sẵn sàng cho mượn lại."))
+	frappe.db.set_value(LOAN_DOCTYPE, loan, "status", "Đã đóng", update_modified=False)
+	frappe.db.set_value(SET_DOCTYPE, loan_doc.instrument_set, "current_status", "Sẵn sàng", update_modified=False)
+	return {"name": loan, "status": "Đã đóng", "set_status": "Sẵn sàng"}
