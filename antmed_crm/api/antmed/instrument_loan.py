@@ -531,3 +531,62 @@ def save_checklist(loan: str, kind: str = "handover", items_json: str | None = N
 			row.signed_by = it["signed_by"]
 	doc.save()
 	return {"name": loan, "kind": kind, "rows": len(doc.get(field) or [])}
+
+
+# ── M05-S4: Sự cố + nhắc quá hạn ────────────────────────────────────────────
+INCIDENT_DOCTYPE = "AntMed Loan Incident"
+# Map loại sự cố → trạng thái bộ.
+_INCIDENT_SET_STATUS = {"Missing": "Mất", "Damaged": "Hỏng"}
+
+
+@frappe.whitelist(methods=["POST"])
+def report_incident(
+	loan: str,
+	incident_type: str,
+	value_estimated: float | None = None,
+	description: str | None = None,
+	charged_to_hospital: int = 0,
+) -> dict:
+	"""Báo sự cố bộ mượn (Missing/Damaged/Late) → tạo AntMed Loan Incident + loan 'Sự cố'.
+
+	Missing → Set 'Mất'; Damaged → Set 'Hỏng' (Late giữ trạng thái). Gate quyền write.
+	"""
+	_check_loan_write(loan)
+	loan_doc = frappe.get_doc(LOAN_DOCTYPE, loan)
+	inc = frappe.get_doc(
+		{
+			"doctype": INCIDENT_DOCTYPE,
+			"loan": loan,
+			"instrument_set": loan_doc.instrument_set,
+			"incident_type": incident_type,
+			"value_estimated": value_estimated,
+			"description": description,
+			"charged_to_hospital": int(charged_to_hospital or 0),
+		}
+	)
+	inc.insert(ignore_permissions=True)
+	frappe.db.set_value(LOAN_DOCTYPE, loan, "status", "Sự cố", update_modified=False)
+	set_status = _INCIDENT_SET_STATUS.get(incident_type)
+	if set_status:
+		frappe.db.set_value(SET_DOCTYPE, loan_doc.instrument_set, "current_status", set_status, update_modified=False)
+	return {"incident": inc.name, "loan_status": "Sự cố", "set_status": set_status}
+
+
+def check_overdue_loans() -> dict:
+	"""Scheduler (daily): lượt mượn quá hạn (due_return_at < now, còn ở BV/chưa xử lý) → realtime alert.
+
+	Wire ở root hooks.py::scheduler_events.daily. Trả {count, overdue:[names]} (testable).
+	"""
+	now = now_datetime()
+	overdue = frappe.get_all(
+		LOAN_DOCTYPE,
+		filters={"status": ["in", OVERDUE_STATES], "due_return_at": ["<", now]},
+		fields=["name", "instrument_set", "hospital"],
+		limit_page_length=0,
+	)
+	for o in overdue:
+		try:
+			frappe.publish_realtime("antmed_loan_overdue", {"loan": o["name"], "instrument_set": o["instrument_set"]})
+		except Exception:
+			frappe.log_error(frappe.get_traceback(), "M05 check_overdue_loans publish_realtime")
+	return {"count": len(overdue), "overdue": [o["name"] for o in overdue]}
