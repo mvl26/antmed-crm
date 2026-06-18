@@ -27,4 +27,10 @@ describe('AntmedDoctorDetail.vue — CRM Bác sỹ', () => {
       expect(src).toContain(r)
     }
   })
+  it('form thêm nhanh ghi chú + quà', () => {
+    expect(src).toContain('saveCareNote')
+    expect(src).toContain('createGift')
+    expect(src).toContain('addNote')
+    expect(src).toContain('addGift')
+  })
 })

@@ -102,20 +102,38 @@
 
       <section class="flex-1 px-6 py-5">
         <!-- Ghi chú -->
-        <AntmedCareList
-          v-if="activeTab === 'notes'"
-          :resource="careNotes"
-          :empty="__('Chưa có ghi chú')"
-        >
-          <template #row="{ row }">
-            <div class="text-p-xs text-ink-gray-5">
-              {{ fmtDate(row.note_date) }} · {{ row.category || __('Khác') }}
+        <div v-if="activeTab === 'notes'">
+          <div class="mb-4 flex flex-col gap-2">
+            <FormControl
+              type="textarea"
+              v-model="noteContent"
+              :placeholder="__('Thêm ghi chú chăm sóc…')"
+              :aria-label="__('Nội dung ghi chú')"
+            />
+            <div>
+              <Button
+                variant="solid"
+                :label="__('Lưu ghi chú')"
+                :loading="saveNoteRes.loading"
+                :disabled="!noteContent.trim()"
+                @click="addNote"
+              />
             </div>
-            <div class="mt-0.5 whitespace-pre-line text-p-sm text-ink-gray-8">
-              {{ row.content }}
-            </div>
-          </template>
-        </AntmedCareList>
+          </div>
+          <AntmedCareList
+            :resource="careNotes"
+            :empty="__('Chưa có ghi chú')"
+          >
+            <template #row="{ row }">
+              <div class="text-p-xs text-ink-gray-5">
+                {{ fmtDate(row.note_date) }} · {{ row.category || __('Khác') }}
+              </div>
+              <div class="mt-0.5 whitespace-pre-line text-p-sm text-ink-gray-8">
+                {{ row.content }}
+              </div>
+            </template>
+          </AntmedCareList>
+        </div>
 
         <!-- Lịch sử (ghé thăm) -->
         <AntmedCareList
@@ -132,21 +150,50 @@
         </AntmedCareList>
 
         <!-- Quà -->
-        <AntmedCareList
-          v-else-if="activeTab === 'gifts'"
-          :resource="gifts"
-          :empty="__('Chưa có quà tặng')"
-        >
-          <template #row="{ row }">
-            <div class="text-p-xs text-ink-gray-5">{{ fmtDate(row.gift_date) }}</div>
-            <div class="mt-0.5 text-p-sm text-ink-gray-8">
-              {{ row.item_or_text }}
-              <span v-if="row.value_vnd" class="text-ink-gray-5">
-                · {{ Number(row.value_vnd).toLocaleString('vi-VN') }}₫</span
-              >
+        <div v-else-if="activeTab === 'gifts'">
+          <div class="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <FormControl
+              type="text"
+              v-model="giftForm.item_or_text"
+              :placeholder="__('Quà / nội dung')"
+              :aria-label="__('Nội dung quà')"
+            />
+            <FormControl
+              type="number"
+              v-model="giftForm.value_vnd"
+              :placeholder="__('Giá trị (VND)')"
+              :aria-label="__('Giá trị quà')"
+            />
+            <FormControl
+              type="text"
+              v-model="giftForm.approved_by"
+              :placeholder="__('Người duyệt')"
+              :aria-label="__('Người duyệt')"
+            />
+            <div class="sm:col-span-3">
+              <Button
+                variant="solid"
+                :label="__('Lưu quà tặng')"
+                :loading="saveGiftRes.loading"
+                @click="addGift"
+              />
             </div>
-          </template>
-        </AntmedCareList>
+          </div>
+          <AntmedCareList
+            :resource="gifts"
+            :empty="__('Chưa có quà tặng')"
+          >
+            <template #row="{ row }">
+              <div class="text-p-xs text-ink-gray-5">{{ fmtDate(row.gift_date) }}</div>
+              <div class="mt-0.5 text-p-sm text-ink-gray-8">
+                {{ row.item_or_text }}
+                <span v-if="row.value_vnd" class="text-ink-gray-5">
+                  · {{ Number(row.value_vnd).toLocaleString('vi-VN') }}₫</span
+                >
+              </div>
+            </template>
+          </AntmedCareList>
+        </div>
 
         <!-- Gọi -->
         <div v-else-if="activeTab === 'calls'">
@@ -195,7 +242,7 @@
 <script setup>
 import { computed, h, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Badge, Button, FeatherIcon, toast } from 'frappe-ui'
+import { Badge, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
 import LoadingIndicator from '@/components/Icons/LoadingIndicator.vue'
 import LogCallModal from '@/components/Antmed/LogCallModal.vue'
 import {
@@ -205,6 +252,8 @@ import {
   listGifts,
   listCallLogs,
   checkInDoctor,
+  saveCareNote,
+  createGift,
 } from '@/data/antmed'
 
 const props = defineProps({ name: { type: String, required: true } })
@@ -225,6 +274,47 @@ const checkInRes = checkInDoctor({
     toast.error(err?.messages?.[0] || __('Không check-in được'))
   },
 })
+
+const noteContent = ref('')
+const saveNoteRes = saveCareNote({
+  onSuccess() {
+    noteContent.value = ''
+    toast.success(__('Đã lưu ghi chú'))
+    careNotes.submit({ doctor: props.name })
+  },
+  onError(err) {
+    toast.error(err?.messages?.[0] || __('Không lưu được ghi chú'))
+  },
+})
+function addNote() {
+  if (!noteContent.value.trim()) return
+  saveNoteRes.submit({ doctor: props.name, content: noteContent.value.trim() })
+}
+
+const giftForm = ref({ item_or_text: '', value_vnd: '', approved_by: '' })
+const saveGiftRes = createGift({
+  onSuccess() {
+    giftForm.value = { item_or_text: '', value_vnd: '', approved_by: '' }
+    toast.success(__('Đã lưu quà tặng'))
+    gifts.submit({ doctor: props.name })
+  },
+  onError(err) {
+    toast.error(err?.messages?.[0] || __('Không lưu được quà tặng'))
+  },
+})
+function addGift() {
+  const f = giftForm.value
+  if (!f.item_or_text.trim() || !f.approved_by.trim()) {
+    toast.error(__('Cần nhập nội dung quà và người duyệt'))
+    return
+  }
+  saveGiftRes.submit({
+    doctor: props.name,
+    item_or_text: f.item_or_text.trim(),
+    value_vnd: f.value_vnd || undefined,
+    approved_by: f.approved_by.trim(),
+  })
+}
 
 const tabs = [
   { key: 'notes', label: 'Ghi chú' },
