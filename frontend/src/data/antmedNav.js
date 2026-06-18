@@ -174,6 +174,13 @@ export const ANTMED_SECTIONS = [
         to: '/antmed/sales/team',
         enabled: true,
       },
+      {
+        key: 'tasks',
+        label: 'Công việc',
+        icon: '✅',
+        to: '/antmed/tasks',
+        enabled: true,
+      },
     ],
   },
   {

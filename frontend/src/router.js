@@ -244,6 +244,13 @@ const routes = [
     component: () => import('@/pages/AntmedDispatch.vue'),
   },
   {
+    // Công việc (port CRM Task → dùng cho AntMed): CSKH/hồ sơ thầu/theo dõi HĐ.
+    path: '/antmed/tasks',
+    name: 'AntmedTasks',
+    meta: { role: 'sales' },
+    component: () => import('@/pages/AntmedTasks.vue'),
+  },
+  {
     // M10-3: màn "Hồ sơ nhân viên" (mockup B2 left-card, Trưởng phòng KD) — drill-down 1 dòng từ
     // bảng roster /antmed/sales/team. param owner = deal_owner (email) — KHÔNG hiển thị email thô,
     // chỉ full_name. Render trong AntmedLayout (isAntmedPath '/antmed/*' + meta.antmedShell).
