@@ -1263,3 +1263,51 @@ export const LEAD_STATUS_THEME = {
   Unqualified: 'gray',
   Junk: 'red',
 }
+
+/**
+ * AntMed — Công việc (Task) trên CRM Task: antmed_crm.api.antmed.tasks.list_tasks (GET).
+ * RAW dict { data:[{...,assigned_to_name,is_open}], total_count, open_count }. method:'GET' bắt buộc
+ * (endpoint GET-only — POST mặc định của frappe-ui sẽ 403). filters object PHẢI JSON.stringify.
+ */
+export function getTasks({ auto = false, status, filters } = {}) {
+  // CHỈ gửi param ĐÃ định nghĩa — KHÔNG để {status: undefined} → serialize thành chuỗi
+  // "undefined" → BE lọc status="undefined" → 0 dòng (dù DB có data). filters PHẢI JSON.stringify.
+  const params = {}
+  if (status) params.status = status
+  if (filters) params.filters = JSON.stringify(filters)
+  return createResource({
+    url: 'antmed_crm.api.antmed.tasks.list_tasks',
+    method: 'GET',
+    params,
+    auto,
+  })
+}
+
+/** Theme Badge cho status công việc (CRM Task workflow). */
+export const TASK_STATUS_THEME = {
+  Backlog: 'gray',
+  Todo: 'blue',
+  'In Progress': 'orange',
+  Done: 'green',
+  Canceled: 'red',
+}
+
+/** Theme Badge cho mức ưu tiên công việc. */
+export const TASK_PRIORITY_THEME = {
+  Low: 'gray',
+  Medium: 'blue',
+  High: 'red',
+}
+
+/**
+ * Quick-search command palette (header) — antmed_crm.api.antmed.search.global_search (GET).
+ * BE trả RAW dict { hospitals: [...], contracts: [...] } (KHÔNG bọc data/total_count) →
+ * đọc r.data.hospitals / r.data.contracts trực tiếp. Gọi `.submit({query, limit})` mỗi lần gõ.
+ * ⚠️ PHẢI method:'GET' (createResource mặc định POST → BE methods=["GET"] reject 403).
+ */
+export function useGlobalSearch() {
+  return createResource({
+    url: 'antmed_crm.api.antmed.search.global_search',
+    method: 'GET',
+  })
+}
