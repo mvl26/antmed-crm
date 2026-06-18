@@ -19,6 +19,11 @@
   "assigned_employee",
   "delivered_at",
   "sla_status",
+  "section_break_sign",
+  "signed_by",
+  "signature_method",
+  "gps_lat",
+  "gps_lng",
   "section_break_items",
   "items",
   "notes"
@@ -37,6 +42,11 @@
   {"fieldname": "assigned_employee", "fieldtype": "Link", "in_standard_filter": 1, "label": "NV được gán", "options": "User"},
   {"fieldname": "delivered_at", "fieldtype": "Datetime", "label": "Thời điểm bàn giao", "no_copy": 1, "read_only": 1},
   {"fieldname": "sla_status", "fieldtype": "Select", "label": "Tình trạng SLA", "no_copy": 1, "options": "\nOnTime\nLate", "read_only": 1},
+  {"fieldname": "section_break_sign", "fieldtype": "Section Break", "label": "Ký nhận & GPS"},
+  {"fieldname": "signed_by", "fieldtype": "Data", "label": "Người ký nhận", "no_copy": 1, "read_only": 1},
+  {"fieldname": "signature_method", "fieldtype": "Select", "label": "Hình thức ký", "options": "\nTouch\nUSB Token\nPaper-Photo", "no_copy": 1, "read_only": 1},
+  {"fieldname": "gps_lat", "fieldtype": "Float", "label": "GPS Lat", "no_copy": 1, "precision": "6", "read_only": 1},
+  {"fieldname": "gps_lng", "fieldtype": "Float", "label": "GPS Lng", "no_copy": 1, "precision": "6", "read_only": 1},
   {"fieldname": "section_break_items", "fieldtype": "Section Break", "label": "Vật tư giao"},
   {"fieldname": "items", "fieldtype": "Table", "label": "Vật tư", "options": "AntMed Delivery Item"},
   {"fieldname": "notes", "fieldtype": "Small Text", "label": "Ghi chú"}

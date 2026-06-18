@@ -8,6 +8,7 @@ AntMed-DR-.YYYY.-.##### (KHÔNG AM-DR — reserve). Item_name fetch từ AntMed 
 """
 
 import frappe
+from frappe import _
 from frappe.model.document import Document
 
 
@@ -17,3 +18,8 @@ class AntMedDelivery(Document):
 		for line in self.items:
 			if line.item and not line.item_name:
 				line.item_name = frappe.db.get_value("AntMed Item", line.item, "item_name")
+
+	def on_trash(self):
+		"""BR-07: KHÔNG cho xóa phiếu giao đã bàn giao/ký nhận (chứng cứ pháp lý)."""
+		if self.status in ("Đã bàn giao", "Đã đóng"):
+			frappe.throw(_("BR-07: Không được xóa phiếu giao đã bàn giao/ký. Phải hủy kèm lý do."))

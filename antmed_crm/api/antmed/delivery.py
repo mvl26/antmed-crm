@@ -197,21 +197,59 @@ def start_transit(name: str) -> dict:
 	return {"name": name, "status": "Đang giao"}
 
 
-@frappe.whitelist(methods=["POST"])
-def handover(name: str) -> dict:
-	"""Bàn giao tại phòng mổ → 'Đã bàn giao' (submit, docstatus 1) + tính SLA.
+def _line_qty(line) -> float:
+	"""SL tiêu hao của dòng giao: consumed → delivered → requested."""
+	return float(line.get("consumed_qty") or line.get("delivered_qty") or line.get("requested_qty") or 0)
 
-	sla_status = 'OnTime' nếu giao trước/đúng giờ phẫu thuật, ngược lại 'Late'.
-	(Gate chữ ký/ảnh/GPS + trừ quota M02 để slice M04-S3.)
+
+@frappe.whitelist(methods=["POST"])
+def handover(
+	name: str,
+	gps_lat: str | None = None,
+	gps_lng: str | None = None,
+	signed_by: str | None = None,
+	signature_method: str | None = None,
+) -> dict:
+	"""Bàn giao tại phòng mổ → 'Đã bàn giao' (submit, docstatus 1) + SLA + chữ ký/GPS + trừ quota.
+
+	- sla_status = 'OnTime' nếu giao trước/đúng giờ phẫu thuật, ngược lại 'Late'.
+	- BR-06: nếu phiếu gắn HĐ → assert_quota_available trước khi submit; throw nếu chạm trần.
+	- Sau submit: consume_quota (M02) cho từng dòng (idempotent theo do_ref=phiếu giao).
 	"""
 	_check_write(name)
 	doc = frappe.get_doc(DELIVERY_DOCTYPE, name)
 	_assert_transition(doc.status, "Đã bàn giao")
+
+	# BR-06: kiểm tra trần quota TRƯỚC khi submit (nếu phiếu gắn HĐ).
+	if doc.contract:
+		from antmed_crm.antmed import contract_hooks
+
+		for line in doc.items:
+			contract_hooks.assert_quota_available(doc.contract, line.item, _line_qty(line))
+
 	now = now_datetime()
 	doc.delivered_at = now
 	doc.status = "Đã bàn giao"
 	doc.sla_status = "OnTime" if now <= get_datetime(doc.surgery_datetime) else "Late"
+	if gps_lat is not None and str(gps_lat) != "":
+		doc.gps_lat = float(gps_lat)
+	if gps_lng is not None and str(gps_lng) != "":
+		doc.gps_lng = float(gps_lng)
+	if signed_by:
+		doc.signed_by = signed_by
+	if signature_method:
+		doc.signature_method = signature_method
 	doc.submit()
+
+	# Trừ quota HĐ sau khi bàn giao (M02-3 consume_quota — idempotent theo do_ref).
+	if doc.contract:
+		from antmed_crm.antmed import contract_hooks
+
+		for line in doc.items:
+			qty = _line_qty(line)
+			if qty:
+				contract_hooks.consume_quota(doc.contract, line.item, qty, do_ref=name)
+
 	return {"name": name, "status": doc.status, "sla_status": doc.sla_status, "delivered_at": str(doc.delivered_at)}
 
 
