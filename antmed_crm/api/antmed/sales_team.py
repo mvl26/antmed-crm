@@ -83,9 +83,18 @@ KHÔNG raw SQL / KHÔNG f-string injection: chỉ get_list/get_all (filters list
 
 import frappe
 
+from antmed_crm.api.antmed.rbac import ANTMED_ALLOWED_ROLES
+
 DEAL_DOCTYPE = "CRM Deal"
 DEAL_STATUS_DOCTYPE = "CRM Deal Status"
 SALES_ROLE = "NV kinh doanh"
+
+# Allow-list role NGHIỆP VỤ thuộc PHẠM VI AntMed CRM = 3 role AntMed + role sales CRM gốc.
+# Whitelist → "Hồ sơ NV" CHỈ hiện role AntMed/CRM, LOẠI SẠCH role của app khác cài cùng bench
+# (AssetCore / Norm / WFC / Calibration…) + role hệ thống. AntMed CRM = app RIÊNG, không lẫn module khác.
+PROFILE_BUSINESS_ROLES = frozenset(
+	set(ANTMED_ALLOWED_ROLES) | {"Sales Master Manager", "Sales Manager", "Sales User"}
+)
 
 # Ngưỡng % doanh số (so với đỉnh đội) → theme thanh bar (mockup B2).
 SALES_PCT_GREEN = 70  # >=70 → green
@@ -480,10 +489,11 @@ def dispatch_board() -> dict:
 
 
 def _user_roles(email: str) -> list[str]:
-	"""Danh sách role NGHIỆP VỤ của user (loại role hệ thống). Rỗng nếu user không tồn tại.
+	"""Danh sách role NGHIỆP VỤ AntMed/CRM của user. Rỗng nếu user không tồn tại.
 
-	Đọc qua get_all('Has Role') — KHÔNG raw SQL. Role hệ thống (SYSTEM_ROLES) bị loại để card
-	hồ sơ chỉ hiện cấp/vai trò nghiệp vụ (vd 'NV kinh doanh'), KHÔNG lộ role kỹ thuật.
+	Đọc qua get_all('Has Role') — KHÔNG raw SQL. WHITELIST theo PROFILE_BUSINESS_ROLES →
+	CHỈ giữ role thuộc phạm vi AntMed CRM (3 role AntMed + sales CRM), LOẠI SẠCH role của app
+	khác cài cùng bench (AssetCore/Norm/WFC…) + role hệ thống. Tránh "lẫn" module khác.
 	"""
 	if not email or not frappe.db.exists("User", email):
 		return []
@@ -493,7 +503,7 @@ def _user_roles(email: str) -> list[str]:
 		pluck="role",
 		limit_page_length=0,
 	)
-	return sorted({r for r in rows if r not in SYSTEM_ROLES})
+	return sorted({r for r in rows if r in PROFILE_BUSINESS_ROLES})
 
 
 def _status_theme(status: str, won_statuses: set, lost_statuses: set) -> str:
