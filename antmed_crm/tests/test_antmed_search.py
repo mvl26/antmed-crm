@@ -26,6 +26,8 @@ def _mk_hospital(code, name):
 
 
 def _mk_contract(contract_no, hospital):
+	if frappe.db.exists("AntMed Contract", {"contract_no": contract_no}):
+		return frappe.get_doc("AntMed Contract", {"contract_no": contract_no})
 	doc = frappe.get_doc(
 		{
 			"doctype": "AntMed Contract",
@@ -78,6 +80,9 @@ class TestGlobalSearch(FrappeTestCase):
 		self.assertLessEqual(len(res["contracts"]), 1)
 
 	def test_limit_clamped_when_invalid(self):
-		# limit không hợp lệ → fallback an toàn, KHÔNG raise
+		# limit không hợp lệ → fallback an toàn (5), KHÔNG raise
 		res = search.global_search(query=PREFIX, limit="abc")
 		self.assertIsInstance(res["hospitals"], list)
+		self.assertIsInstance(res["contracts"], list)
+		self.assertLessEqual(len(res["hospitals"]), 5)
+		self.assertLessEqual(len(res["contracts"]), 5)
