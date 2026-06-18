@@ -26,6 +26,8 @@ const EMOJI_FEATHER = {
   '🏠': 'home',
   '💼': 'briefcase',
   '🩺': 'activity',
+  '🧲': 'zap',
+  '✅': 'check-square',
 }
 
 export function featherFor(emoji) {
