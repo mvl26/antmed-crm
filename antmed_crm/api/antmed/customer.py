@@ -556,7 +556,8 @@ def convert_to_delivery(name: str) -> dict:
 			"doctype": DELIVERY_DOCTYPE,
 			"hospital": mr.hospital,
 			"doctor": mr.doctor,
-			"surgery_datetime": mr.surgery_datetime,
+			# surgery_datetime bắt buộc trên phiếu giao — default 'now' nếu yêu cầu chưa nêu giờ mổ.
+			"surgery_datetime": mr.surgery_datetime or frappe.utils.now_datetime(),
 			"surgery_room": mr.surgery_room,
 			# NV chuyển yêu cầu = người được gán → phiếu vào thẳng 'Đã gán NV'.
 			"status": "Đã gán NV",
