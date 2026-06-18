@@ -119,3 +119,56 @@ class TestAntMedLoan(FrappeTestCase):
 				instrument_loan.get_loan(name)
 		finally:
 			frappe.set_user("Administrator")
+
+
+class TestAntMedInstrumentBoard(FrappeTestCase):
+	"""M05 I1/C3 — board() (KPI+grid+tần suất) + save_checklist() (C3)."""
+
+	@classmethod
+	def setUpClass(cls):
+		super().setUpClass()
+		cls.hosp = _mk_hospital("_T-BD-BV", "BV Board").name
+
+	def test_board_shape(self):
+		b = instrument_loan.board()
+		self.assertEqual(set(b.keys()), {"kpis", "sets", "frequency"})
+		self.assertEqual(set(b["kpis"].keys()), {"total", "in_circulation", "ready", "issue"})
+		self.assertIsInstance(b["sets"], list)
+		self.assertIsInstance(b["frequency"], list)
+		# KPI 'total' = toàn fleet (admin context).
+		self.assertEqual(b["kpis"]["total"], len(frappe.get_all("AntMed Instrument Set", pluck="name")))
+
+	def test_board_card_enrichment(self):
+		s = _mk_set("_T-BD-SET").name
+		b = instrument_loan.board(search="_T-BD-SET")
+		row = next((r for r in b["sets"] if r["name"] == s), None)
+		self.assertIsNotNone(row)
+		for k in ("set_code", "surgery_type", "current_status", "item_count", "is_overdue", "hospital_name"):
+			self.assertIn(k, row)
+		self.assertEqual(row["item_count"], 1)  # _mk_set thêm đúng 1 component "Kẹp"
+
+	def test_save_checklist_persist_then_lock(self):
+		import json
+
+		s = _mk_set("_T-BD-CL").name
+		loan = instrument_loan.book(
+			instrument_set=s,
+			hospital=self.hosp,
+			booked_at=str(add_to_date(now_datetime(), hours=2)),
+			due_return_at=str(add_to_date(now_datetime(), hours=8)),
+		)["name"]
+		# book() sinh handover_checklist từ components → có "Kẹp".
+		res = instrument_loan.save_checklist(
+			loan, kind="handover", items_json=json.dumps([{"component_name": "Kẹp", "condition": "Damaged"}])
+		)
+		self.assertEqual(res["name"], loan)
+		detail = instrument_loan.get_loan(loan)
+		row = next((c for c in detail["handover_checklist"] if c["component_name"] == "Kẹp"), None)
+		self.assertIsNotNone(row)
+		self.assertEqual(row["condition"], "Damaged")
+		# Sau handover (submit) → khoá, save_checklist throw.
+		instrument_loan.handover(loan)
+		with self.assertRaises(frappe.ValidationError):
+			instrument_loan.save_checklist(
+				loan, kind="handover", items_json=json.dumps([{"component_name": "Kẹp", "condition": "OK"}])
+			)

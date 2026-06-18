@@ -43,20 +43,24 @@ DELIVERY_LIST_FIELDS = [
 	"hospital",
 	"hospital.hospital_name as hospital_name",
 	"doctor",
+	"doctor.full_name as doctor_name",
 	"surgery_datetime",
 	"status",
 	"sla_status",
 	"assigned_employee",
+	"assigned_employee.full_name as assigned_employee_name",
 ]
 DELIVERY_LIST_ITEM_KEYS = (
 	"name",
 	"hospital",
 	"hospital_name",
 	"doctor",
+	"doctor_name",
 	"surgery_datetime",
 	"status",
 	"sla_status",
 	"assigned_employee",
+	"assigned_employee_name",
 )
 DELIVERY_DETAIL_FIELDS = (
 	"name",
@@ -136,6 +140,9 @@ def get_delivery(name: str) -> dict:
 	)
 	result["doctor_name"] = (
 		frappe.db.get_value(DOCTOR_DOCTYPE, doc.get("doctor"), "full_name") if doc.get("doctor") else None
+	)
+	result["assigned_employee_name"] = (
+		frappe.db.get_value("User", doc.get("assigned_employee"), "full_name") if doc.get("assigned_employee") else None
 	)
 	result["items"] = [{k: row.get(k) for k in DELIVERY_ITEM_KEYS} for row in (doc.get("items") or [])]
 	return result
@@ -225,3 +232,31 @@ def dispatch_board(hospital: str | None = None) -> dict:
 	for r in rows:
 		board.setdefault(r.get("status"), []).append({k: r.get(k) for k in DELIVERY_LIST_ITEM_KEYS})
 	return {"columns": [{"status": s, "items": board.get(s, [])} for s in STATUS_ORDER], "total": len(rows)}
+
+
+@frappe.whitelist(methods=["GET"])
+def list_assignable_employees() -> dict:
+	"""NV có thể gán phụ trách phiếu giao (role 'NV kinh doanh' / 'Quản lý', user active).
+
+	Trả {data: [{value: <user>, label: <full_name>}]} cho dropdown 'Gán NV' (S2).
+	value = User.name gửi BE; label = full_name hiển thị (KHÔNG leak email ra UI).
+	"""
+	user_ids = frappe.get_all(
+		"Has Role",
+		filters={"role": ["in", ["NV kinh doanh", "Quản lý"]], "parenttype": "User"},
+		pluck="parent",
+		distinct=True,
+	)
+	if not user_ids:
+		return {"data": []}
+	users = frappe.get_all(
+		"User",
+		filters=[
+			["name", "in", user_ids],
+			["enabled", "=", 1],
+			["name", "not in", ["Administrator", "Guest"]],
+		],
+		fields=["name as value", "full_name as label"],
+		order_by="full_name asc",
+	)
+	return {"data": users}

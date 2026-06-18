@@ -36,7 +36,19 @@ DELIVERY_MIN_FIELDS = {
 	"items",
 }
 DELIVERY_ITEM_FIELDS = {"item", "item_name", "requested_qty", "delivered_qty", "consumed_qty", "returned_qty", "lot"}
-LIST_KEYS = {"name", "hospital", "hospital_name", "doctor", "surgery_datetime", "status", "sla_status", "assigned_employee"}
+# Shape list_deliveries — đã mở rộng (factory): + doctor_name + assigned_employee_name (enrich cho FE điều phối).
+LIST_KEYS = {
+	"name",
+	"hospital",
+	"hospital_name",
+	"doctor",
+	"doctor_name",
+	"surgery_datetime",
+	"status",
+	"sla_status",
+	"assigned_employee",
+	"assigned_employee_name",
+}
 
 
 def _mk_hospital(code, name):

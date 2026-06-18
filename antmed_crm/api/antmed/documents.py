@@ -26,10 +26,35 @@ EINVOICE_LIST_ITEM_KEYS = ("name", "delivery", "provider", "status", "ma_cqt", "
 CERT_LIST_FIELDS = ["name", "cert_no", "cert_type", "item", "lot", "issued_date", "expires_at"]
 CERT_LIST_ITEM_KEYS = ("name", "cert_no", "cert_type", "item", "lot", "issued_date", "expires_at")
 
-QUEUE_LIST_FIELDS = ["name", "delivery", "document_bundle", "status", "missing_chips", "assigned_to"]
+QUEUE_LIST_FIELDS = ["name", "delivery", "document_bundle", "status", "missing_chips", "assigned_to", "ts"]
+# Key cũ (backward-compat) — KHÔNG đổi/xoá. Key MỚI (ts/hospital_name/assigned_employee) chỉ THÊM.
 QUEUE_LIST_ITEM_KEYS = ("name", "delivery", "document_bundle", "status", "missing_chips", "assigned_to")
+QUEUE_LIST_EXTRA_KEYS = ("ts", "hospital_name", "assigned_employee", "assigned_employee_name")
+READY_STATUS = "Chờ phát hành"
 DOC_DETAIL_FIELDS = ("name", "delivery", "hospital", "status", "missing_items", "hash_sha256")
 LINE_KEYS = ("item", "lot", "qty", "requires_cocq", "co_attached", "cq_attached")
+
+
+def _parse_chips(raw) -> list:
+	"""Parse missing_chips JSON null-guard. Chuỗi rỗng / None / JSON hỏng → [] (KHÔNG throw).
+
+	Dùng CHUNG cho summary count + list output để 2 nguồn nhất quán (Hyrum-safe).
+	Chỉ trả list; giá trị không phải list (vd dict/số) → [] để count không lệch.
+	"""
+	if not raw:
+		return []
+	if isinstance(raw, list):
+		return raw
+	try:
+		parsed = json.loads(raw)
+	except (ValueError, TypeError):
+		return []
+	return parsed if isinstance(parsed, list) else []
+
+
+def _chip_text(chips: list) -> str:
+	"""Gộp các chip thành 1 chuỗi để dò 'CO'/'CQ' (chip dạng 'CO lot L-9930')."""
+	return " ".join(str(c) for c in chips)
 
 
 def _build_lines(delivery_name: str) -> tuple[list, list]:
@@ -114,23 +139,125 @@ def refresh_release_status(delivery: str) -> dict:
 
 @frappe.whitelist(methods=["GET"])
 def list_release_queue(status: str | None = None, start: int = 0, page_length: int = 20) -> dict:
-	"""Hàng chờ phát hành chứng từ. Trả RAW {data, total_count} — count==rows dưới DocPerm."""
+	"""Hàng chờ phát hành chứng từ (worklist E1). Trả RAW {data, total_count} — count==rows dưới DocPerm.
+
+	Mỗi dòng = key cũ (backward-compat: name/delivery/document_bundle/status/missing_chips/assigned_to)
+	+ key THÊM cho cột E1: ts, hospital_name, assigned_employee (NV) — resolve qua delivery.
+	KHÔNG N+1: bulk-fetch delivery distinct (1 query) + hospital distinct (1 query) → map ở Python.
+	"""
 	conditions = []
 	if status:
 		conditions.append(["status", "=", status])
 	start = max(0, int(start))
 	page_length = max(0, int(page_length))
-	rows = frappe.get_list(
-		QUEUE_DOCTYPE,
-		filters=conditions,
-		fields=QUEUE_LIST_FIELDS,
-		limit_start=start,
-		limit_page_length=page_length or 0,
-		order_by="modified desc",
-	)
-	data = [{k: r.get(k) for k in QUEUE_LIST_ITEM_KEYS} for r in rows]
+	# Fail-closed BR-13: user KHÔNG read-perm AntMed Document Release Queue → rỗng (count==rows==0), KHÔNG throw.
+	try:
+		rows = frappe.get_list(
+			QUEUE_DOCTYPE,
+			filters=conditions,
+			fields=QUEUE_LIST_FIELDS,
+			limit_start=start,
+			limit_page_length=page_length or 0,
+			order_by="modified desc",
+		)
+	except frappe.PermissionError:
+		return {"data": [], "total_count": 0}
+
+	# BULK 1: phiếu giao distinct → hospital + assigned_employee (KHÔNG get_value trong loop).
+	delivery_names = list({r.get("delivery") for r in rows if r.get("delivery")})
+	dlv_map: dict = {}
+	hospital_names: set = set()
+	employee_users: set = set()
+	if delivery_names:
+		for d in frappe.get_all(
+			DELIVERY_DOCTYPE,
+			filters=[["name", "in", delivery_names]],
+			fields=["name", "hospital", "assigned_employee"],
+			limit_page_length=0,
+			ignore_permissions=True,
+		):
+			dlv_map[d["name"]] = d
+			if d.get("hospital"):
+				hospital_names.add(d["hospital"])
+			if d.get("assigned_employee"):
+				employee_users.add(d["assigned_employee"])
+
+	# BULK 2: bệnh viện distinct → hospital_name (1 query map).
+	hosp_name_map: dict = {}
+	if hospital_names:
+		for h in frappe.get_all(
+			"AntMed Hospital",
+			filters=[["name", "in", list(hospital_names)]],
+			fields=["name", "hospital_name"],
+			limit_page_length=0,
+			ignore_permissions=True,
+		):
+			hosp_name_map[h["name"]] = h.get("hospital_name")
+
+	# BULK 3: NV (User) distinct → full_name (KHÔNG leak email thô ra UI — GATE-2). 1 query map.
+	emp_name_map: dict = {}
+	if employee_users:
+		for u in frappe.get_all(
+			"User",
+			filters=[["name", "in", list(employee_users)]],
+			fields=["name", "full_name"],
+			limit_page_length=0,
+			ignore_permissions=True,
+		):
+			emp_name_map[u["name"]] = u.get("full_name")
+
+	data = []
+	for r in rows:
+		row = {k: r.get(k) for k in QUEUE_LIST_ITEM_KEYS}
+		dlv = dlv_map.get(r.get("delivery")) or {}
+		row["ts"] = r.get("ts")
+		row["assigned_employee"] = dlv.get("assigned_employee")
+		# Tên NV đọc được (full_name) — FE hiển thị tên này, KHÔNG email/ID (assigned_employee giữ raw cho backward-compat).
+		row["assigned_employee_name"] = emp_name_map.get(dlv.get("assigned_employee"))
+		row["hospital_name"] = hosp_name_map.get(dlv.get("hospital")) or dlv.get("hospital")
+		data.append(row)
+
 	total_count = len(frappe.get_list(QUEUE_DOCTYPE, filters=conditions, pluck="name", limit_page_length=0))
 	return {"data": data, "total_count": total_count}
+
+
+@frappe.whitelist(methods=["GET"])
+def release_queue_summary() -> dict:
+	"""KPI rollup màn 'Hàng chờ phát hành chứng từ' (E1). Trả RAW dict khoá CỐ ĐỊNH (Hyrum-safe):
+
+	    {missing_co, missing_cq, ready_to_release}
+
+	- missing_co       = số hàng chờ có 'CO' trong missing_chips.
+	- missing_cq       = số hàng chờ có 'CQ' trong missing_chips.
+	- ready_to_release = số hàng chờ status='Chờ phát hành' AND missing_chips rỗng (đủ CO+CQ).
+
+	Đếm dưới DocPerm (BR-13) — count khớp số dòng list_release_queue user được phép thấy.
+	Fail-closed: user KHÔNG read-perm AntMed Document Release Queue → {0,0,0} (KHÔNG throw/leak/500).
+	KHÔNG N+1 / KHÔNG raw SQL: 1 get_list lấy {status, missing_chips} rồi gộp ở Python.
+	"""
+	empty = {"missing_co": 0, "missing_cq": 0, "ready_to_release": 0}
+	if not frappe.has_permission(QUEUE_DOCTYPE, "read"):
+		return empty
+	try:
+		rows = frappe.get_list(
+			QUEUE_DOCTYPE,
+			fields=["status", "missing_chips"],
+			limit_page_length=0,
+		)
+	except frappe.PermissionError:
+		return empty
+
+	missing_co = missing_cq = ready = 0
+	for r in rows:
+		chips = _parse_chips(r.get("missing_chips"))
+		text = _chip_text(chips)
+		if "CO" in text:
+			missing_co += 1
+		if "CQ" in text:
+			missing_cq += 1
+		if r.get("status") == READY_STATUS and not chips:
+			ready += 1
+	return {"missing_co": missing_co, "missing_cq": missing_cq, "ready_to_release": ready}
 
 
 @frappe.whitelist(methods=["GET"])

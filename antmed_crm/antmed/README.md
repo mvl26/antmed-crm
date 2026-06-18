@@ -13,7 +13,7 @@ crm/
 ├── antmed/                     # module Frappe "AntMed" (code nghiệp vụ round sau)
 │   ├── __init__.py
 │   └── README.md               # (file này) convention FE↔BE
-├── api/antmed/                 # package endpoint — đường gọi crm.api.antmed.<module>.<fn>
+├── api/antmed/                 # package endpoint — đường gọi antmed_crm.api.antmed.<module>.<fn>
 │   ├── __init__.py
 │   └── health.py               # ping() — smoke GET, RAW dict
 ├── fixtures/role.json          # 3 Role AntMed (Frappe import_fixtures CHỈ đọc crm/fixtures/)
@@ -21,7 +21,7 @@ crm/
 
 frontend/src/
 ├── router.js                   # CHỈ thêm route /antmed (lazy) — KHÔNG đụng route gốc
-└── pages/AntmedHome.vue        # placeholder gọi crm.api.antmed.health.ping
+└── pages/AntmedHome.vue        # placeholder gọi antmed_crm.api.antmed.health.ping
 ```
 
 ## 1. Namespace Python (BE)
@@ -31,9 +31,9 @@ frontend/src/
 | Module Frappe | `AntMed` (khai `crm/modules.txt`) | `AntMed` |
 | Thư mục code module | `crm/antmed/` | `crm/antmed/__init__.py` |
 | Package API | `crm/api/antmed/` (có `__init__.py`) | `crm/api/antmed/health.py` |
-| Đường gọi endpoint | `crm.api.antmed.<module>.<fn>` | `crm.api.antmed.health.ping` |
+| Đường gọi endpoint | `antmed_crm.api.antmed.<module>.<fn>` | `antmed_crm.api.antmed.health.ping` |
 
-**Cấm**: `antmed_crm.api.*`, `assetcore.*`, app riêng `antmed_crm` (ADR-M01-01).
+**Cấm**: `crm.api.*` (namespace cũ — app cài là `antmed_crm`), `assetcore.*`, app khác (ADR-M01-01).
 
 ## 2. DocType prefix (round sau)
 
@@ -72,7 +72,7 @@ Role rỗng quyền ở R1 (DocPerm/Role Profile gắn ở round có DocType).
 | Route name | PascalCase tiền tố `Antmed` | `AntmedHome` |
 | Page component | `frontend/src/pages/Antmed<Feature>.vue` | `AntmedHome.vue` |
 | Store (round sau) | `stores/antmed<Feature>.js` → `useAntmed<Feature>Store` | `antmedHospitals.js` |
-| Resource call | `createResource({ url: 'crm.api.antmed.<module>.<fn>' })` | `crm.api.antmed.health.ping` |
+| Resource call | `createResource({ url: 'antmed_crm.api.antmed.<module>.<fn>' })` | `antmed_crm.api.antmed.health.ping` |
 
 **Cấm**: sửa/xoá route/page/store Frappe CRM gốc (Leads/Deals/Contacts/Tasks…). Chỉ THÊM prefix `Antmed`.
 
