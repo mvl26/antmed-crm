@@ -67,14 +67,35 @@ def _build_lines(delivery_name: str) -> tuple[list, list]:
 	"""Dựng dòng chứng từ từ phiếu giao + đánh dấu CO/CQ. Trả (lines, missing_item_codes).
 
 	requires_cocq lấy từ AntMed Item; co/cq attached = lô có co_cert/cq_cert (AntMed Lot).
+	KHÔNG N+1: bulk-fetch distinct item/lot (≤2 query) → map ở Python (giống list_release_queue).
+	Output-identical với loop get_value cũ: item/lot absent trong map → default 0 (= get_value None→0).
 	"""
 	dlv = frappe.get_doc(DELIVERY_DOCTYPE, delivery_name)
+
+	# BULK 1: item distinct → requires_cocq (1 query, rỗng-safe — KHÔNG query `in []`).
+	item_codes = list({it.item for it in dlv.items if it.item})
+	requires_map: dict = {}
+	if item_codes:
+		for r in frappe.get_all(
+			"AntMed Item", filters=[["name", "in", item_codes]], fields=["name", "requires_cocq"], limit_page_length=0
+		):
+			requires_map[r["name"]] = int(r.get("requires_cocq") or 0)
+
+	# BULK 2: lot distinct → (co_cert, cq_cert) (1 query, rỗng-safe).
+	lot_codes = list({it.lot for it in dlv.items if it.lot})
+	cert_map: dict = {}
+	if lot_codes:
+		for r in frappe.get_all(
+			"AntMed Lot", filters=[["name", "in", lot_codes]], fields=["name", "co_cert", "cq_cert"], limit_page_length=0
+		):
+			cert_map[r["name"]] = (r.get("co_cert"), r.get("cq_cert"))
+
 	lines, missing = [], []
 	for it in dlv.items:
-		requires = int(frappe.db.get_value("AntMed Item", it.item, "requires_cocq") or 0) if it.item else 0
+		requires = requires_map.get(it.item, 0) if it.item else 0
 		co = cq = 0
 		if it.lot:
-			cert = frappe.db.get_value("AntMed Lot", it.lot, ["co_cert", "cq_cert"]) or (None, None)
+			cert = cert_map.get(it.lot) or (None, None)
 			co = 1 if cert[0] else 0
 			cq = 1 if cert[1] else 0
 		lines.append(
