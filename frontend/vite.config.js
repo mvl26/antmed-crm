@@ -14,7 +14,14 @@ export default defineConfig(async ({ mode }) => {
       VitePWA({
         registerType: 'autoUpdate',
         devOptions: {
-          enabled: true,
+          // Tắt service worker ở DEV: tránh SW cache app-shell cũ → màn trắng / UI cũ khi
+          // đang phát triển (rule 02). PWA vẫn đầy đủ ở production build (yarn build).
+          enabled: false,
+        },
+        workbox: {
+          // App-shell có file CSS ~2.5 MiB (leaflet + tailwind...) vượt mặc định 2 MiB.
+          // Nâng giới hạn để service worker precache đủ app-shell (offline) và build không vỡ.
+          maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         },
         manifest: {
           display: 'standalone',
@@ -68,9 +75,32 @@ export default defineConfig(async ({ mode }) => {
       ],
     },
     server: {
+      port: 3001,
+      strictPort: true,
       allowedHosts: ['miyano', 'antmed.local', 'localhost', '127.0.0.1'],
       fs: {
         allow: [path.resolve(__dirname, '..')],
+      },
+      // Dev local CHỈ dùng localhost:3001 → ép mọi request API về site `miyano`.
+      // (Frappe phân giải site theo Host; "localhost" không phải site → 404/Guest.)
+      // changeOrigin gửi Host=miyano cho backend; bỏ Domain của Set-Cookie để session
+      // sống trên localhost. Thay cho frappeProxy (định tuyến site theo Host trình duyệt).
+      proxy: {
+        '^/(desk|app|login|api|assets|files|private)': {
+          target: 'http://miyano:8000',
+          changeOrigin: true,
+          ws: true,
+          configure: (proxy) => {
+            proxy.on('proxyRes', (proxyRes) => {
+              const sc = proxyRes.headers['set-cookie']
+              if (Array.isArray(sc)) {
+                proxyRes.headers['set-cookie'] = sc.map((c) =>
+                  c.replace(/;\s*Domain=[^;]+/i, ''),
+                )
+              }
+            })
+          },
+        },
       },
     },
   }
@@ -78,7 +108,9 @@ export default defineConfig(async ({ mode }) => {
   const frappeui = await importFrappeUIPlugin(isDev, config)
   config.plugins.unshift(
     frappeui({
-      frappeProxy: true,
+      // Dev: proxy tự cấu hình ở server.proxy (ghim site miyano, chỉ dùng localhost:3001).
+      // Tắt frappeProxy mặc định vì nó định tuyến site theo Host trình duyệt (localhost fail).
+      frappeProxy: false,
       lucideIcons: true,
       jinjaBootData: true,
       buildConfig: {
@@ -104,9 +136,8 @@ async function importFrappeUIPlugin(isDev, config) {
         console.info('Local frappe-ui vite plugin found, using local plugin')
         config.resolve.alias = getAliases(config)
         return module.default
-      } else {
-        console.warn('Local frappe-ui vite plugin not found, using npm package')
       }
+      // Không có frappe-ui local → dùng npm package (mặc định, im lặng — không cảnh báo).
     } catch (error) {
       console.warn(
         'Local frappe-ui not found, falling back to npm package:',
