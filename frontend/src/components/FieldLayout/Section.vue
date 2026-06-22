@@ -29,7 +29,7 @@
   </div>
 </template>
 <script setup>
-import Section from '@/components/Section.vue'
+import Section from '@/components/CollapsibleSection.vue'
 import Column from '@/components/FieldLayout/Column.vue'
 import { inject } from 'vue'
 
