@@ -320,7 +320,7 @@ const routes = [
 ]
 
 let router = createRouter({
-  history: createWebHistory('/crm'),
+  history: createWebHistory('/'),
   routes,
 })
 

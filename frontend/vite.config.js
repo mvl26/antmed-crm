@@ -20,9 +20,9 @@ export default defineConfig(async ({ mode }) => {
           display: 'standalone',
           name: 'AntMed CRM',
           short_name: 'AntMed CRM',
-          start_url: '/crm',
+          start_url: '/antmed',
           description:
-            'Modern & 100% Open-source CRM tool to supercharge your sales operations',
+            'AntMed CRM — quản lý kinh doanh thiết bị và vật tư y tế',
           icons: [
             {
               src: '/assets/antmed_crm/manifest/manifest-icon-192.maskable.png',
@@ -82,7 +82,7 @@ export default defineConfig(async ({ mode }) => {
       lucideIcons: true,
       jinjaBootData: true,
       buildConfig: {
-        indexHtmlPath: '../antmed_crm/www/crm.html',
+        indexHtmlPath: '../antmed_crm/www/antmed.html',
         emptyOutDir: true,
         sourcemap: true,
       },

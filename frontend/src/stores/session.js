@@ -34,12 +34,12 @@ export const sessionStore = defineStore('crm-session', () => {
       // KHÔNG set user.value=null TRƯỚC redirect: nó lật isLoggedIn (reactive) → App.vue
       // remount router-view như Guest → AntmedProfile gọi lại getMyProfile khi session đã hết
       // → "Không tải được hồ sơ". Full reload bên dưới tự xoá toàn bộ state (cookie đã clear).
-      const inAntmed = window.location.pathname.startsWith('/crm/antmed')
+      const inAntmed = window.location.pathname.startsWith('/antmed')
       if (inAntmed) {
-        window.location.replace('/crm/antmed/login')
+        window.location.replace('/antmed/login')
       } else {
         window.location.replace(
-          '/login?redirect-to=' + encodeURIComponent('/crm'),
+          '/login?redirect-to=' + encodeURIComponent('/antmed'),
         )
       }
     },

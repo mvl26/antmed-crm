@@ -24,6 +24,6 @@ docs/antmed_crm
 .playwright
 .playwright-mcp
 antmed_crm/public
-antmed_crm/www/crm.html
+antmed_crm/www/antmed.html
 docs/superpowers
 docs/BA

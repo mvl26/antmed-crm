@@ -165,12 +165,12 @@ function safeLocal(fn, fallback = null) {
   }
 }
 
-// Đích sau đăng nhập: query `redirect-to` (path SPA, vd /antmed/deliveries) → /crm/<path>.
-// Mặc định /crm/antmed. Chỉ chấp nhận path nội bộ bắt đầu bằng '/' (chống open-redirect).
+// Đích sau đăng nhập: query `redirect-to` (path SPA, vd /antmed/deliveries) → path (base '/').
+// Mặc định /antmed. Chỉ chấp nhận path nội bộ bắt đầu bằng '/' (chống open-redirect).
 const redirectTarget = computed(() => {
   const rt = route.query['redirect-to']
   const path = typeof rt === 'string' && rt.startsWith('/') ? rt : '/antmed'
-  return '/crm' + path
+  return path
 })
 
 // Login resource RIÊNG (KHÔNG dùng session.login — onSuccess của nó router.replace, còn ở
@@ -202,7 +202,7 @@ function doLogin() {
 onMounted(() => {
   // Đã đăng nhập mà mở trang login → về thẳng app (full reload lấy boot xác thực).
   if (session.isLoggedIn) {
-    window.location.href = '/crm/antmed'
+    window.location.href = '/antmed'
     return
   }
   // Prefill email đã ghi nhớ (nếu có) → tick sẵn "Nhớ tài khoản".
