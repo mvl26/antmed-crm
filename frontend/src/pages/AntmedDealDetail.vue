@@ -183,7 +183,7 @@ import { RouterLink } from 'vue-router'
 import { Badge, Button, toast } from 'frappe-ui'
 import LoadingIndicator from '@/components/Icons/LoadingIndicator.vue'
 import { getDeal, DEAL_STAGE_LABEL, DEAL_STAGE_THEME } from '@/data/antmed'
-import { formatVnMoney } from '@/utils/antmedUi'
+import { formatVnMoney, fmtDate } from '@/utils/antmedUi'
 
 const props = defineProps({ name: { type: String, required: true } })
 
@@ -199,13 +199,7 @@ function stageLabel(s) {
 function stageTheme(s) {
   return DEAL_STAGE_THEME[s] || 'gray'
 }
-function fmtDate(v) {
-  if (!v) return '—'
-  const dt = new Date(String(v).replace(' ', 'T'))
-  if (Number.isNaN(dt.getTime())) return String(v)
-  const p = (n) => String(n).padStart(2, '0')
-  return `${p(dt.getDate())}/${p(dt.getMonth() + 1)}/${dt.getFullYear()}`
-}
+// fmtDate (dd/MM/yyyy) gom về canon @/utils/antmedUi (output không đổi với Frappe Date).
 const errorMessage = computed(
   () =>
     resource.error?.messages?.[0] ||

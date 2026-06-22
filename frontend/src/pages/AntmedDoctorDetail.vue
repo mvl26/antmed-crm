@@ -255,6 +255,7 @@ import {
   saveCareNote,
   createGift,
 } from '@/data/antmed'
+import { fmtDate } from '@/utils/antmedUi'
 
 const props = defineProps({ name: { type: String, required: true } })
 const router = useRouter()
@@ -376,11 +377,8 @@ function fmtDuration(sec) {
   const r = s % 60
   return m ? `${m}p${r ? ' ' + r + 's' : ''}` : `${r}s`
 }
-function fmtDate(d) {
-  if (!d) return '—'
-  const [y, m, day] = String(d).split(' ')[0].split('-')
-  return y && m && day ? `${day}/${m}/${y}` : d
-}
+// fmtDate (dd/MM/yyyy) gom về canon @/utils/antmedUi; fmtDateTime giữ inline (dd/MM/yyyy HH:mm,
+// thứ tự ngày-trước-giờ — không có canon khớp) nhưng dùng lại fmtDate đã import.
 function fmtDateTime(d) {
   if (!d) return '—'
   const [date, time] = String(d).split(' ')

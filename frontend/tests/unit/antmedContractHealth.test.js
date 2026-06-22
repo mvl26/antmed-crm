@@ -205,8 +205,14 @@ describe('AntmedContractHealth.vue — đọc r.data.data + tri-branch + cột A
     expect(pageSrc).toMatch(/bg-red-100/)
   })
 
-  it('Hết hạn định dạng dd/MM/yyyy (padStart ngày/tháng)', () => {
-    expect(pageSrc).toMatch(/\$\{dd\}\/\$\{mm\}\/\$\{yyyy\}/)
+  it('Hết hạn định dạng dd/MM/yyyy qua canon fmtDate (alias formatDate, gom hết inline)', () => {
+    // Vòng 2 CONSOLIDATE: formatDate inline → import canon fmtDate (dd/MM/yyyy) từ antmedUi.
+    expect(pageSrc).toMatch(
+      /import[^\n]*fmtDate as formatDate[^\n]*from\s*'@\/utils\/antmedUi'/,
+    )
+    expect(pageSrc).toMatch(/formatDate\(row\.valid_to\)/)
+    // KHÔNG còn tự định nghĩa formatDate inline trong page.
+    expect(pageSrc).not.toMatch(/function formatDate\(/)
   })
 
   it('status chip qua theme map (KHÔNG raw màu) + label chữ (WCAG: không chỉ màu)', () => {

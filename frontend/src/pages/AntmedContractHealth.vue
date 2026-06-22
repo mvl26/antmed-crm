@@ -210,7 +210,7 @@ import { Badge, Button, toast } from 'frappe-ui'
 import LoadingIndicator from '@/components/Icons/LoadingIndicator.vue'
 import AntmedTopQuotaItemsCard from '@/components/Antmed/AntmedTopQuotaItemsCard.vue'
 import { getContractHealth, getTopQuotaItems, CONTRACT_WORKFLOW_THEME } from '@/data/antmed'
-import { healthBarClass, expiryLabel } from '@/utils/antmedUi'
+import { healthBarClass, expiryLabel, fmtDate as formatDate } from '@/utils/antmedUi'
 
 const router = useRouter()
 
@@ -245,16 +245,7 @@ function statusTheme(status) {
   return CONTRACT_WORKFLOW_THEME[status] || 'gray'
 }
 
-// Hết hạn theo định dạng dd/MM/yyyy (vi-VN gibi DD/MM/YYYY) — '—' khi thiếu.
-function formatDate(value) {
-  if (!value) return '—'
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return value
-  const dd = String(d.getDate()).padStart(2, '0')
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const yyyy = d.getFullYear()
-  return `${dd}/${mm}/${yyyy}`
-}
+// formatDate (dd/MM/yyyy) gom về canon fmtDate @/utils/antmedUi (alias — template không đổi).
 
 function formatCurrency(value) {
   if (value === null || value === undefined || value === '') return '—'

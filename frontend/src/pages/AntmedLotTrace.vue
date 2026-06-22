@@ -508,6 +508,7 @@ import {
 } from '@/data/antmed'
 import {
   fmtDate,
+  fmtQty,
   formatStockTime,
   recallChipClass,
   entryDirectionLabel,
@@ -580,13 +581,7 @@ function doExportPdf() {
   )
 }
 
-// Số lượng: hiển thị số nguyên VI có phân tách (1.000); thiếu/NaN → '—'.
-function fmtQty(value) {
-  if (value === null || value === undefined || value === '') return '—'
-  const n = Number(value)
-  if (!Number.isFinite(n)) return '—'
-  return n.toLocaleString('vi-VN', { maximumFractionDigits: 2 })
-}
+// fmtQty (SL VI có phân tách, maxFractionDigits 2) gom về canon @/utils/antmedUi (identical).
 
 // Phân biệt not-found (BE raise DoesNotExistError → exc_type/HTTP 404) với lỗi khác.
 const isNotFound = computed(() => {
