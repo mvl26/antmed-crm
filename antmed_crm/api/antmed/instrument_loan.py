@@ -617,13 +617,17 @@ def check_overdue_loans() -> dict:
 	overdue = frappe.get_all(
 		LOAN_DOCTYPE,
 		filters={"status": ["in", OVERDUE_STATES], "due_return_at": ["<", now]},
-		fields=["name", "instrument_set", "hospital"],
+		fields=["name", "instrument_set", "hospital", "employee"],
 		limit_page_length=0,
 	)
 	for o in overdue:
 		try:
+			# Scope realtime tới NV chịu trách nhiệm lượt mượn (KHÔNG broadcast toàn site —
+			# tránh rò sang co-tenant + frappe-realtime-pick-room rule). Pattern: send_call_plan_today.
 			frappe.publish_realtime(
-				"antmed_loan_overdue", {"loan": o["name"], "instrument_set": o["instrument_set"]}
+				"antmed_loan_overdue",
+				{"loan": o["name"], "instrument_set": o["instrument_set"]},
+				user=o.get("employee"),
 			)
 		except Exception:
 			frappe.log_error(frappe.get_traceback(), "M05 check_overdue_loans publish_realtime")
