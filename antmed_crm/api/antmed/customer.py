@@ -15,6 +15,8 @@ nhưng cách đếm này giữ contract count==rows khi M14/R3 thêm data-scope.
 import frappe
 from frappe import _
 
+from antmed_crm.api.antmed._filters import coerce_filters
+
 HOSPITAL_DOCTYPE = "AntMed Hospital"
 DOCTOR_DOCTYPE = "AntMed Doctor"
 STOCK_ENTRY_DOCTYPE = "AntMed Stock Entry"
@@ -72,14 +74,7 @@ def create_hospital(
 
 def _coerce_filters(filters: dict | str | None) -> list:
 	"""Chuẩn hoá filters về list điều kiện. FE/GET truyền dict hoặc JSON-string."""
-	if not filters:
-		return []
-	if isinstance(filters, str):
-		filters = frappe.parse_json(filters) or []
-	if isinstance(filters, dict):
-		# dict {field: value} → list [[field, "=", value]] để gộp được điều kiện search.
-		return [[k, "=", v] for k, v in filters.items()]
-	return list(filters)
+	return coerce_filters(filters)
 
 
 @frappe.whitelist(methods=["GET"])

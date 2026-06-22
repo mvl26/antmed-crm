@@ -11,7 +11,7 @@ total_count đếm DƯỚI permission của user (frappe.get_list tôn trọng D
 dùng frappe.db.count (bỏ qua permission). Giữ contract count==rows khi M14/R3 thêm
 permission_query_conditions data-scope.
 
-Pattern mượn từ crm/api/antmed/customer.py (đã verify live R2).
+Pattern mượn từ antmed_crm/api/antmed/customer.py (đã verify live R2).
 """
 
 import frappe
@@ -19,6 +19,7 @@ from frappe import _
 from frappe.utils import add_months, get_datetime, getdate, nowdate
 
 from antmed_crm.antmed import contract_hooks
+from antmed_crm.api.antmed._filters import coerce_filters
 
 CONTRACT_DOCTYPE = "AntMed Contract"
 HOSPITAL_DOCTYPE = "AntMed Hospital"
@@ -65,17 +66,7 @@ def _coerce_filters(filters: dict | str | None) -> list:
 	M02-1: acceptance gọi 'workflow_state/status' — field thật ở slice này là `status`.
 	Nếu caller truyền key `workflow_state` → map về `status` (ADR-M02-04).
 	"""
-	if not filters:
-		return []
-	if isinstance(filters, str):
-		filters = frappe.parse_json(filters) or []
-	if isinstance(filters, dict):
-		conditions = []
-		for k, v in filters.items():
-			field = "status" if k == "workflow_state" else k
-			conditions.append([field, "=", v])
-		return conditions
-	return list(filters)
+	return coerce_filters(filters, field_map={"workflow_state": "status"})
 
 
 @frappe.whitelist(methods=["GET"])

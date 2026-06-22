@@ -14,6 +14,8 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, date_diff, getdate, nowdate
 
+from antmed_crm.api.antmed._filters import coerce_filters
+
 ITEM_DOCTYPE = "AntMed Item"
 WAREHOUSE_DOCTYPE = "AntMed Warehouse"
 LOT_DOCTYPE = "AntMed Lot"
@@ -215,13 +217,7 @@ ITEM_DETAIL_FIELDS = (
 
 def _coerce_filters(filters: dict | str | None) -> list:
 	"""Chuẩn hoá filters về list điều kiện (dict hoặc JSON-string từ FE/GET)."""
-	if not filters:
-		return []
-	if isinstance(filters, str):
-		filters = frappe.parse_json(filters) or []
-	if isinstance(filters, dict):
-		return [[k, "=", v] for k, v in filters.items()]
-	return list(filters)
+	return coerce_filters(filters)
 
 
 @frappe.whitelist(methods=["GET"])

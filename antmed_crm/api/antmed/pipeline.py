@@ -10,6 +10,8 @@ BR-M08-01 (tender_no unique — field) · BR-M08-02 (Trúng cần decision_no).
 import frappe
 from frappe import _
 
+from antmed_crm.api.antmed._filters import coerce_filters
+
 TENDER_DOCTYPE = "AntMed Tender"
 HOSPITAL_DOCTYPE = "AntMed Hospital"
 
@@ -25,13 +27,7 @@ STAGE_PROB = {"Tiếp cận": 10, "Khảo sát": 25, "Báo giá": 50, "Dự th�
 
 
 def _coerce_filters(filters: dict | str | None) -> list:
-	if not filters:
-		return []
-	if isinstance(filters, str):
-		filters = frappe.parse_json(filters) or []
-	if isinstance(filters, dict):
-		return [[k, "=", v] for k, v in filters.items()]
-	return list(filters)
+	return coerce_filters(filters)
 
 
 @frappe.whitelist(methods=["POST"])

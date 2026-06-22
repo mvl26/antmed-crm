@@ -11,6 +11,8 @@ import frappe
 from frappe import _
 from frappe.utils import date_diff, get_datetime, get_first_day, now_datetime
 
+from antmed_crm.api.antmed._filters import coerce_filters
+
 SET_DOCTYPE = "AntMed Instrument Set"
 LOAN_DOCTYPE = "AntMed Instrument Loan"
 STERILIZATION_DOCTYPE = "AntMed Sterilization"
@@ -77,13 +79,7 @@ COMPONENT_KEYS = ("component_name", "qty", "criticality", "reference_photo")
 
 
 def _coerce_filters(filters: dict | str | None) -> list:
-	if not filters:
-		return []
-	if isinstance(filters, str):
-		filters = frappe.parse_json(filters) or []
-	if isinstance(filters, dict):
-		return [[k, "=", v] for k, v in filters.items()]
-	return list(filters)
+	return coerce_filters(filters)
 
 
 @frappe.whitelist(methods=["GET"])

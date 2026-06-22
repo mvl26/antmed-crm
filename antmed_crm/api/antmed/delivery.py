@@ -13,6 +13,8 @@ import frappe
 from frappe import _
 from frappe.utils import get_datetime, now_datetime
 
+from antmed_crm.api.antmed._filters import coerce_filters
+
 DELIVERY_DOCTYPE = "AntMed Delivery"
 HOSPITAL_DOCTYPE = "AntMed Hospital"
 DOCTOR_DOCTYPE = "AntMed Doctor"
@@ -81,13 +83,7 @@ DELIVERY_ITEM_KEYS = ("item", "item_name", "lot", "uom", "requested_qty", "deliv
 
 
 def _coerce_filters(filters: dict | str | None) -> list:
-	if not filters:
-		return []
-	if isinstance(filters, str):
-		filters = frappe.parse_json(filters) or []
-	if isinstance(filters, dict):
-		return [[k, "=", v] for k, v in filters.items()]
-	return list(filters)
+	return coerce_filters(filters)
 
 
 @frappe.whitelist(methods=["GET"])

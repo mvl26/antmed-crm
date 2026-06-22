@@ -10,6 +10,8 @@ import frappe
 from frappe import _
 from frappe.utils import getdate, now_datetime, nowdate
 
+from antmed_crm.api.antmed._filters import coerce_filters
+
 VISIT_DOCTYPE = "AntMed Doctor Visit"
 NOTE_DOCTYPE = "AntMed Care Note"
 DOCTOR_DOCTYPE = "AntMed Doctor"
@@ -41,13 +43,7 @@ NOTE_LIST_ITEM_KEYS = ("name", "doctor", "visit", "note_date", "category", "cont
 
 
 def _coerce_filters(filters: dict | str | None) -> list:
-	if not filters:
-		return []
-	if isinstance(filters, str):
-		filters = frappe.parse_json(filters) or []
-	if isinstance(filters, dict):
-		return [[k, "=", v] for k, v in filters.items()]
-	return list(filters)
+	return coerce_filters(filters)
 
 
 @frappe.whitelist(methods=["POST"])

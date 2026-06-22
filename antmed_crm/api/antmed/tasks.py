@@ -7,9 +7,9 @@ RAW dict. count==rows (BR-13 fail-closed: đọc DƯỚI permission → NV chỉ
 Task gắn được vào bản ghi AntMed (Hợp đồng/Bệnh viện/Phiếu giao…) qua reference_doctype/_docname.
 """
 
-import json
-
 import frappe
+
+from antmed_crm.api.antmed._filters import coerce_filters
 
 TASK_DOCTYPE = "CRM Task"
 TASK_FIELDS = [
@@ -28,16 +28,8 @@ OPEN_STATUSES = ("Backlog", "Todo", "In Progress")
 
 
 def _coerce_filters(filters: dict | str | None) -> list:
-	if not filters:
-		return []
-	if isinstance(filters, str):
-		try:
-			filters = json.loads(filters)
-		except Exception:
-			return []
-	if isinstance(filters, dict):
-		return [[k, "=", v] for k, v in filters.items()]
-	return filters if isinstance(filters, list) else []
+	# safe=True: nuốt JSON hỏng → [] (ngữ nghĩa lỗi riêng của tasks, KHÔNG raise như bản chuẩn).
+	return coerce_filters(filters, safe=True)
 
 
 @frappe.whitelist(methods=["GET"])
