@@ -160,7 +160,7 @@
         class="absolute inset-y-0 left-0 z-40 flex w-64 flex-col overflow-hidden border-r border-outline-gray-1 bg-surface-gray-1 transition-all duration-200 ease-out lg:static lg:z-auto lg:translate-x-0"
         :class="[
           mobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0',
-          collapsed ? 'lg:w-[60px]' : 'lg:w-[200px]',
+          collapsed ? 'lg:w-[60px]' : 'lg:w-[240px]',
         ]"
         :aria-label="__('Điều hướng AntMed')"
       >
