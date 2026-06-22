@@ -19,7 +19,10 @@ import {
 const srcDir = path.resolve(__dirname, '../../src')
 const dataSrc = readFileSync(path.join(srcDir, 'data/antmed.js'), 'utf8')
 const uiSrc = readFileSync(path.join(srcDir, 'utils/antmedUi.js'), 'utf8')
-const pageSrc = readFileSync(path.join(srcDir, 'pages/AntmedRevenuePage.vue'), 'utf8')
+const pageSrc = readFileSync(
+  path.join(srcDir, 'pages/AntmedRevenuePage.vue'),
+  'utf8',
+)
 const routerSrc = readFileSync(path.join(srcDir, 'router.js'), 'utf8')
 const navSrc = readFileSync(path.join(srcDir, 'data/antmedNav.js'), 'utf8')
 
@@ -30,17 +33,25 @@ describe('M02-9 data layer — getRevenueByGroup url revenue_by_group + method G
   })
 
   it('url == antmed_crm.api.antmed.contract.revenue_by_group (KHÔNG prefix sai)', () => {
-    expect(dataSrc).toMatch(/antmed_crm\.api\.antmed\.contract\.revenue_by_group/)
-    expect(dataSrc).not.toMatch(/['"]crm\.api\.antmed\.contract\.revenue_by_group/)
+    expect(dataSrc).toMatch(
+      /antmed_crm\.api\.antmed\.contract\.revenue_by_group/,
+    )
+    expect(dataSrc).not.toMatch(
+      /['"]crm\.api\.antmed\.contract\.revenue_by_group/,
+    )
   })
 
   it("resource có method === 'GET' (chống defect POST→403)", () => {
-    const block = dataSrc.slice(dataSrc.indexOf('export function getRevenueByGroup'))
+    const block = dataSrc.slice(
+      dataSrc.indexOf('export function getRevenueByGroup'),
+    )
     expect(block).toMatch(/method:\s*'GET'/)
   })
 
   it('dùng createResource (dict THƯỜNG), KHÔNG createListResource', () => {
-    expect(dataSrc).toMatch(/import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/)
+    expect(dataSrc).toMatch(
+      /import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/,
+    )
     expect(dataSrc).not.toMatch(/import[^\n]*createListResource/)
   })
 
@@ -170,7 +181,9 @@ describe('M02-9 router — AntmedRevenuePage unique + mock AntmedRevenueMock', (
   // Phase 2: mock prototype /ceo/revenue (AntmedRevenueMock) ĐÃ GỠ — chỉ còn /antmed/revenue thật.
 
   it('meta antmedShell:true + role:ceo cho route real-data', () => {
-    const block = routerSrc.slice(routerSrc.indexOf("name: 'AntmedRevenuePage'") - 200)
+    const block = routerSrc.slice(
+      routerSrc.indexOf("name: 'AntmedRevenuePage'") - 200,
+    )
     expect(block).toMatch(/antmedShell:\s*true/)
     expect(block).toMatch(/role:\s*'ceo'/)
   })
@@ -216,15 +229,27 @@ describe('REVENUE_GROUP_COLORS / revenueGroupBarClass / swatch — PURE map', ()
       expect(typeof v.swatch).toBe('string')
       expect(v.bar).not.toMatch(/#[0-9a-fA-F]{6}/)
     }
-    expect(uiSrc).not.toMatch(/REVENUE_GROUP_COLORS[\s\S]{0,400}#[0-9a-fA-F]{6}/)
+    expect(uiSrc).not.toMatch(
+      /REVENUE_GROUP_COLORS[\s\S]{0,400}#[0-9a-fA-F]{6}/,
+    )
   })
 
   it('barClass/swatchClass nhóm lạ/thiếu → fallback Khác (an toàn)', () => {
-    expect(revenueGroupBarClass('Loại A')).toBe(REVENUE_GROUP_COLORS['Loại A'].bar)
-    expect(revenueGroupBarClass('khong-ton-tai')).toBe(REVENUE_GROUP_COLORS['Khác'].bar)
-    expect(revenueGroupBarClass(undefined)).toBe(REVENUE_GROUP_COLORS['Khác'].bar)
-    expect(revenueGroupSwatchClass('Loại D')).toBe(REVENUE_GROUP_COLORS['Loại D'].swatch)
-    expect(revenueGroupSwatchClass(null)).toBe(REVENUE_GROUP_COLORS['Khác'].swatch)
+    expect(revenueGroupBarClass('Loại A')).toBe(
+      REVENUE_GROUP_COLORS['Loại A'].bar,
+    )
+    expect(revenueGroupBarClass('khong-ton-tai')).toBe(
+      REVENUE_GROUP_COLORS['Khác'].bar,
+    )
+    expect(revenueGroupBarClass(undefined)).toBe(
+      REVENUE_GROUP_COLORS['Khác'].bar,
+    )
+    expect(revenueGroupSwatchClass('Loại D')).toBe(
+      REVENUE_GROUP_COLORS['Loại D'].swatch,
+    )
+    expect(revenueGroupSwatchClass(null)).toBe(
+      REVENUE_GROUP_COLORS['Khác'].swatch,
+    )
   })
 })
 
@@ -281,14 +306,20 @@ describe('formatVnMoney — render tiền VI (PURE, tái dùng)', () => {
 // compiler-sfc rồi render bằng 1 component có setup() cung cấp ĐÚNG state mà script setup expose +
 // helper antmedUi THẬT. KHÔNG new Function trên script body (an toàn — chỉ template compiled render fn).
 describe('M02-9 SSR render-verify — AntmedRevenuePage render HTML thật', () => {
-  async function renderTemplate(resourceData, { loading = false, error = null } = {}) {
+  async function renderTemplate(
+    resourceData,
+    { loading = false, error = null } = {},
+  ) {
     const { parse } = await import('@vue/compiler-sfc')
     const { compile } = await import('@vue/compiler-dom')
     const vue = await import('vue')
     const { renderToString } = await import('@vue/server-renderer')
     const ui = await import('../../src/utils/antmedUi')
 
-    const raw = readFileSync(path.join(srcDir, 'pages/AntmedRevenuePage.vue'), 'utf8')
+    const raw = readFileSync(
+      path.join(srcDir, 'pages/AntmedRevenuePage.vue'),
+      'utf8',
+    )
     const { descriptor } = parse(raw, { filename: 'AntmedRevenuePage.vue' })
     // mode:'function' → thân hàm tham chiếu 1 đối số `Vue` (runtime helpers), KHÔNG import/ESM →
     // tránh data:URL không resolve bare specifier. Source là <template> repo của chính ta (KHÔNG
@@ -306,14 +337,29 @@ describe('M02-9 SSR render-verify — AntmedRevenuePage render HTML thật', () 
     const i18n = (s) => s
     const comp = {
       components: {
-        Badge: { props: ['label'], render() { return vue.h('span', {}, this.label) } },
+        Badge: {
+          props: ['label'],
+          render() {
+            return vue.h('span', {}, this.label)
+          },
+        },
         Button: {
           props: ['label'],
           emits: ['click'],
-          render() { return vue.h('button', {}, this.label) },
+          render() {
+            return vue.h('button', {}, this.label)
+          },
         },
-        RouterLink: { render() { return vue.h('a', {}, this.$slots.default?.()) } },
-        LoadingIndicator: { render() { return vue.h('span', {}, '...') } },
+        RouterLink: {
+          render() {
+            return vue.h('a', {}, this.$slots.default?.())
+          },
+        },
+        LoadingIndicator: {
+          render() {
+            return vue.h('span', {}, '...')
+          },
+        },
       },
       setup() {
         // State y hệt script setup expose (đọc thẳng resourceData — KHÔNG aggregate).
@@ -322,7 +368,9 @@ describe('M02-9 SSR render-verify — AntmedRevenuePage render HTML thật', () 
         const groups = vue.computed(() => revenue.data?.groups || [])
         const grandTotal = vue.computed(() => revenue.data?.grand_total ?? 0)
         const columnMax = vue.computed(() =>
-          ui.stackColumnMax(ui.stackColumnTotals(groups.value, months.value.length)),
+          ui.stackColumnMax(
+            ui.stackColumnTotals(groups.value, months.value.length),
+          ),
         )
         // Card NV×BV (M02-10) cùng template — MIRROR loading/error flag của group card + cấp data
         // tối thiểu (1 NV × 1 BV) để khi không loading/error thì card heat render NHÁNH DATA (KHÔNG
@@ -330,7 +378,21 @@ describe('M02-9 SSR render-verify — AntmedRevenuePage render HTML thật', () 
         // test riêng (antmedRevenueByRepHospital.test.js) — ở đây chỉ assert card revenue_by_group.
         const repHosp = {
           data: {
-            rows: [{ deal_owner: 'x@y.z', full_name: '_RH', cells: [{ hospital: 'H', hospital_label: 'H', value: 1_000_000, heat: 'h5c' }], total: 1_000_000 }],
+            rows: [
+              {
+                deal_owner: 'x@y.z',
+                full_name: '_RH',
+                cells: [
+                  {
+                    hospital: 'H',
+                    hospital_label: 'H',
+                    value: 1_000_000,
+                    heat: 'h5c',
+                  },
+                ],
+                total: 1_000_000,
+              },
+            ],
             hospitals: [{ key: 'H', label: 'H' }],
             max_cell: 1_000_000,
             grand_total: 1_000_000,
@@ -340,7 +402,9 @@ describe('M02-9 SSR render-verify — AntmedRevenuePage render HTML thật', () 
           reload() {},
         }
         const repHospRows = vue.computed(() => repHosp.data?.rows || [])
-        const repHospHospitals = vue.computed(() => repHosp.data?.hospitals || [])
+        const repHospHospitals = vue.computed(
+          () => repHosp.data?.hospitals || [],
+        )
         const repHospGrand = vue.computed(() => repHosp.data?.grand_total ?? 0)
         return {
           __: i18n,
@@ -370,13 +434,51 @@ describe('M02-9 SSR render-verify — AntmedRevenuePage render HTML thật', () 
 
   it('render data: 12 cột bar + legend 5 nhóm + nhãn widget + breadcrumb', async () => {
     const data = {
-      months: ['T7', 'T8', 'T9', 'T10', 'T11', 'T12', 'T1', 'T2', 'T3', 'T4', 'T5', 'T6'],
+      months: [
+        'T7',
+        'T8',
+        'T9',
+        'T10',
+        'T11',
+        'T12',
+        'T1',
+        'T2',
+        'T3',
+        'T4',
+        'T5',
+        'T6',
+      ],
       groups: [
-        { classification: 'Loại A', label: 'Loại A', monthly: [20e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8e6], total: 28e6 },
-        { classification: 'Loại B', label: 'Loại B', monthly: [20e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], total: 20e6 },
-        { classification: 'Loại C', label: 'Loại C', monthly: [0, 0, 0, 0, 0, 0, 0, 18e6, 0, 0, 0, 0], total: 18e6 },
-        { classification: 'Loại D', label: 'Loại D', monthly: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], total: 0 },
-        { classification: 'Khác', label: 'Khác', monthly: [13e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], total: 13e6 },
+        {
+          classification: 'Loại A',
+          label: 'Loại A',
+          monthly: [20e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8e6],
+          total: 28e6,
+        },
+        {
+          classification: 'Loại B',
+          label: 'Loại B',
+          monthly: [20e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          total: 20e6,
+        },
+        {
+          classification: 'Loại C',
+          label: 'Loại C',
+          monthly: [0, 0, 0, 0, 0, 0, 0, 18e6, 0, 0, 0, 0],
+          total: 18e6,
+        },
+        {
+          classification: 'Loại D',
+          label: 'Loại D',
+          monthly: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          total: 0,
+        },
+        {
+          classification: 'Khác',
+          label: 'Khác',
+          monthly: [13e6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          total: 13e6,
+        },
       ],
       grand_total: 79e6,
       currency: 'VND',
@@ -394,7 +496,20 @@ describe('M02-9 SSR render-verify — AntmedRevenuePage render HTML thật', () 
 
   it('render empty: months 12 + groups 5 nhưng grand_total 0 → hint chưa có dữ liệu', async () => {
     const empty = {
-      months: ['T7', 'T8', 'T9', 'T10', 'T11', 'T12', 'T1', 'T2', 'T3', 'T4', 'T5', 'T6'],
+      months: [
+        'T7',
+        'T8',
+        'T9',
+        'T10',
+        'T11',
+        'T12',
+        'T1',
+        'T2',
+        'T3',
+        'T4',
+        'T5',
+        'T6',
+      ],
       groups: ['Loại A', 'Loại B', 'Loại C', 'Loại D', 'Khác'].map((c) => ({
         classification: c,
         label: c,

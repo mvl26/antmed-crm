@@ -55,9 +55,7 @@ describe('M02-4 AntmedHome — wire widget Top 10 Bệnh viện THẬT', () => {
     expect(homeSrc).toMatch(/AntmedTopHospitalsCard/)
     expect(homeSrc).toMatch(/<AntmedTopHospitalsCard/)
     // placeholder Top 10 cũ đã bị thay: không còn <AntmedPlaceholderPanel title="…Top 10…">
-    expect(homeSrc).not.toMatch(
-      /<AntmedPlaceholderPanel[\s\S]{0,120}Top 10/,
-    )
+    expect(homeSrc).not.toMatch(/<AntmedPlaceholderPanel[\s\S]{0,120}Top 10/)
   })
 
   it("render tiêu đề widget 'Top 10 Bệnh viện' (qua card hoặc trực tiếp)", () => {
@@ -125,7 +123,7 @@ describe('M02-4 AntmedTopHospitalsCard — bảng 3 cột, bar màu, tri-branch'
     expect(cardSrc).toMatch(/@keydown\.enter/)
   })
 
-  it("a11y: progressbar aria-valuenow cho bar", () => {
+  it('a11y: progressbar aria-valuenow cho bar', () => {
     expect(cardSrc).toMatch(/role="progressbar"/)
     expect(cardSrc).toMatch(/aria-valuenow/)
     expect(cardSrc).toMatch(/aria-valuemin="0"/)

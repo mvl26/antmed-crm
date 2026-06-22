@@ -30,16 +30,16 @@ const outsider = () => ({ isCrmUser: () => false, isAntmedUser: () => false })
 
 // ── Helper thuần expirySeverityChipTheme — 4 tầng → token (PILL_THEME key) ──────────────
 describe('expirySeverityChipTheme — severity BE → token màu (4 tầng)', () => {
-  it("expired → danger (đỏ)", () => {
+  it('expired → danger (đỏ)', () => {
     expect(expirySeverityChipTheme('expired')).toBe('danger')
   })
-  it("d30 → danger (đỏ, sát hạn nguy cấp)", () => {
+  it('d30 → danger (đỏ, sát hạn nguy cấp)', () => {
     expect(expirySeverityChipTheme('d30')).toBe('danger')
   })
-  it("d60 → warn (cam)", () => {
+  it('d60 → warn (cam)', () => {
     expect(expirySeverityChipTheme('d60')).toBe('warn')
   })
-  it("d90 → neutral (xám)", () => {
+  it('d90 → neutral (xám)', () => {
     expect(expirySeverityChipTheme('d90')).toBe('neutral')
   })
   it('giá trị lạ (null/undefined/khác) → neutral (an toàn)', () => {
@@ -110,7 +110,9 @@ describe('M03-4 data layer — getExpiryAlerts url expiry_alerts', () => {
     expect(block).toMatch(/auto/)
   })
   it('dùng createResource (đọc dict RAW), KHÔNG createListResource', () => {
-    expect(dataSrc).toMatch(/import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/)
+    expect(dataSrc).toMatch(
+      /import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/,
+    )
     expect(dataSrc).not.toMatch(/import[^\n]*createListResource/)
   })
 })
@@ -128,9 +130,9 @@ describe('M03-4 nav — wh-expiry enabled tới /antmed/warehouse/expiry-alerts'
   it('isNavActive: active ở /antmed/warehouse/expiry-alerts, KHÔNG active ở /antmed', () => {
     const item = { to: '/antmed/warehouse/expiry-alerts' }
     expect(isNavActive(item, '/antmed/warehouse/expiry-alerts')).toBe(true)
-    expect(isNavActive({ to: '/antmed' }, '/antmed/warehouse/expiry-alerts')).toBe(
-      false,
-    )
+    expect(
+      isNavActive({ to: '/antmed' }, '/antmed/warehouse/expiry-alerts'),
+    ).toBe(false)
   })
   it('key wh-expiry DUY NHẤT trong nav warehouse (không trùng key)', () => {
     const keys = ROLE_NAV.warehouse.filter((i) => i.key === 'wh-expiry')
@@ -141,7 +143,9 @@ describe('M03-4 nav — wh-expiry enabled tới /antmed/warehouse/expiry-alerts'
 // ── Route — /antmed/warehouse/expiry-alerts đăng ký, name AntmedExpiryAlerts unique, guard
 describe('M03-4 route — /antmed/warehouse/expiry-alerts đăng ký + guard', () => {
   it('router.js đăng ký AntmedExpiryAlerts → /antmed/warehouse/expiry-alerts (lazy page real-data)', () => {
-    expect(routerSrc).toMatch(/path:\s*['"]\/antmed\/warehouse\/expiry-alerts['"]/)
+    expect(routerSrc).toMatch(
+      /path:\s*['"]\/antmed\/warehouse\/expiry-alerts['"]/,
+    )
     expect(routerSrc).toMatch(/name:\s*['"]AntmedExpiryAlerts['"]/)
     expect(routerSrc).toMatch(
       /import\(['"]@\/pages\/AntmedExpiryAlerts\.vue['"]\)/,
@@ -197,7 +201,15 @@ describe('AntmedExpiryAlerts.vue — đọc r.data.{rows,kpis} + tri-branch + 7 
     expect(pageSrc).toMatch(/row\.severity/)
   })
   it('header 7 cột đủ (VI): SKU / Tên VT / Lot / Kho / HSD / SL còn / Mức độ', () => {
-    for (const h of ['SKU', 'Tên VT', 'Lot', 'Kho', 'HSD', 'SL còn', 'Mức độ']) {
+    for (const h of [
+      'SKU',
+      'Tên VT',
+      'Lot',
+      'Kho',
+      'HSD',
+      'SL còn',
+      'Mức độ',
+    ]) {
       expect(pageSrc).toContain(h)
     }
   })
@@ -207,7 +219,7 @@ describe('AntmedExpiryAlerts.vue — đọc r.data.{rows,kpis} + tri-branch + 7 
     expect(pageSrc).toMatch(/expirySeverityLabel\(row\.severity\)/)
     expect(pageSrc).toMatch(/from\s*'@\/utils\/antmedUi'/)
   })
-  it("4 KPI card thật: Đã hết hạn / ≤30 ngày / ≤60 ngày / ≤90 ngày bind kpis BE (KHÔNG hardcode)", () => {
+  it('4 KPI card thật: Đã hết hạn / ≤30 ngày / ≤60 ngày / ≤90 ngày bind kpis BE (KHÔNG hardcode)', () => {
     expect(pageSrc).toContain('Đã hết hạn')
     expect(pageSrc).toContain('≤30 ngày')
     expect(pageSrc).toContain('≤60 ngày')
@@ -218,7 +230,7 @@ describe('AntmedExpiryAlerts.vue — đọc r.data.{rows,kpis} + tri-branch + 7 
     expect(pageSrc).toMatch(/kpis\.d90/)
     expect(pageSrc).toMatch(/AntmedKpiCard/)
   })
-  it("highlight bg-red-50 cho dòng severity expired || d30", () => {
+  it('highlight bg-red-50 cho dòng severity expired || d30', () => {
     expect(pageSrc).toMatch(/severity === 'expired'/)
     expect(pageSrc).toMatch(/severity === 'd30'/)
     expect(pageSrc).toMatch(/bg-red-50/)

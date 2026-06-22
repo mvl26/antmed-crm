@@ -41,7 +41,9 @@ describe('AntMed FE bootstrap (M01 R1)', () => {
     // KHÔNG tự createResource health.ping nữa. Health.ping vẫn callable + test ở BE + data layer.
     expect(pageSrc).toMatch(/getDashboardOverview/)
     const dataSrc = readFileSync(path.join(srcDir, 'data/antmed.js'), 'utf8')
-    expect(dataSrc).toMatch(/url:\s*['"]antmed_crm\.api\.antmed\.dashboard\.overview['"]/)
+    expect(dataSrc).toMatch(
+      /url:\s*['"]antmed_crm\.api\.antmed\.dashboard\.overview['"]/,
+    )
   })
 
   it('AntmedHome.vue KHÔNG dùng axios/TanStack/api-ts layer (di sản stack cũ)', () => {

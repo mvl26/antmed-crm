@@ -26,7 +26,10 @@ import {
 const srcDir = path.resolve(__dirname, '../../src')
 const routerSrc = readFileSync(path.join(srcDir, 'router.js'), 'utf8')
 const navSrc = readFileSync(path.join(srcDir, 'data/antmedNav.js'), 'utf8')
-const pageSrc = readFileSync(path.join(srcDir, 'pages/AntmedLotTrace.vue'), 'utf8')
+const pageSrc = readFileSync(
+  path.join(srcDir, 'pages/AntmedLotTrace.vue'),
+  'utf8',
+)
 const dataSrc = readFileSync(path.join(srcDir, 'data/antmed.js'), 'utf8')
 
 const antmed = () => ({ isCrmUser: () => false, isAntmedUser: () => true })
@@ -39,7 +42,7 @@ describe('fmtDate — định dạng dd/MM/yyyy (NSX/HSD)', () => {
     expect(fmtDate('2025-03-01')).toBe('01/03/2025')
     expect(fmtDate('2027-10-31')).toBe('31/10/2027')
   })
-  it("ISO có phần giờ vẫn lấy đúng ngày", () => {
+  it('ISO có phần giờ vẫn lấy đúng ngày', () => {
     expect(fmtDate('2026-01-05 09:30:00')).toBe('05/01/2026')
   })
   it('Date object cũng format đúng', () => {
@@ -96,7 +99,9 @@ describe('M03-2 data layer — getLot url get_lot', () => {
     expect(block).toMatch(/auto\s*=\s*false/)
   })
   it('dùng createResource (đọc dict THƯỜNG r.data), KHÔNG createListResource', () => {
-    expect(dataSrc).toMatch(/import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/)
+    expect(dataSrc).toMatch(
+      /import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/,
+    )
     expect(dataSrc).not.toMatch(/import[^\n]*createListResource/)
   })
 })
@@ -114,7 +119,9 @@ describe('M03-2 nav — wh-lot-trace enabled tới /antmed/warehouse/lot-trace',
   it('isNavActive: active ở /antmed/warehouse/lot-trace, KHÔNG active ở /antmed', () => {
     const item = { to: '/antmed/warehouse/lot-trace' }
     expect(isNavActive(item, '/antmed/warehouse/lot-trace')).toBe(true)
-    expect(isNavActive({ to: '/antmed' }, '/antmed/warehouse/lot-trace')).toBe(false)
+    expect(isNavActive({ to: '/antmed' }, '/antmed/warehouse/lot-trace')).toBe(
+      false,
+    )
   })
   it('no-regression: wh-lot-trace giữ nguyên đích + enabled (sau khi thêm wh-stock-count)', () => {
     const whLotTrace = ROLE_NAV.warehouse.find((i) => i.key === 'wh-lot-trace')
@@ -365,7 +372,9 @@ describe('M03-7 helper thuần — RECALL_INITIATE_STATUSES + recallChipClass 3 
 describe('M03-7 data layer — initiateRecall url initiate_recall + method POST', () => {
   it('initiateRecall → createResource url antmed_crm.api.antmed.inventory.initiate_recall', () => {
     expect(dataSrc).toMatch(/export function initiateRecall/)
-    expect(dataSrc).toMatch(/antmed_crm\.api\.antmed\.inventory\.initiate_recall/)
+    expect(dataSrc).toMatch(
+      /antmed_crm\.api\.antmed\.inventory\.initiate_recall/,
+    )
   })
   it("method: 'POST' (MUTATION — KHÔNG GET mặc định)", () => {
     const block = dataSrc.slice(
@@ -391,7 +400,9 @@ describe('AntmedLotTrace.vue — M03-7 nút Khởi tạo Recall + confirm-modal'
     expect(pageSrc).toMatch(
       /import\s*\{[\s\S]*?initiateRecall[\s\S]*?\}\s*from\s*'@\/data\/antmed'/,
     )
-    expect(pageSrc).toMatch(/import\s*\{[\s\S]*?\bDialog\b[\s\S]*?\}\s*from\s*'frappe-ui'/)
+    expect(pageSrc).toMatch(
+      /import\s*\{[\s\S]*?\bDialog\b[\s\S]*?\}\s*from\s*'frappe-ui'/,
+    )
     expect(pageSrc).toMatch(
       /import\s*\{[\s\S]*?RECALL_INITIATE_STATUSES[\s\S]*?\}\s*from\s*'@\/utils\/antmedUi'/,
     )
@@ -406,7 +417,9 @@ describe('AntmedLotTrace.vue — M03-7 nút Khởi tạo Recall + confirm-modal'
     expect(btnIdx).toBeGreaterThan(olIdx)
   })
   it('nút disabled khi chưa load lô (!data) HOẶC recall_status === "Đã thu hồi"', () => {
-    expect(pageSrc).toMatch(/:disabled=['"]!data \|\| data\.recall_status === 'Đã thu hồi'['"]/)
+    expect(pageSrc).toMatch(
+      /:disabled=['"]!data \|\| data\.recall_status === 'Đã thu hồi'['"]/,
+    )
   })
   it('tri-state nút: loading bind initiateRecall.loading', () => {
     expect(pageSrc).toMatch(/:loading=['"]initiateRecall\.loading['"]/)
@@ -434,7 +447,9 @@ describe('AntmedLotTrace.vue — M03-7 nút Khởi tạo Recall + confirm-modal'
   it('nút Hủy + Xác nhận khởi tạo; Xác nhận disabled khi reason rỗng HOẶC đang submit', () => {
     expect(pageSrc).toContain('Hủy')
     expect(pageSrc).toContain('Xác nhận khởi tạo')
-    expect(pageSrc).toMatch(/:disabled=['"]!recallReason\.trim\(\) \|\| initiateRecall\.loading['"]/)
+    expect(pageSrc).toMatch(
+      /:disabled=['"]!recallReason\.trim\(\) \|\| initiateRecall\.loading['"]/,
+    )
   })
   it('submit chặn FE khi reason rỗng (return sớm trong submitRecall)', () => {
     expect(pageSrc).toMatch(/function submitRecall/)
@@ -448,12 +463,16 @@ describe('AntmedLotTrace.vue — M03-7 nút Khởi tạo Recall + confirm-modal'
     )
   })
   it('success → toast + đóng modal + reset reason + lot.reload() (chip recall_status đổi)', () => {
-    expect(pageSrc).toMatch(/toast\.success\(\s*__\('Đã khởi tạo recall cho lô /)
+    expect(pageSrc).toMatch(
+      /toast\.success\(\s*__\('Đã khởi tạo recall cho lô /,
+    )
     expect(pageSrc).toMatch(/showRecallModal\.value\s*=\s*false/)
     expect(pageSrc).toMatch(/lot\.reload\(\)/)
   })
   it('error → toast.error(err.messages[0]) KHÔNG đổi chip (không reload trong onError)', () => {
-    expect(pageSrc).toMatch(/onError\([\s\S]*?toast\.error\(\s*err\?\.messages\?\.\[0\]/)
+    expect(pageSrc).toMatch(
+      /onError\([\s\S]*?toast\.error\(\s*err\?\.messages\?\.\[0\]/,
+    )
   })
   it('KHÔNG mock / KHÔNG createListResource / KHÔNG window.confirm (Dialog thay confirm)', () => {
     const code = pageSrc

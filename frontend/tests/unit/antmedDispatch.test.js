@@ -13,7 +13,10 @@ import { dispatchBarClass, barFillClass } from '../../src/utils/antmedUi'
 const srcDir = path.resolve(__dirname, '../../src')
 const routerSrc = readFileSync(path.join(srcDir, 'router.js'), 'utf8')
 const navSrc = readFileSync(path.join(srcDir, 'data/antmedNav.js'), 'utf8')
-const pageSrc = readFileSync(path.join(srcDir, 'pages/AntmedDispatch.vue'), 'utf8')
+const pageSrc = readFileSync(
+  path.join(srcDir, 'pages/AntmedDispatch.vue'),
+  'utf8',
+)
 const dataSrc = readFileSync(path.join(srcDir, 'data/antmed.js'), 'utf8')
 
 const antmed = () => ({ isCrmUser: () => false, isAntmedUser: () => true })
@@ -42,7 +45,9 @@ describe('dispatchBarClass — bar_theme BE → class fill (3 nhánh, tái dùng
 describe('M10-2 data layer — getDispatchBoard url dispatch_board', () => {
   it('getDispatchBoard → createResource url antmed_crm.api.antmed.sales_team.dispatch_board', () => {
     expect(dataSrc).toMatch(/export function getDispatchBoard/)
-    expect(dataSrc).toMatch(/antmed_crm\.api\.antmed\.sales_team\.dispatch_board/)
+    expect(dataSrc).toMatch(
+      /antmed_crm\.api\.antmed\.sales_team\.dispatch_board/,
+    )
   })
   it('nhận opt auto + method GET (endpoint không params → tránh 403 POST)', () => {
     const idx = dataSrc.indexOf('export function getDispatchBoard')
@@ -51,7 +56,9 @@ describe('M10-2 data layer — getDispatchBoard url dispatch_board', () => {
     expect(block).toMatch(/method:\s*'GET'/)
   })
   it('dùng createResource (đọc dict RAW), KHÔNG createListResource', () => {
-    expect(dataSrc).toMatch(/import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/)
+    expect(dataSrc).toMatch(
+      /import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/,
+    )
     expect(dataSrc).not.toMatch(/import[^\n]*createListResource/)
   })
 })
@@ -81,7 +88,9 @@ describe('M10-2 nav — sales-dispatch enabled tới /antmed/sales/dispatch', ()
   })
   it('thứ tự sidebar sales khớp mockup B (Điều phối trước Đội ngũ)', () => {
     const keys = ROLE_NAV.sales.map((i) => i.key)
-    expect(keys.indexOf('sales-dispatch')).toBeLessThan(keys.indexOf('sales-team'))
+    expect(keys.indexOf('sales-dispatch')).toBeLessThan(
+      keys.indexOf('sales-team'),
+    )
   })
 })
 

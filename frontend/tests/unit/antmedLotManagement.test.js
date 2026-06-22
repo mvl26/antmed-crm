@@ -20,10 +20,16 @@ describe('data/antmed.js — factory truy vết/quản lý lot (url + method kh�
     ['saveLotTrace', 'antmed_crm.api.antmed.inventory.save_lot_trace', 'POST'],
     ['listLots', 'antmed_crm.api.antmed.inventory.list_lots', 'GET'],
     ['listItems', 'antmed_crm.api.antmed.inventory.list_items', 'GET'],
-    ['exportLotTracePdf', 'antmed_crm.api.antmed.inventory.export_lot_trace_pdf', 'POST'],
+    [
+      'exportLotTracePdf',
+      'antmed_crm.api.antmed.inventory.export_lot_trace_pdf',
+      'POST',
+    ],
   ]
   it.each(cases)('%s → url %s method %s', (fn, url, method) => {
-    const m = dataSrc.match(new RegExp(`export function ${fn}\\([\\s\\S]*?\\n}`))
+    const m = dataSrc.match(
+      new RegExp(`export function ${fn}\\([\\s\\S]*?\\n}`),
+    )
     expect(m, `thiếu factory ${fn}`).toBeTruthy()
     expect(m[0]).toContain(`url: '${url}'`)
     expect(m[0]).toContain(`method: '${method}'`)

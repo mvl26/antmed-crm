@@ -36,7 +36,9 @@ describe('rowBlockedByCocq — chặn dòng thiếu CO/CQ bắt buộc', () => {
   it('requires_cocq=1 + cocq_ok!=true → bị chặn', () => {
     expect(rowBlockedByCocq({ requires_cocq: 1, cocq_ok: false })).toBe(true)
     expect(rowBlockedByCocq({ requires_cocq: 1, cocq_ok: null })).toBe(true)
-    expect(rowBlockedByCocq({ requires_cocq: true, cocq_ok: undefined })).toBe(true)
+    expect(rowBlockedByCocq({ requires_cocq: true, cocq_ok: undefined })).toBe(
+      true,
+    )
   })
   it('requires_cocq=1 + cocq_ok=true → KHÔNG chặn', () => {
     expect(rowBlockedByCocq({ requires_cocq: 1, cocq_ok: true })).toBe(false)
@@ -101,7 +103,9 @@ describe('M03-S4/S5 data layer — factory url antmed_crm.api.antmed.* + method'
   })
   it('createStockEntry → inventory.create_stock_entry (POST)', () => {
     expect(dataSrc).toMatch(/export function createStockEntry/)
-    expect(dataSrc).toMatch(/antmed_crm\.api\.antmed\.inventory\.create_stock_entry/)
+    expect(dataSrc).toMatch(
+      /antmed_crm\.api\.antmed\.inventory\.create_stock_entry/,
+    )
     // Khối ngay sau định nghĩa createStockEntry phải có method POST.
     const blk = dataSrc.slice(
       dataSrc.indexOf('export function createStockEntry'),
@@ -111,19 +115,27 @@ describe('M03-S4/S5 data layer — factory url antmed_crm.api.antmed.* + method'
   })
   it('listWarehouses → inventory.list_warehouses (GET)', () => {
     expect(dataSrc).toMatch(/export function listWarehouses/)
-    expect(dataSrc).toMatch(/antmed_crm\.api\.antmed\.inventory\.list_warehouses/)
+    expect(dataSrc).toMatch(
+      /antmed_crm\.api\.antmed\.inventory\.list_warehouses/,
+    )
   })
   it('listAssignableEmployees → delivery.list_assignable_employees (GET)', () => {
     expect(dataSrc).toMatch(/export function listAssignableEmployees/)
-    expect(dataSrc).toMatch(/antmed_crm\.api\.antmed\.delivery\.list_assignable_employees/)
+    expect(dataSrc).toMatch(
+      /antmed_crm\.api\.antmed\.delivery\.list_assignable_employees/,
+    )
   })
   it('stockCountSnapshot → inventory.stock_count_snapshot (GET)', () => {
     expect(dataSrc).toMatch(/export function stockCountSnapshot/)
-    expect(dataSrc).toMatch(/antmed_crm\.api\.antmed\.inventory\.stock_count_snapshot/)
+    expect(dataSrc).toMatch(
+      /antmed_crm\.api\.antmed\.inventory\.stock_count_snapshot/,
+    )
   })
   it('createStockCount → inventory.create_stock_count (POST)', () => {
     expect(dataSrc).toMatch(/export function createStockCount/)
-    expect(dataSrc).toMatch(/antmed_crm\.api\.antmed\.inventory\.create_stock_count/)
+    expect(dataSrc).toMatch(
+      /antmed_crm\.api\.antmed\.inventory\.create_stock_count/,
+    )
     const blk = dataSrc.slice(
       dataSrc.indexOf('export function createStockCount'),
       dataSrc.indexOf('export function createStockCount') + 320,
@@ -132,7 +144,9 @@ describe('M03-S4/S5 data layer — factory url antmed_crm.api.antmed.* + method'
   })
   it('listStockCounts → inventory.list_stock_counts (GET)', () => {
     expect(dataSrc).toMatch(/export function listStockCounts/)
-    expect(dataSrc).toMatch(/antmed_crm\.api\.antmed\.inventory\.list_stock_counts/)
+    expect(dataSrc).toMatch(
+      /antmed_crm\.api\.antmed\.inventory\.list_stock_counts/,
+    )
   })
   it('mọi factory GET có method:GET tường minh (tránh POST → 403)', () => {
     for (const fn of [
@@ -175,26 +189,49 @@ describe('QrScanner.vue — html5-qrcode camera component', () => {
 
 // ── Nav — wh-import enabled + route mới; wh-export → /issue; wh-stock-count tồn tại ──
 describe('M03-S4/S5 nav — ROLE_NAV.warehouse cập nhật', () => {
-  it("wh-import enabled tới /antmed/warehouse/import", () => {
+  it('wh-import enabled tới /antmed/warehouse/import', () => {
     const item = ROLE_NAV.warehouse.find((i) => i.key === 'wh-import')
-    expect(item).toMatchObject({ to: '/antmed/warehouse/import', enabled: true, label: 'Nhập kho' })
+    expect(item).toMatchObject({
+      to: '/antmed/warehouse/import',
+      enabled: true,
+      label: 'Nhập kho',
+    })
   })
-  it("wh-export trỏ /antmed/warehouse/issue (Wizard mới)", () => {
+  it('wh-export trỏ /antmed/warehouse/issue (Wizard mới)', () => {
     const item = ROLE_NAV.warehouse.find((i) => i.key === 'wh-export')
-    expect(item).toMatchObject({ to: '/antmed/warehouse/issue', enabled: true, label: 'Xuất cho NV' })
+    expect(item).toMatchObject({
+      to: '/antmed/warehouse/issue',
+      enabled: true,
+      label: 'Xuất cho NV',
+    })
   })
-  it("wh-stock-count tồn tại tới /antmed/warehouse/stock-count", () => {
+  it('wh-stock-count tồn tại tới /antmed/warehouse/stock-count', () => {
     const item = ROLE_NAV.warehouse.find((i) => i.key === 'wh-stock-count')
-    expect(item).toMatchObject({ to: '/antmed/warehouse/stock-count', enabled: true, label: 'Kiểm kê' })
+    expect(item).toMatchObject({
+      to: '/antmed/warehouse/stock-count',
+      enabled: true,
+      label: 'Kiểm kê',
+    })
   })
   it('thứ tự mockup: Nhập → Xuất → Ký gửi → Kiểm kê → Truy vết → Cảnh báo HSD', () => {
     const keys = ROLE_NAV.warehouse.map((i) => i.key)
-    expect(keys.indexOf('wh-stock-count')).toBeGreaterThan(keys.indexOf('wh-consignment'))
-    expect(keys.indexOf('wh-stock-count')).toBeLessThan(keys.indexOf('wh-lot-trace'))
+    expect(keys.indexOf('wh-stock-count')).toBeGreaterThan(
+      keys.indexOf('wh-consignment'),
+    )
+    expect(keys.indexOf('wh-stock-count')).toBeLessThan(
+      keys.indexOf('wh-lot-trace'),
+    )
   })
   it('isNavActive hoạt động cho route mới', () => {
-    expect(isNavActive({ to: '/antmed/warehouse/issue' }, '/antmed/warehouse/issue')).toBe(true)
-    expect(isNavActive({ to: '/antmed/warehouse/stock-count' }, '/antmed/warehouse/stock-count')).toBe(true)
+    expect(
+      isNavActive({ to: '/antmed/warehouse/issue' }, '/antmed/warehouse/issue'),
+    ).toBe(true)
+    expect(
+      isNavActive(
+        { to: '/antmed/warehouse/stock-count' },
+        '/antmed/warehouse/stock-count',
+      ),
+    ).toBe(true)
   })
 })
 
@@ -205,13 +242,19 @@ describe('M03-S4/S5 route — issue / import / stock-count', () => {
     ['/antmed/warehouse/import', 'AntmedStockReceipt'],
     ['/antmed/warehouse/stock-count', 'AntmedStockCount'],
   ]
-  it.each(specs)('route %s → name %s (lazy page, role warehouse)', (routePath, name) => {
-    expect(routerSrc).toContain(`path: '${routePath}'`)
-    expect(routerSrc).toMatch(new RegExp(`name:\\s*['"]${name}['"]`))
-    expect(routerSrc).toMatch(new RegExp(`import\\(['"]@/pages/${name}\\.vue['"]\\)`))
-  })
+  it.each(specs)(
+    'route %s → name %s (lazy page, role warehouse)',
+    (routePath, name) => {
+      expect(routerSrc).toContain(`path: '${routePath}'`)
+      expect(routerSrc).toMatch(new RegExp(`name:\\s*['"]${name}['"]`))
+      expect(routerSrc).toMatch(
+        new RegExp(`import\\(['"]@/pages/${name}\\.vue['"]\\)`),
+      )
+    },
+  )
   it.each(specs)('name %s DUY NHẤT', (_routePath, name) => {
-    const matches = routerSrc.match(new RegExp(`name:\\s*['"]${name}['"]`, 'g')) || []
+    const matches =
+      routerSrc.match(new RegExp(`name:\\s*['"]${name}['"]`, 'g')) || []
     expect(matches).toHaveLength(1)
   })
   it('guard: AntMed + CRM user allow; outsider redirect', () => {
@@ -229,12 +272,15 @@ describe('Wizard pages — endpoint đúng + KHÔNG di sản stack cũ', () => {
     ['AntmedStockReceipt.vue', receiptSrc],
     ['AntmedStockCount.vue', countSrc],
   ]
-  it.each(pages)('%s import factory từ @/data/antmed (KHÔNG url thô)', (_name, src) => {
-    expect(src).toMatch(/from\s*['"]@\/data\/antmed['"]/)
-    expect(src).not.toMatch(/crm\.api\./)
-    expect(src).not.toMatch(/axios|@tanstack\/vue-query|useApi\(/)
-    expect(src).not.toMatch(/createListResource/)
-  })
+  it.each(pages)(
+    '%s import factory từ @/data/antmed (KHÔNG url thô)',
+    (_name, src) => {
+      expect(src).toMatch(/from\s*['"]@\/data\/antmed['"]/)
+      expect(src).not.toMatch(/crm\.api\./)
+      expect(src).not.toMatch(/axios|@tanstack\/vue-query|useApi\(/)
+      expect(src).not.toMatch(/createListResource/)
+    },
+  )
   it('AntmedStockIssue: dùng QrScanner + gate CO/CQ + entry_type Xuất cho NV', () => {
     expect(issueSrc).toMatch(/QrScanner/)
     expect(issueSrc).toMatch(/rowBlockedByCocq|blockedCocqRows/)

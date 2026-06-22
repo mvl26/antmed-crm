@@ -16,7 +16,10 @@ import {
 
 const srcDir = path.resolve(__dirname, '../../src')
 const routerSrc = readFileSync(path.join(srcDir, 'router.js'), 'utf8')
-const pageSrc = readFileSync(path.join(srcDir, 'pages/AntmedRepProfile.vue'), 'utf8')
+const pageSrc = readFileSync(
+  path.join(srcDir, 'pages/AntmedRepProfile.vue'),
+  'utf8',
+)
 const teamSrc = readFileSync(path.join(srcDir, 'pages/AntmedTeam.vue'), 'utf8')
 const dataSrc = readFileSync(path.join(srcDir, 'data/antmed.js'), 'utf8')
 
@@ -44,7 +47,7 @@ describe('formatJoinDate — ngày vào làm (User.creation) → dd/MM/yyyy', ()
     expect(formatJoinDate('2023-04-15')).toBe('15/04/2023')
     expect(formatJoinDate('2023-04-15')).toBe(fmtDate('2023-04-15'))
   })
-  it("datetime ISO → tách ngày dd/MM/yyyy", () => {
+  it('datetime ISO → tách ngày dd/MM/yyyy', () => {
     expect(formatJoinDate('2022-12-01 09:30:00')).toBe('01/12/2022')
   })
   it('null/undefined/rỗng → — (KHÔNG bịa ngày)', () => {
@@ -69,7 +72,9 @@ describe('M10-3 data layer — getRepProfile url rep_profile', () => {
     expect(block).toMatch(/onError/)
   })
   it('signature getRepProfile(owner, { auto, onError }) — owner là arg đầu', () => {
-    expect(dataSrc).toMatch(/getRepProfile\(owner,\s*\{[^)]*auto[^)]*\}\s*=\s*\{\}\)/)
+    expect(dataSrc).toMatch(
+      /getRepProfile\(owner,\s*\{[^)]*auto[^)]*\}\s*=\s*\{\}\)/,
+    )
   })
   it('dùng createResource (đọc dict RAW), KHÔNG createListResource', () => {
     expect(dataSrc).not.toMatch(/import[^\n]*createListResource/)
@@ -81,7 +86,9 @@ describe('M10-3 route — /antmed/sales/team/:owner real-page (drill-down)', () 
   it('router.js đăng ký AntmedRepProfile → /antmed/sales/team/:owner (lazy page real-data)', () => {
     expect(routerSrc).toMatch(/path:\s*['"]\/antmed\/sales\/team\/:owner['"]/)
     expect(routerSrc).toMatch(/name:\s*['"]AntmedRepProfile['"]/)
-    expect(routerSrc).toMatch(/import\(['"]@\/pages\/AntmedRepProfile\.vue['"]\)/)
+    expect(routerSrc).toMatch(
+      /import\(['"]@\/pages\/AntmedRepProfile\.vue['"]\)/,
+    )
   })
   it('route có props:true (nhận :owner làm prop) + antmedShell', () => {
     const idx = routerSrc.indexOf("'/antmed/sales/team/:owner'")

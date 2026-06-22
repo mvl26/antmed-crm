@@ -93,7 +93,9 @@ describe('M03-3 data layer — getConsignmentStock url consignment_stock', () =>
     expect(block).toMatch(/auto/)
   })
   it('dùng createResource (đọc dict RAW), KHÔNG createListResource', () => {
-    expect(dataSrc).toMatch(/import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/)
+    expect(dataSrc).toMatch(
+      /import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/,
+    )
     expect(dataSrc).not.toMatch(/import[^\n]*createListResource/)
   })
 })
@@ -111,16 +113,22 @@ describe('M03-3 nav — wh-consignment enabled tới /antmed/warehouse/consignme
   it('isNavActive: active ở /antmed/warehouse/consignment, KHÔNG active ở /antmed', () => {
     const item = { to: '/antmed/warehouse/consignment' }
     expect(isNavActive(item, '/antmed/warehouse/consignment')).toBe(true)
-    expect(isNavActive({ to: '/antmed' }, '/antmed/warehouse/consignment')).toBe(false)
+    expect(
+      isNavActive({ to: '/antmed' }, '/antmed/warehouse/consignment'),
+    ).toBe(false)
   })
 })
 
 // ── Route — /antmed/warehouse/consignment đăng ký, name AntmedConsignment unique, guard ─
 describe('M03-3 route — /antmed/warehouse/consignment đăng ký + guard', () => {
   it('router.js đăng ký AntmedConsignment → /antmed/warehouse/consignment (lazy page real-data)', () => {
-    expect(routerSrc).toMatch(/path:\s*['"]\/antmed\/warehouse\/consignment['"]/)
+    expect(routerSrc).toMatch(
+      /path:\s*['"]\/antmed\/warehouse\/consignment['"]/,
+    )
     expect(routerSrc).toMatch(/name:\s*['"]AntmedConsignment['"]/)
-    expect(routerSrc).toMatch(/import\(['"]@\/pages\/AntmedConsignment\.vue['"]\)/)
+    expect(routerSrc).toMatch(
+      /import\(['"]@\/pages\/AntmedConsignment\.vue['"]\)/,
+    )
   })
   it('name AntmedConsignment DUY NHẤT (stub cũ đã đổi name → KHÔNG trùng)', () => {
     const matches = routerSrc.match(/name:\s*['"]AntmedConsignment['"]/g) || []
@@ -171,7 +179,7 @@ describe('AntmedConsignment.vue — đọc r.data.{rows,kpis,hospitals,hospital}
     expect(pageSrc).toMatch(/row\.system_qty/)
     expect(pageSrc).toMatch(/row\.near_expiry/)
   })
-  it("header cột đủ (VI): SKU / Tên VT / Lot / HSD / SL hệ thống", () => {
+  it('header cột đủ (VI): SKU / Tên VT / Lot / HSD / SL hệ thống', () => {
     for (const h of ['SKU', 'Tên VT', 'Lot', 'HSD', 'SL hệ thống']) {
       expect(pageSrc).toContain(h)
     }
@@ -232,7 +240,9 @@ describe("AntmedConsignment.vue — KPI card 'Tồn ký gửi' (M03-5, thẻ gi�
   it("value thẻ 'Tồn ký gửi' = formatVnMoney(total_value) (tái dùng helper tiền VI gọn)", () => {
     expect(pageSrc).toMatch(/formatVnMoney/)
     // import từ @/utils/antmedUi.
-    expect(pageSrc).toMatch(/formatVnMoney[\s\S]*from\s*'@\/utils\/antmedUi'|from\s*'@\/utils\/antmedUi'[\s\S]*formatVnMoney/)
+    expect(pageSrc).toMatch(
+      /formatVnMoney[\s\S]*from\s*'@\/utils\/antmedUi'|from\s*'@\/utils\/antmedUi'[\s\S]*formatVnMoney/,
+    )
     // bind total_value qua formatVnMoney (số tiền tồn).
     expect(pageSrc).toMatch(/formatVnMoney\([^)]*total_value[^)]*\)/)
   })

@@ -28,7 +28,9 @@ describe('M02-7 data layer — getRevenueMix url revenue_mix + method GET', () =
 
   it("resource có method === 'GET' (chống defect POST→403, ADR-M02-14)", () => {
     // Khối getRevenueMix phải set method:'GET' (revenue_mix() KHÔNG có params → mặc định POST vỡ).
-    const block = dataSrc.slice(dataSrc.indexOf('export function getRevenueMix'))
+    const block = dataSrc.slice(
+      dataSrc.indexOf('export function getRevenueMix'),
+    )
     expect(block).toMatch(/method:\s*'GET'/)
   })
 

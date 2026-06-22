@@ -41,7 +41,7 @@ describe('formatVnMoney — định dạng tiền VN gọn', () => {
   it("đúng 1 tỷ → '1 tỷ' (bỏ ,0)", () => {
     expect(formatVnMoney(1_000_000_000)).toBe('1 tỷ')
   })
-  it("< 1 triệu → số nguyên đồng phân tách VI", () => {
+  it('< 1 triệu → số nguyên đồng phân tách VI', () => {
     expect(formatVnMoney(950_000)).toBe((950000).toLocaleString('vi-VN'))
   })
   it("null/undefined/''/NaN → '— '", () => {
@@ -58,7 +58,9 @@ describe('formatStockTime — định dạng HH:mm dd/MM/yyyy', () => {
     expect(formatStockTime('2026-06-17 09:05:00')).toBe('09:05 17/06/2026')
   })
   it('Date object cũng format đúng', () => {
-    expect(formatStockTime(new Date(2026, 0, 3, 14, 7))).toBe('14:07 03/01/2026')
+    expect(formatStockTime(new Date(2026, 0, 3, 14, 7))).toBe(
+      '14:07 03/01/2026',
+    )
   })
   it("thiếu / parse fail → '—'", () => {
     expect(formatStockTime(null)).toBe('—')
@@ -101,7 +103,9 @@ describe('M03-1 data layer — listStockEntries url list_stock_entries', () => {
     )
   })
   it('dùng createResource (đọc dict bọc), KHÔNG createListResource', () => {
-    expect(dataSrc).toMatch(/import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/)
+    expect(dataSrc).toMatch(
+      /import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/,
+    )
     expect(dataSrc).not.toMatch(/import[^\n]*createListResource/)
   })
 })
@@ -121,16 +125,22 @@ describe('M03-S4 nav — wh-export enabled tới Wizard /antmed/warehouse/issue'
   it('isNavActive: active ở /antmed/warehouse/issue, KHÔNG active ở /antmed', () => {
     const item = { to: '/antmed/warehouse/issue' }
     expect(isNavActive(item, '/antmed/warehouse/issue')).toBe(true)
-    expect(isNavActive({ to: '/antmed' }, '/antmed/warehouse/issue')).toBe(false)
+    expect(isNavActive({ to: '/antmed' }, '/antmed/warehouse/issue')).toBe(
+      false,
+    )
   })
 })
 
 // ── Route — /antmed/warehouse/stock-entries đăng ký, name unique, guard allow ─
 describe('M03-1 route — /antmed/warehouse/stock-entries đăng ký + guard', () => {
   it('router.js đăng ký AntmedStockEntries → /antmed/warehouse/stock-entries (lazy page real-data)', () => {
-    expect(routerSrc).toMatch(/path:\s*['"]\/antmed\/warehouse\/stock-entries['"]/)
+    expect(routerSrc).toMatch(
+      /path:\s*['"]\/antmed\/warehouse\/stock-entries['"]/,
+    )
     expect(routerSrc).toMatch(/name:\s*['"]AntmedStockEntries['"]/)
-    expect(routerSrc).toMatch(/import\(['"]@\/pages\/AntmedStockEntries\.vue['"]\)/)
+    expect(routerSrc).toMatch(
+      /import\(['"]@\/pages\/AntmedStockEntries\.vue['"]\)/,
+    )
   })
   it('name AntmedStockEntries DUY NHẤT', () => {
     const matches = routerSrc.match(/name:\s*['"]AntmedStockEntries['"]/g) || []

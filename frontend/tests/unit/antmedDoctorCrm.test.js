@@ -23,7 +23,12 @@ describe('AntmedDoctorDetail.vue — CRM Bác sỹ', () => {
     expect(src).toContain('LogCallModal')
   })
   it('wire 4 resource list', () => {
-    for (const r of ['listCareNotes', 'listVisits', 'listGifts', 'listCallLogs']) {
+    for (const r of [
+      'listCareNotes',
+      'listVisits',
+      'listGifts',
+      'listCallLogs',
+    ]) {
       expect(src).toContain(r)
     }
   })

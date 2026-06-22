@@ -30,10 +30,10 @@ describe('teamBarClass — bar_theme BE → class fill (tái dùng BAR_THEME)', 
   it("green → class default (brand teal, == barFillClass('default'))", () => {
     expect(teamBarClass('green')).toBe(barFillClass('default'))
   })
-  it("warn → class warn (cam)", () => {
+  it('warn → class warn (cam)', () => {
     expect(teamBarClass('warn')).toBe(barFillClass('warn'))
   })
-  it("danger → class danger (đỏ)", () => {
+  it('danger → class danger (đỏ)', () => {
     expect(teamBarClass('danger')).toBe(barFillClass('danger'))
   })
   it('theme lạ/rỗng → default (an toàn, không vỡ)', () => {
@@ -77,14 +77,16 @@ describe('M10-1 data layer — getTeamRoster url team_roster', () => {
     expect(dataSrc).toMatch(/export function getTeamRoster/)
     expect(dataSrc).toMatch(/antmed_crm\.api\.antmed\.sales_team\.team_roster/)
   })
-  it("nhận opt auto + method GET (endpoint không params → tránh 403 POST)", () => {
+  it('nhận opt auto + method GET (endpoint không params → tránh 403 POST)', () => {
     const idx = dataSrc.indexOf('export function getTeamRoster')
     const block = dataSrc.slice(idx, idx + 400)
     expect(block).toMatch(/auto/)
     expect(block).toMatch(/method:\s*'GET'/)
   })
   it('dùng createResource (đọc dict RAW), KHÔNG createListResource', () => {
-    expect(dataSrc).toMatch(/import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/)
+    expect(dataSrc).toMatch(
+      /import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/,
+    )
     expect(dataSrc).not.toMatch(/import[^\n]*createListResource/)
   })
 })
@@ -110,8 +112,12 @@ describe('M10-1 nav — sales-team enabled tới /antmed/sales/team', () => {
   })
   it('thứ tự sidebar sales khớp mockup B (Điều phối/Duyệt/Đội ngũ/...)', () => {
     const keys = ROLE_NAV.sales.map((i) => i.key)
-    expect(keys.indexOf('sales-dispatch')).toBeLessThan(keys.indexOf('sales-approvals'))
-    expect(keys.indexOf('sales-approvals')).toBeLessThan(keys.indexOf('sales-team'))
+    expect(keys.indexOf('sales-dispatch')).toBeLessThan(
+      keys.indexOf('sales-approvals'),
+    )
+    expect(keys.indexOf('sales-approvals')).toBeLessThan(
+      keys.indexOf('sales-team'),
+    )
   })
 })
 
@@ -170,7 +176,14 @@ describe('AntmedTeam.vue — đọc r.data.{rows,kpis} + tri-branch + 6 cột + 
     expect(pageSrc).toMatch(/row\.alert/)
   })
   it('header 6 cột đủ (VI): NV / Tuyến BV / DS tháng / Số deal mở / SLA đúng giờ / Cảnh báo', () => {
-    for (const h of ['NV', 'Tuyến BV', 'DS tháng', 'Số deal mở', 'SLA đúng giờ', 'Cảnh báo']) {
+    for (const h of [
+      'NV',
+      'Tuyến BV',
+      'DS tháng',
+      'Số deal mở',
+      'SLA đúng giờ',
+      'Cảnh báo',
+    ]) {
       expect(pageSrc).toContain(h)
     }
   })
@@ -184,7 +197,7 @@ describe('AntmedTeam.vue — đọc r.data.{rows,kpis} + tri-branch + 6 cột + 
   it('chip Cảnh báo chỉ render khi alert khác rỗng (v-if teamAlertLabel)', () => {
     expect(pageSrc).toMatch(/v-if="teamAlertLabel\(row\.alert\)"/)
   })
-  it("3 KPI card thật: Số NV / DS tháng (formatVnMoney) / SLA đúng giờ TB bind kpis BE (KHÔNG hardcode)", () => {
+  it('3 KPI card thật: Số NV / DS tháng (formatVnMoney) / SLA đúng giờ TB bind kpis BE (KHÔNG hardcode)', () => {
     expect(pageSrc).toMatch(/kpis\.total_reps/)
     expect(pageSrc).toMatch(/formatVnMoney\(kpis\.total_month_sales\)/)
     expect(pageSrc).toMatch(/kpis\.avg_sla/)

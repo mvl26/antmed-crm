@@ -17,7 +17,10 @@ import {
 const srcDir = path.resolve(__dirname, '../../src')
 const routerSrc = readFileSync(path.join(srcDir, 'router.js'), 'utf8')
 const navSrc = readFileSync(path.join(srcDir, 'data/antmedNav.js'), 'utf8')
-const pageSrc = readFileSync(path.join(srcDir, 'pages/AntmedAlerts.vue'), 'utf8')
+const pageSrc = readFileSync(
+  path.join(srcDir, 'pages/AntmedAlerts.vue'),
+  'utf8',
+)
 const dataSrc = readFileSync(path.join(srcDir, 'data/antmed.js'), 'utf8')
 
 const antmed = () => ({ isCrmUser: () => false, isAntmedUser: () => true })
@@ -37,8 +40,18 @@ const quota100 = {
   threshold: 100,
   days_to_expiry: null,
 }
-const quota90 = { ...quota100, threshold: 90, used_pct: 92, item_name: 'Catheter' }
-const quota70 = { ...quota100, threshold: 70, used_pct: 73.2, item_name: 'Guidewire' }
+const quota90 = {
+  ...quota100,
+  threshold: 90,
+  used_pct: 92,
+  item_name: 'Catheter',
+}
+const quota70 = {
+  ...quota100,
+  threshold: 70,
+  used_pct: 73.2,
+  item_name: 'Guidewire',
+}
 const expiryPast = {
   kind: 'expiry',
   contract: 'CT-002',
@@ -137,10 +150,14 @@ describe('alertText — câu VI theo mẫu quota / expiry', () => {
 describe('M02-3 data layer — getQuotaAlerts url list_quota_alerts', () => {
   it('getQuotaAlerts → createResource url antmed_crm.api.antmed.contract.list_quota_alerts', () => {
     expect(dataSrc).toMatch(/export function getQuotaAlerts/)
-    expect(dataSrc).toMatch(/antmed_crm\.api\.antmed\.contract\.list_quota_alerts/)
+    expect(dataSrc).toMatch(
+      /antmed_crm\.api\.antmed\.contract\.list_quota_alerts/,
+    )
   })
   it('dùng createResource (đọc dict bọc r.data.data), KHÔNG createListResource', () => {
-    expect(dataSrc).toMatch(/import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/)
+    expect(dataSrc).toMatch(
+      /import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/,
+    )
     expect(dataSrc).not.toMatch(/import[^\n]*createListResource/)
   })
 })
@@ -173,14 +190,22 @@ describe('M02-3 route — /antmed/alerts đăng ký + guard + name uniqueness', 
     const matches = routerSrc.match(/name:\s*['"]AntmedAlerts['"]/g) || []
     expect(matches).toHaveLength(1)
     // Phase 2: mock /admin/audit (AntmedAudit) ĐÃ GỠ — không còn để đối chiếu.
-    expect(routerSrc).not.toMatch(/name:\s*['"]AntmedAlerts['"][\s\S]{0,200}name:\s*['"]AntmedAlerts['"]/)
+    expect(routerSrc).not.toMatch(
+      /name:\s*['"]AntmedAlerts['"][\s\S]{0,200}name:\s*['"]AntmedAlerts['"]/,
+    )
   })
   it('guard: AntMed user + CRM user mở /antmed/alerts KHÔNG redirect', () => {
-    expect(shouldRedirectNotPermitted({ path: '/antmed/alerts' }, antmed())).toBe(false)
-    expect(shouldRedirectNotPermitted({ path: '/antmed/alerts' }, crm())).toBe(false)
+    expect(
+      shouldRedirectNotPermitted({ path: '/antmed/alerts' }, antmed()),
+    ).toBe(false)
+    expect(shouldRedirectNotPermitted({ path: '/antmed/alerts' }, crm())).toBe(
+      false,
+    )
   })
   it('guard: outsider mở /antmed/alerts bị redirect', () => {
-    expect(shouldRedirectNotPermitted({ path: '/antmed/alerts' }, outsider())).toBe(true)
+    expect(
+      shouldRedirectNotPermitted({ path: '/antmed/alerts' }, outsider()),
+    ).toBe(true)
   })
 })
 
@@ -206,7 +231,9 @@ describe('AntmedAlerts.vue — đọc r.data.data + tri-branch + pill+text', () 
     expect(pageSrc).toMatch(/alertPillTheme\(/)
     expect(pageSrc).toMatch(/alertPillLabel\(/)
     expect(pageSrc).toMatch(/alertText\(/)
-    expect(pageSrc).toMatch(/import[^\n]*alertPillTheme[^\n]*from\s*'@\/utils\/antmedUi'/)
+    expect(pageSrc).toMatch(
+      /import[^\n]*alertPillTheme[^\n]*from\s*'@\/utils\/antmedUi'/,
+    )
   })
   it("FE KHÔNG sort lại — render rows theo thứ tự BE (v-for trên 'rows' không .sort/.slice().sort)", () => {
     const code = pageSrc
@@ -229,7 +256,9 @@ describe('AntmedAlerts.vue — drill-down KHÔNG dead-end + a11y', () => {
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/<!--[\s\S]*?-->/g, '')
       .replace(/^\s*\/\/.*$/gm, '')
-    expect(codeNoComments).toMatch(/router\.push\(\s*\{\s*name:\s*['"]AntmedContractDetail['"]/)
+    expect(codeNoComments).toMatch(
+      /router\.push\(\s*\{\s*name:\s*['"]AntmedContractDetail['"]/,
+    )
     expect(codeNoComments).toMatch(/params:\s*\{\s*name:/)
   })
   it('<li> affordance: role=link + tabindex + @click + @keydown.enter + aria-label', () => {

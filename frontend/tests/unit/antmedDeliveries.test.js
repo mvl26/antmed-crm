@@ -1,7 +1,11 @@
 import { readFileSync } from 'fs'
 import path from 'path'
 import { describe, it, expect } from 'vitest'
-import { ANTMED_NAV, ANTMED_SECTIONS, isNavActive } from '../../src/data/antmedNav'
+import {
+  ANTMED_NAV,
+  ANTMED_SECTIONS,
+  isNavActive,
+} from '../../src/data/antmedNav'
 
 // M04 Slice S1 — màn DANH SÁCH + CHI TIẾT phiếu Giao phòng mổ
 // (/antmed/deliveries, AntmedDeliveries.vue + AntmedDeliveryDetail.vue).
@@ -13,7 +17,10 @@ const srcDir = path.resolve(__dirname, '../../src')
 const routerSrc = readFileSync(path.join(srcDir, 'router.js'), 'utf8')
 const dataSrc = readFileSync(path.join(srcDir, 'data/antmed.js'), 'utf8')
 const navSrc = readFileSync(path.join(srcDir, 'data/antmedNav.js'), 'utf8')
-const listSrc = readFileSync(path.join(srcDir, 'pages/AntmedDeliveries.vue'), 'utf8')
+const listSrc = readFileSync(
+  path.join(srcDir, 'pages/AntmedDeliveries.vue'),
+  'utf8',
+)
 const detailSrc = readFileSync(
   path.join(srcDir, 'pages/AntmedDeliveryDetail.vue'),
   'utf8',
