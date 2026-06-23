@@ -232,7 +232,7 @@ describe('AntmedAlerts.vue — đọc r.data.data + tri-branch + pill+text', () 
     expect(pageSrc).toMatch(/alertPillLabel\(/)
     expect(pageSrc).toMatch(/alertText\(/)
     expect(pageSrc).toMatch(
-      /import[^\n]*alertPillTheme[^\n]*from\s*'@\/utils\/antmedUi'/,
+      /import\s*\{[^}]*alertPillTheme[^}]*\}\s*from\s*'@\/utils\/antmedUi'/,
     )
   })
   it("FE KHÔNG sort lại — render rows theo thứ tự BE (v-for trên 'rows' không .sort/.slice().sort)", () => {
