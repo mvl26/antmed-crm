@@ -3,7 +3,10 @@
 
 import frappe
 from frappe import _
-from frappe.desk.form.assign_to import _add as assign
+try:
+	from frappe.desk.form.assign_to import _add as assign
+except ImportError:  # Frappe < 15.112 keeps ignore_permissions on the whitelisted `add`
+	from frappe.desk.form.assign_to import add as assign
 from frappe.model.document import Document
 
 from antmed_crm.api.exchange_rate import get_exchange_rate
