@@ -368,4 +368,38 @@ router.beforeEach(async (to, from, next) => {
   next()
 })
 
+// Tự phục hồi khi NẠP CHUNK LAZY THẤT BẠI: vue-router reject `import()` của route khi chunk
+// 404 (build đổi hash sau rebuild / service-worker phục vụ app-shell cũ — rule 02 PWA stale).
+// KHÔNG có handler này, vue-router HUỶ điều hướng IM LẶNG → trang "không nhấn được / click
+// không chuyển trang". Reload CỨNG tới đích (server serve shell qua website_route_rules
+// /antmed/<path>) để lấy shell + chunk mới. Cờ sessionStorage chống vòng lặp reload.
+const CHUNK_LOAD_ERROR =
+  /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|ChunkLoadError|Loading chunk [\w-]+ failed/i
+const RELOAD_GUARD_KEY = 'antmed:chunk-reload-to'
+router.onError((error, to) => {
+  if (!CHUNK_LOAD_ERROR.test(error?.message || '')) return
+  const target = to?.fullPath || window.location.pathname
+  let last = null
+  try {
+    last = sessionStorage.getItem(RELOAD_GUARD_KEY)
+  } catch {
+    /* storage bị chặn → vẫn thử reload 1 lần */
+  }
+  if (last === target) return // đã reload cho đích này mà vẫn lỗi → dừng (tránh loop)
+  try {
+    sessionStorage.setItem(RELOAD_GUARD_KEY, target)
+  } catch {
+    /* noop */
+  }
+  window.location.assign(target)
+})
+// Điều hướng SPA thành công → xoá cờ để lần kẹt sau vẫn tự phục hồi được.
+router.afterEach(() => {
+  try {
+    sessionStorage.removeItem(RELOAD_GUARD_KEY)
+  } catch {
+    /* noop */
+  }
+})
+
 export default router
