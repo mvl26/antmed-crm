@@ -1,5 +1,5 @@
-name: Run CRM Server Tests
-description: Execute bench tests for the CRM app with optional coverage collection.
+name: Run AntMed CRM Server Tests
+description: Execute bench tests for the antmed_crm app with optional coverage collection.
 inputs:
     bench-path:
         description: Absolute path to the bench directory
@@ -12,7 +12,7 @@ inputs:
     app:
         description: App to test
         required: false
-        default: "crm"
+        default: "antmed_crm"
     enable-coverage:
         description: When true, include coverage flag during test execution
         required: false

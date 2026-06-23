@@ -22,9 +22,19 @@ class TestAntMedLeadPipeline(FrappeTestCase):
 	@classmethod
 	def setUpClass(cls):
 		super().setUpClass()
-		cls.lead = frappe.get_doc(
-			{"doctype": "CRM Lead", "first_name": "BV Tiềm Năng Test", "organization": "BV Tiềm Năng Test", "status": "New", "lead_owner": "Administrator"}
-		).insert(ignore_permissions=True).name
+		cls.lead = (
+			frappe.get_doc(
+				{
+					"doctype": "CRM Lead",
+					"first_name": "BV Tiềm Năng Test",
+					"organization": "BV Tiềm Năng Test",
+					"status": "New",
+					"lead_owner": "Administrator",
+				}
+			)
+			.insert(ignore_permissions=True)
+			.name
+		)
 
 	def test_get_lead(self):
 		res = pipeline.get_lead(self.lead)

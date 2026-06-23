@@ -2,10 +2,10 @@
 
 | Mục | Giá trị |
 |---|---|
-| Module folder | `crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) |
-| DocType folder | `crm/antmed/doctype/antmed_item/`, `.../antmed_warehouse/`, `.../antmed_lot/`, `.../antmed_stock_entry/` … |
-| Code path | `crm/antmed/doctype/<snake>/` + module hooks `crm/antmed/hooks_m03.py` (doc_events) + scheduler `crm/antmed/scheduler_m03.py` |
-| API package | `crm/api/antmed/inventory.py` (đường gọi `antmed_crm.api.antmed.inventory.<fn>`) |
+| Module folder | `antmed_crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) |
+| DocType folder | `antmed_crm/antmed/doctype/antmed_item/`, `.../antmed_warehouse/`, `.../antmed_lot/`, `.../antmed_stock_entry/` … |
+| Code path | `antmed_crm/antmed/doctype/<snake>/` + module hooks `antmed_crm/antmed/hooks_m03.py` (doc_events) + scheduler `antmed_crm/antmed/scheduler_m03.py` |
+| API package | `antmed_crm/api/antmed/inventory.py` (đường gọi `antmed_crm.api.antmed.inventory.<fn>`) |
 | Wave (PLAN) | **W1 — Master data & catalog** (M03 catalog-lite chạy ‖ M01-full ‖ M02) |
 | Role chính (VI) | `Thủ kho` (chính), `NV kinh doanh` (kho cá nhân + đối chiếu ký gửi), `Quản lý` |
 | Phụ thuộc (M..) | — (Item native — không phụ thuộc module nào; tham chiếu mềm `AntMed Hospital` từ M01 cho kho ký gửi) |
@@ -81,7 +81,7 @@ M03 là **xương sống vật tư** của AntMed CRM: nơi định nghĩa danh 
 
 ## 3. Workflow
 
-M03 có **2 nhóm trạng thái**: (a) DocType giao dịch dùng **`docstatus`** (Draft→Submitted→Cancelled) cho `AntMed Stock Entry`; (b) **state machine có ràng buộc** cho `AntMed Consignment Reconciliation` và `AntMed Recall Notification` → đề xuất dùng **Frappe-native Workflow** (D2: fixtures `crm/fixtures/workflow.json`, field `status` làm `workflow_state`, states/transitions tiếng Việt).
+M03 có **2 nhóm trạng thái**: (a) DocType giao dịch dùng **`docstatus`** (Draft→Submitted→Cancelled) cho `AntMed Stock Entry`; (b) **state machine có ràng buộc** cho `AntMed Consignment Reconciliation` và `AntMed Recall Notification` → đề xuất dùng **Frappe-native Workflow** (D2: fixtures `antmed_crm/fixtures/workflow.json`, field `status` làm `workflow_state`, states/transitions tiếng Việt).
 
 ### 3.1 `AntMed Stock Entry` — chỉ docstatus (không workflow riêng)
 - `Nháp (docstatus=0)` → **Submit** → `Đã ghi sổ (docstatus=1)` (sinh dòng `AntMed Stock Ledger`, cập nhật tồn) → **Cancel** → `Đã huỷ (docstatus=2)` (đảo dòng ledger). FIFO/CO-CQ enforce ở `validate`/`on_submit` (xem §4).
@@ -111,13 +111,13 @@ M03 có **2 nhóm trạng thái**: (a) DocType giao dịch dùng **`docstatus`**
 
 ## 4. Business Rules
 
-> Enforce trong **module hooks** `crm/antmed/hooks_m03.py` qua `doc_events` (wire ở `crm/hooks.py` — chỉ THÊM key), hoặc trong controller `validate`/`on_submit`. Lỗi nghiệp vụ = `frappe.throw(_("BR-XX: …tiếng Việt"))`.
+> Enforce trong **module hooks** `antmed_crm/antmed/hooks_m03.py` qua `doc_events` (wire ở `antmed_crm/hooks.py` — chỉ THÊM key), hoặc trong controller `validate`/`on_submit`. Lỗi nghiệp vụ = `frappe.throw(_("BR-XX: …tiếng Việt"))`.
 
 | BR | Mô tả | Nơi enforce (đề xuất) | Trạng thái |
 |---|---|---|---|
 | **BR-08** | **FIFO theo HSD**: khi xuất kho (Stock Entry type `Xuất cho NV`/`Chuyển kho`) gợi ý lô có `expiry_date` sớm nhất còn tồn; nếu chọn lô không ưu tiên → **cảnh báo** (warn, không chặn cứng). Endpoint `fifo_suggest` + `check_fifo`. | `AntMed Stock Entry.validate` (warn) + `antmed_crm.api.antmed.inventory.fifo_suggest` | **[PLANNED]** — ground BR-08 README + UI_Design §4 dòng 128 |
 | **BR-03** (chuẩn bị) | **Gate CO/CQ**: lô VTYT có `requires_cocq=1` phải gắn `co_cert`+`cq_cert` còn hiệu lực trước khi xuất/giao. M03 set `cocq_ok` trên dòng Stock Entry; **chặn cứng** thực thi ở M06 (phát hành). | `AntMed Stock Entry.validate` (set `cocq_ok`, warn nếu thiếu) | **[PLANNED]** — BR-03 enforce đầy đủ ở M06 Sales Invoice |
-| **BR-15** | **Nhắc đối chiếu kho ký gửi định kỳ** (hằng tuần): scheduler quét kho `warehouse_type=Ký gửi BV` chưa đối chiếu trong 7 ngày → tạo task/notification cho NV phụ trách BV. | `crm/antmed/scheduler_m03.py::weekly_consignment_reminder` (hooks `scheduler_events`) | **[PLANNED]** — ground BR-15 README dòng 217 + scaffold scheduler |
+| **BR-15** | **Nhắc đối chiếu kho ký gửi định kỳ** (hằng tuần): scheduler quét kho `warehouse_type=Ký gửi BV` chưa đối chiếu trong 7 ngày → tạo task/notification cho NV phụ trách BV. | `antmed_crm/antmed/scheduler_m03.py::weekly_consignment_reminder` (hooks `scheduler_events`) | **[PLANNED]** — ground BR-15 README dòng 217 + scaffold scheduler |
 | **BR-13** | **Data-scope**: NV chỉ thấy kho cá nhân của mình + kho ký gửi BV mình phụ trách. | `permission_query_conditions` cho `AntMed Warehouse`/`AntMed Stock Entry`/`AntMed Consignment Reconciliation` | **[PLANNED — hoãn W4/M14]** (giữ invariant count==rows ngay) |
 | **BR-10** | **Audit hash-chain**: `AntMed Certificate.hash_sha256` (SHA256 file CO/CQ) + ghi `AntMed Audit Log` khi recall/đối chiếu submit. | `AntMed Certificate.validate` + lazy-import `antmed_crm.api.antmed.audit.write_log` | **[PLANNED]** — nền M14 |
 | **BR (native)** | **Cận date 30/60/90 ngày**: scheduler quét lô có `expiry_date` rơi vào 30/60/90 ngày tới → `publish_realtime`/notification. | `scheduler_m03.py::check_near_expiry_90_60_30` | **[PLANNED]** — ground Modules §3 + UI_Design §4.3 |
@@ -130,7 +130,7 @@ M03 có **2 nhóm trạng thái**: (a) DocType giao dịch dùng **`docstatus`**
 
 ## 5. API
 
-> File: `crm/api/antmed/inventory.py`. Mọi hàm `@frappe.whitelist(methods=["GET"|"POST"])`, **type-annotated** (`crm/hooks.py` `require_type_annotated_api_methods=True`), trả **RAW dict/list** (KHÔNG `_ok`/`_err`/envelope). Lỗi = `frappe.throw(_("BR-XX: …"))`. List endpoint giữ **count == rows**.
+> File: `antmed_crm/api/antmed/inventory.py`. Mọi hàm `@frappe.whitelist(methods=["GET"|"POST"])`, **type-annotated** (`antmed_crm/hooks.py` `require_type_annotated_api_methods=True`), trả **RAW dict/list** (KHÔNG `_ok`/`_err`/envelope). Lỗi = `frappe.throw(_("BR-XX: …"))`. List endpoint giữ **count == rows**.
 
 | Endpoint (`antmed_crm.api.antmed.inventory.<fn>`) | Verb | Mô tả |
 |---|---|---|
@@ -221,20 +221,20 @@ def get_stock_entry(name: str) -> dict:
 
 > Theo DAG (PLAN §2): M03 **không phụ thuộc** module nào (Item native), **cấp dữ liệu** cho M04/M05/M06. Quy ước: **lazy-import** module phụ thuộc trong hàm (tránh circular), **truyền PK** (name), không import controller chéo ở top-level.
 
-**Doc_events VÀO `crm/hooks.py` (chỉ THÊM key — đề xuất):**
+**Doc_events VÀO `antmed_crm/hooks.py` (chỉ THÊM key — đề xuất):**
 ```python
-# crm/hooks.py  (THÊM, không sửa key gốc)
+# antmed_crm/hooks.py  (THÊM, không sửa key gốc)
 doc_events = {
-  "AntMed Warehouse":   {"validate": "crm.antmed.hooks_m03.validate_warehouse_type"},
-  "AntMed Stock Entry": {"validate": "crm.antmed.hooks_m03.validate_stock_entry",   # tồn âm + FIFO warn + cocq_ok
-                         "on_submit": "crm.antmed.hooks_m03.post_stock_ledger"},     # ghi AntMed Stock Ledger
-  "AntMed Certificate": {"validate": "crm.antmed.hooks_m03.hash_certificate_file"},  # BR-10
-  "AntMed Consignment Reconciliation": {"on_submit": "crm.antmed.hooks_m03.close_reconciliation"},
-  "AntMed Recall Notification":        {"on_submit": "crm.antmed.hooks_m03.apply_recall"},
+  "AntMed Warehouse":   {"validate": "antmed_crm.antmed.hooks_m03.validate_warehouse_type"},
+  "AntMed Stock Entry": {"validate": "antmed_crm.antmed.hooks_m03.validate_stock_entry",   # tồn âm + FIFO warn + cocq_ok
+                         "on_submit": "antmed_crm.antmed.hooks_m03.post_stock_ledger"},     # ghi AntMed Stock Ledger
+  "AntMed Certificate": {"validate": "antmed_crm.antmed.hooks_m03.hash_certificate_file"},  # BR-10
+  "AntMed Consignment Reconciliation": {"on_submit": "antmed_crm.antmed.hooks_m03.close_reconciliation"},
+  "AntMed Recall Notification":        {"on_submit": "antmed_crm.antmed.hooks_m03.apply_recall"},
 }
 scheduler_events = {
-  "daily":  ["crm.antmed.scheduler_m03.check_near_expiry_90_60_30"],
-  "weekly": ["crm.antmed.scheduler_m03.weekly_consignment_reminder"],  # BR-15
+  "daily":  ["antmed_crm.antmed.scheduler_m03.check_near_expiry_90_60_30"],
+  "weekly": ["antmed_crm.antmed.scheduler_m03.weekly_consignment_reminder"],  # BR-15
 }
 ```
 
@@ -353,7 +353,7 @@ scheduler_events = {
 - **Decision**: Frappe-native Workflow (fixtures `workflow.json`, field `status`, states/transitions tiếng Việt) cho 2 DocType đối chiếu/recall; `AntMed Stock Entry` chỉ docstatus.
 - **Consequences**: (+) Chuẩn Frappe, không cặp app khác. (−) Phải bảo trì fixtures workflow + smoke test mỗi transition.
 
-> Kế thừa: **ADR-M01-01** (in-place), **ADR-M01-02** (prefix `AntMed `), **DEC-A** (role VI), **ADR-M01-05** (hoãn data-scope BR-13, giữ count==rows) — áp dụng nguyên cho M03.
+> Kế thừa: **ADR-M01-01** (gốc: in-place; THỰC TẾ = app RIÊNG `antmed_crm`), **ADR-M01-02** (prefix `AntMed `), **DEC-A** (role VI), **ADR-M01-05** (hoãn data-scope BR-13, giữ count==rows) — áp dụng nguyên cho M03.
 
 ---
 
@@ -361,7 +361,7 @@ scheduler_events = {
 
 > Theo SPEC §6. Một slice "xong" = BE test xanh + FE vitest + build + (sau USER reload) pixel verify + no-regression.
 
-**BE (TDD — `Ran N OK`):** `bench --site miyano run-tests --module crm.tests.test_antmed_inventory`
+**BE (TDD — `Ran N OK`):** `bench --site miyano run-tests --module antmed_crm.tests.test_antmed_inventory`
 - DocType tồn tại sau migrate + đủ field tối thiểu (`AntMed Item`/`Warehouse`/`Lot`/`Certificate`/`Stock Entry`/`Stock Ledger`).
 - `item_code`/`lot_no`/`warehouse_name` unique; naming series sinh đúng (`AM-SE-`/`AM-CR-`/`AM-RN-`/`AM-LTR-`/`AM-CERT-`).
 - `AntMed Warehouse.validate`: type `Cá nhân NV` thiếu `employee` → throw; `Ký gửi BV` thiếu `hospital` → throw.

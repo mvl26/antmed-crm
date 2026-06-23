@@ -11,7 +11,9 @@
         </h3>
         <p class="mt-0.5 truncate text-p-xs text-ink-gray-5">
           {{ set.item_count }} {{ __('món') }}
-          <template v-if="set.hospital_name">· {{ set.hospital_name }}</template>
+          <template v-if="set.hospital_name"
+            >· {{ set.hospital_name }}</template
+          >
           <template v-if="set.doctor_name">· {{ set.doctor_name }}</template>
         </p>
       </div>

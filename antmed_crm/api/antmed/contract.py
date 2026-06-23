@@ -11,7 +11,7 @@ total_count đếm DƯỚI permission của user (frappe.get_list tôn trọng D
 dùng frappe.db.count (bỏ qua permission). Giữ contract count==rows khi M14/R3 thêm
 permission_query_conditions data-scope.
 
-Pattern mượn từ crm/api/antmed/customer.py (đã verify live R2).
+Pattern mượn từ antmed_crm/api/antmed/customer.py (đã verify live R2).
 """
 
 import frappe
@@ -19,6 +19,7 @@ from frappe import _
 from frappe.utils import add_months, get_datetime, getdate, nowdate
 
 from antmed_crm.antmed import contract_hooks
+from antmed_crm.api.antmed._filters import coerce_filters
 
 CONTRACT_DOCTYPE = "AntMed Contract"
 HOSPITAL_DOCTYPE = "AntMed Hospital"
@@ -65,17 +66,7 @@ def _coerce_filters(filters: dict | str | None) -> list:
 	M02-1: acceptance gọi 'workflow_state/status' — field thật ở slice này là `status`.
 	Nếu caller truyền key `workflow_state` → map về `status` (ADR-M02-04).
 	"""
-	if not filters:
-		return []
-	if isinstance(filters, str):
-		filters = frappe.parse_json(filters) or []
-	if isinstance(filters, dict):
-		conditions = []
-		for k, v in filters.items():
-			field = "status" if k == "workflow_state" else k
-			conditions.append([field, "=", v])
-		return conditions
-	return list(filters)
+	return coerce_filters(filters, field_map={"workflow_state": "status"})
 
 
 @frappe.whitelist(methods=["GET"])
@@ -151,12 +142,8 @@ def get_contract(name: str) -> dict:
 	}
 	# LL-BE-2 + LL-BE-5: enrich *_name, null-guard FK orphan.
 	if doc.get("hospital"):
-		result["hospital_name"] = frappe.db.get_value(
-			HOSPITAL_DOCTYPE, doc.get("hospital"), "hospital_name"
-		)
-	result["items"] = [
-		{k: row.get(k) for k in QUOTA_ROW_FIELDS} for row in (doc.get("items") or [])
-	]
+		result["hospital_name"] = frappe.db.get_value(HOSPITAL_DOCTYPE, doc.get("hospital"), "hospital_name")
+	result["items"] = [{k: row.get(k) for k in QUOTA_ROW_FIELDS} for row in (doc.get("items") or [])]
 	return result
 
 
@@ -627,8 +614,7 @@ def _empty_revenue_mix() -> dict:
 	"""Fail-closed / scope rỗng: 4 dòng A–D revenue=0/pct=0, total_revenue=0 (KHÔNG raise, KHÔNG leak)."""
 	return {
 		"data": [
-			{"classification": cls, "label": cls, "revenue": 0.0, "pct": 0.0}
-			for cls in REVENUE_MIX_CLASSES
+			{"classification": cls, "label": cls, "revenue": 0.0, "pct": 0.0} for cls in REVENUE_MIX_CLASSES
 		],
 		"total_revenue": 0,
 	}
@@ -772,8 +758,7 @@ def _empty_revenue_by_group() -> dict:
 	"""
 	today = getdate(nowdate())
 	months = [
-		_month_short_label(add_months(today, offset))
-		for offset in range(-(REVENUE_BY_GROUP_MONTHS - 1), 1)
+		_month_short_label(add_months(today, offset)) for offset in range(-(REVENUE_BY_GROUP_MONTHS - 1), 1)
 	]
 	groups = [
 		{
@@ -920,9 +905,7 @@ def revenue_by_group() -> dict:
 		monthly = [float(v) for v in monthly_by_group[cls]]
 		total = float(sum(monthly))
 		grand_total += total
-		groups.append(
-			{"classification": cls, "label": cls, "monthly": monthly, "total": total}
-		)
+		groups.append({"classification": cls, "label": cls, "monthly": monthly, "total": total})
 
 	return {
 		"months": months,

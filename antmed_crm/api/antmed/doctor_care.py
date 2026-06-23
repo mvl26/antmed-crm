@@ -10,6 +10,8 @@ import frappe
 from frappe import _
 from frappe.utils import getdate, now_datetime, nowdate
 
+from antmed_crm.api.antmed._filters import coerce_filters
+
 VISIT_DOCTYPE = "AntMed Doctor Visit"
 NOTE_DOCTYPE = "AntMed Care Note"
 DOCTOR_DOCTYPE = "AntMed Doctor"
@@ -26,28 +28,51 @@ CALL_OUTCOME_TO_STATUS = {
 }
 CALL_STATUS_TO_OUTCOME = {"Completed": "Nghe máy", "No Answer": "Không nghe", "Busy": "Máy bận"}
 CALL_LOG_LIST_FIELDS = [
-	"name", "id", "type", "status", "duration", "start_time",
-	"caller", "caller.full_name as caller_name", "note", "note.content as note_text",
+	"name",
+	"id",
+	"type",
+	"status",
+	"duration",
+	"start_time",
+	"caller",
+	"caller.full_name as caller_name",
+	"note",
+	"note.content as note_text",
 ]
 
 GIFT_LIST_FIELDS = ["name", "doctor", "gift_date", "item_or_text", "value_vnd", "approved_by"]
 GIFT_LIST_ITEM_KEYS = ("name", "doctor", "gift_date", "item_or_text", "value_vnd", "approved_by")
 
-VISIT_LIST_FIELDS = ["name", "doctor", "doctor.full_name as doctor_name", "hospital", "sales_rep", "status", "checked_in_at"]
+VISIT_LIST_FIELDS = [
+	"name",
+	"doctor",
+	"doctor.full_name as doctor_name",
+	"hospital",
+	"sales_rep",
+	"status",
+	"checked_in_at",
+]
 VISIT_LIST_ITEM_KEYS = ("name", "doctor", "doctor_name", "hospital", "sales_rep", "status", "checked_in_at")
-VISIT_DETAIL_FIELDS = ("name", "doctor", "hospital", "sales_rep", "status", "checked_in_at", "gps_lat", "gps_lng", "topic", "competitors_pitching", "commitments", "docstatus")
+VISIT_DETAIL_FIELDS = (
+	"name",
+	"doctor",
+	"hospital",
+	"sales_rep",
+	"status",
+	"checked_in_at",
+	"gps_lat",
+	"gps_lng",
+	"topic",
+	"competitors_pitching",
+	"commitments",
+	"docstatus",
+)
 NOTE_LIST_FIELDS = ["name", "doctor", "visit", "note_date", "category", "content", "sales_rep"]
 NOTE_LIST_ITEM_KEYS = ("name", "doctor", "visit", "note_date", "category", "content", "sales_rep")
 
 
 def _coerce_filters(filters: dict | str | None) -> list:
-	if not filters:
-		return []
-	if isinstance(filters, str):
-		filters = frappe.parse_json(filters) or []
-	if isinstance(filters, dict):
-		return [[k, "=", v] for k, v in filters.items()]
-	return list(filters)
+	return coerce_filters(filters)
 
 
 @frappe.whitelist(methods=["POST"])
@@ -136,9 +161,14 @@ def get_visit(name: str) -> dict:
 		frappe.throw(_("Bạn không có quyền xem lượt thăm này."), frappe.PermissionError)
 	doc = frappe.get_doc(VISIT_DOCTYPE, name).as_dict()
 	result = {k: doc.get(k) for k in VISIT_DETAIL_FIELDS}
-	result["doctor_name"] = frappe.db.get_value(DOCTOR_DOCTYPE, doc.get("doctor"), "full_name") if doc.get("doctor") else None
+	result["doctor_name"] = (
+		frappe.db.get_value(DOCTOR_DOCTYPE, doc.get("doctor"), "full_name") if doc.get("doctor") else None
+	)
 	result["care_notes"] = frappe.get_all(
-		NOTE_DOCTYPE, filters={"visit": name}, fields=["name", "category", "content", "note_date"], order_by="creation desc"
+		NOTE_DOCTYPE,
+		filters={"visit": name},
+		fields=["name", "category", "content", "note_date"],
+		order_by="creation desc",
 	)
 	return result
 
@@ -212,7 +242,13 @@ def list_gifts(doctor: str | None = None, start: int = 0, page_length: int = 20)
 
 
 @frappe.whitelist(methods=["POST"])
-def submit_survey(doctor: str, score_1_5: int, comments: str | None = None, delivery: str | None = None, instrument_loan: str | None = None) -> dict:
+def submit_survey(
+	doctor: str,
+	score_1_5: int,
+	comments: str | None = None,
+	delivery: str | None = None,
+	instrument_loan: str | None = None,
+) -> dict:
 	"""Ghi khảo sát hài lòng bác sỹ (điểm 1-5)."""
 	if not frappe.has_permission(SURVEY_DOCTYPE, "create"):
 		frappe.throw(_("Bạn không có quyền ghi khảo sát."), frappe.PermissionError)
@@ -244,7 +280,11 @@ def send_call_plan_today() -> dict:
 	)
 	for p in due:
 		try:
-			frappe.publish_realtime("antmed_call_plan_due", {"call_plan": p["name"], "doctor": p["doctor"]}, user=p.get("sales_rep"))
+			frappe.publish_realtime(
+				"antmed_call_plan_due",
+				{"call_plan": p["name"], "doctor": p["doctor"]},
+				user=p.get("sales_rep"),
+			)
 		except Exception:
 			frappe.log_error(frappe.get_traceback(), "M07 send_call_plan_today")
 	return {"count": len(due), "due": due}
@@ -347,7 +387,12 @@ def notify_doctor_birthdays(within_days: int = 7) -> dict:
 	"""
 	today = getdate(nowdate())
 	upcoming = []
-	for d in frappe.get_all(DOCTOR_DOCTYPE, filters=[["birthday", "is", "set"]], fields=["name", "full_name", "birthday"], limit_page_length=0):
+	for d in frappe.get_all(
+		DOCTOR_DOCTYPE,
+		filters=[["birthday", "is", "set"]],
+		fields=["name", "full_name", "birthday"],
+		limit_page_length=0,
+	):
 		bd = getdate(d["birthday"])
 		try:
 			this_year = bd.replace(year=today.year)

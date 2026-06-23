@@ -123,7 +123,9 @@ class TestAntMedCustomer(FrappeTestCase):
 
 	def test_hospital_code_unique(self):
 		"""hospital_code unique — tạo BV thứ 2 cùng code → ném lỗi."""
-		with self.assertRaises((frappe.UniqueValidationError, frappe.DuplicateEntryError, frappe.ValidationError)):
+		with self.assertRaises(
+			(frappe.UniqueValidationError, frappe.DuplicateEntryError, frappe.ValidationError)
+		):
 			_mk_hospital("_T-HOSP-360", "Trùng mã")
 
 	def test_doctype_min_fields(self):
@@ -240,7 +242,7 @@ class TestAntMedCustomer(FrappeTestCase):
 		self.assertGreaterEqual(customer.list_hospitals(page_length=0)["total_count"], 2)
 		frappe.set_user(email)
 		try:
-			for fn, kw in [(customer.list_hospitals, {}), (customer.list_doctors, {})]:
+			for fn, _kw in [(customer.list_hospitals, {}), (customer.list_doctors, {})]:
 				try:
 					res = fn(page_length=0)
 				except frappe.PermissionError:
@@ -274,9 +276,7 @@ class TestAntMedCustomer(FrappeTestCase):
 		frappe.set_user(email)
 		try:
 			rh = customer.list_hospitals(page_length=0)
-			self.assertGreaterEqual(
-				rh["total_count"], 2, msg="NV kinh doanh KHÔNG đọc được BV — RBAC sai"
-			)
+			self.assertGreaterEqual(rh["total_count"], 2, msg="NV kinh doanh KHÔNG đọc được BV — RBAC sai")
 			# get_hospital + get_doctor không được raise PermissionError với NV kinh doanh
 			gh = customer.get_hospital("_T-HOSP-360")
 			self.assertEqual(gh["name"], "_T-HOSP-360")
@@ -303,15 +303,17 @@ class TestAntMedCustomer(FrappeTestCase):
 			# Quản lý: full
 			self.assertIn("Quản lý", perms, msg=f"{dt}: thiếu DocPerm 'Quản lý'")
 			ql = perms["Quản lý"]
-			self.assertTrue(ql.read and ql.write and ql.create and ql.delete,
-				msg=f"{dt}: 'Quản lý' phải full quyền (read/write/create/delete)")
+			self.assertTrue(
+				ql.read and ql.write and ql.create and ql.delete,
+				msg=f"{dt}: 'Quản lý' phải full quyền (read/write/create/delete)",
+			)
 			# NV kinh doanh: read/write/create, KHÔNG delete
 			self.assertIn("NV kinh doanh", perms, msg=f"{dt}: thiếu DocPerm 'NV kinh doanh'")
 			nv = perms["NV kinh doanh"]
-			self.assertTrue(nv.read and nv.write and nv.create,
-				msg=f"{dt}: 'NV kinh doanh' phải có read/write/create")
-			self.assertFalse(nv.delete,
-				msg=f"{dt}: 'NV kinh doanh' KHÔNG được có quyền delete (BR DocPerm)")
+			self.assertTrue(
+				nv.read and nv.write and nv.create, msg=f"{dt}: 'NV kinh doanh' phải có read/write/create"
+			)
+			self.assertFalse(nv.delete, msg=f"{dt}: 'NV kinh doanh' KHÔNG được có quyền delete (BR DocPerm)")
 
 
 # ---------------------------------------------------------------------------
@@ -328,7 +330,7 @@ class TestAntMedCustomer(FrappeTestCase):
 #
 # Lệnh: bench --site miyano run-tests --module antmed_crm.tests.test_antmed_customer
 # ---------------------------------------------------------------------------
-import inspect  # noqa: E402
+import inspect
 
 
 def _mk_warehouse(name, wtype="Tổng"):
@@ -342,9 +344,9 @@ def _mk_warehouse(name, wtype="Tổng"):
 def _mk_item(code, name):
 	if frappe.db.exists("AntMed Item", code):
 		return frappe.get_doc("AntMed Item", code)
-	return frappe.get_doc(
-		{"doctype": "AntMed Item", "item_code": code, "item_name": name}
-	).insert(ignore_permissions=True)
+	return frappe.get_doc({"doctype": "AntMed Item", "item_code": code, "item_name": name}).insert(
+		ignore_permissions=True
+	)
 
 
 def _mk_lot(lot_no, item):
@@ -421,15 +423,9 @@ class TestPortalNotifications(FrappeTestCase):
 		cls.lot = _mk_lot("_T-PNOTIF-LOT", cls.item).name
 		_receipt(cls.wh, cls.item, cls.lot, 1000)
 		# Delivery: 2 phiếu Xuất cho NV cho BV_A (mốc khác nhau) + 1 cho BV_B.
-		cls.se_a1 = _issue_to_nv(
-			cls.wh, cls.item, cls.lot, 5, cls.bv_a, "2026-06-10 08:00:00"
-		).name
-		cls.se_a2 = _issue_to_nv(
-			cls.wh, cls.item, cls.lot, 7, cls.bv_a, "2026-06-15 09:30:00"
-		).name
-		cls.se_b1 = _issue_to_nv(
-			cls.wh, cls.item, cls.lot, 3, cls.bv_b, "2026-06-14 10:00:00"
-		).name
+		cls.se_a1 = _issue_to_nv(cls.wh, cls.item, cls.lot, 5, cls.bv_a, "2026-06-10 08:00:00").name
+		cls.se_a2 = _issue_to_nv(cls.wh, cls.item, cls.lot, 7, cls.bv_a, "2026-06-15 09:30:00").name
+		cls.se_b1 = _issue_to_nv(cls.wh, cls.item, cls.lot, 3, cls.bv_b, "2026-06-14 10:00:00").name
 		# Quota: HĐ của BV_A có 1 item used_pct>=70 (80/100=80%) + 1 item <70 (10/100=10%).
 		cls.contract_a = _mk_contract(
 			"_T-PNOTIF-HD-A",
@@ -599,9 +595,7 @@ class TestPortalNotifications(FrappeTestCase):
 			res = cust.portal_notifications(bv_nn)
 		finally:
 			frappe.get_all = orig_get_all
-		self.assertEqual(
-			calls["quota"], 1, msg=f"quota phải 1 get_all (batch), thực tế={calls['quota']}"
-		)
+		self.assertEqual(calls["quota"], 1, msg=f"quota phải 1 get_all (batch), thực tế={calls['quota']}")
 		# vẫn merge đúng (2 quota cảnh báo: 80% + 90% — từ 2 HĐ khác nhau)
 		quotas = [it for it in res["data"] if it["kind"] == "quota"]
 		self.assertEqual(len(quotas), 2, msg=f"quotas={quotas}")
@@ -642,8 +636,14 @@ def _mk_contract_status(no, hospital, status, quota_rows):
 
 
 TENDER_ITEM_KEYS = {
-	"item", "item_name", "uom", "remaining_qty",
-	"quota_qty", "used_qty", "remaining_pct", "quota_chip",
+	"item",
+	"item_name",
+	"uom",
+	"remaining_qty",
+	"quota_qty",
+	"used_qty",
+	"remaining_pct",
+	"quota_chip",
 }
 
 
@@ -665,12 +665,30 @@ class TestTenderCatalog(FrappeTestCase):
 			cls.bv,
 			"Hiệu lực",
 			[
-				{"item": "_T-TCAT-OK", "item_name": "VT Còn nhiều", "uom": "Cái",
-				 "quota_qty": 100, "used_qty": 50, "unit_price": 12000},
-				{"item": "_T-TCAT-WARN", "item_name": "VT Sắp hết", "uom": "Hộp",
-				 "quota_qty": 100, "used_qty": 92, "unit_price": 5000},
-				{"item": "_T-TCAT-DANGER", "item_name": "VT Hết quota", "uom": "Cái",
-				 "quota_qty": 100, "used_qty": 100, "unit_price": 3000},
+				{
+					"item": "_T-TCAT-OK",
+					"item_name": "VT Còn nhiều",
+					"uom": "Cái",
+					"quota_qty": 100,
+					"used_qty": 50,
+					"unit_price": 12000,
+				},
+				{
+					"item": "_T-TCAT-WARN",
+					"item_name": "VT Sắp hết",
+					"uom": "Hộp",
+					"quota_qty": 100,
+					"used_qty": 92,
+					"unit_price": 5000,
+				},
+				{
+					"item": "_T-TCAT-DANGER",
+					"item_name": "VT Hết quota",
+					"uom": "Cái",
+					"quota_qty": 100,
+					"used_qty": 100,
+					"unit_price": 3000,
+				},
 			],
 		).name
 
@@ -732,9 +750,21 @@ class TestTenderCatalog(FrappeTestCase):
 			"Hiệu lực",
 			[
 				# 10% còn (used 90/100) → biên trên warn (≤10).
-				{"item": "_T-TCAT-B10", "item_name": "Biên 10", "uom": "Cái", "quota_qty": 100, "used_qty": 90},
+				{
+					"item": "_T-TCAT-B10",
+					"item_name": "Biên 10",
+					"uom": "Cái",
+					"quota_qty": 100,
+					"used_qty": 90,
+				},
 				# >10% (used 89/100 = 11%) → ok.
-				{"item": "_T-TCAT-B11", "item_name": "Biên 11", "uom": "Cái", "quota_qty": 100, "used_qty": 89},
+				{
+					"item": "_T-TCAT-B11",
+					"item_name": "Biên 11",
+					"uom": "Cái",
+					"quota_qty": 100,
+					"used_qty": 89,
+				},
 			],
 		)
 		res = cust.tender_catalog(bv_b)
@@ -759,21 +789,61 @@ class TestTenderCatalog(FrappeTestCase):
 		bv2 = _mk_hospital("_T-TCAT-MIX", "BV Tender Mix").name
 		# HĐ active 'Sắp hết hạn' (PHẢI xuất hiện).
 		_mk_contract_status(
-			"_T-TCAT-HD-SOON", bv2, "Sắp hết hạn",
-			[{"item": "_T-TCAT-SOON", "item_name": "VT Active Soon", "uom": "Cái", "quota_qty": 100, "used_qty": 10}],
+			"_T-TCAT-HD-SOON",
+			bv2,
+			"Sắp hết hạn",
+			[
+				{
+					"item": "_T-TCAT-SOON",
+					"item_name": "VT Active Soon",
+					"uom": "Cái",
+					"quota_qty": 100,
+					"used_qty": 10,
+				}
+			],
 		)
 		# HĐ inactive — KHÔNG được xuất hiện.
 		_mk_contract_status(
-			"_T-TCAT-HD-EXP", bv2, "Hết hạn",
-			[{"item": "_T-TCAT-EXP", "item_name": "VT Expired", "uom": "Cái", "quota_qty": 100, "used_qty": 10}],
+			"_T-TCAT-HD-EXP",
+			bv2,
+			"Hết hạn",
+			[
+				{
+					"item": "_T-TCAT-EXP",
+					"item_name": "VT Expired",
+					"uom": "Cái",
+					"quota_qty": 100,
+					"used_qty": 10,
+				}
+			],
 		)
 		_mk_contract_status(
-			"_T-TCAT-HD-DRAFT", bv2, "Nháp",
-			[{"item": "_T-TCAT-DRAFT", "item_name": "VT Draft", "uom": "Cái", "quota_qty": 100, "used_qty": 10}],
+			"_T-TCAT-HD-DRAFT",
+			bv2,
+			"Nháp",
+			[
+				{
+					"item": "_T-TCAT-DRAFT",
+					"item_name": "VT Draft",
+					"uom": "Cái",
+					"quota_qty": 100,
+					"used_qty": 10,
+				}
+			],
 		)
 		_mk_contract_status(
-			"_T-TCAT-HD-CANCEL", bv2, "Đã huỷ",
-			[{"item": "_T-TCAT-CANCEL", "item_name": "VT Cancelled", "uom": "Cái", "quota_qty": 100, "used_qty": 10}],
+			"_T-TCAT-HD-CANCEL",
+			bv2,
+			"Đã huỷ",
+			[
+				{
+					"item": "_T-TCAT-CANCEL",
+					"item_name": "VT Cancelled",
+					"uom": "Cái",
+					"quota_qty": 100,
+					"used_qty": 10,
+				}
+			],
 		)
 		res = cust.tender_catalog(bv2)
 		item_codes = {it["item"] for it in res["items"]}
@@ -789,8 +859,18 @@ class TestTenderCatalog(FrappeTestCase):
 		bv_empty = _mk_hospital("_T-TCAT-EMPTY", "BV Tender Trống").name
 		# Chỉ 1 HĐ Nháp (không active).
 		_mk_contract_status(
-			"_T-TCAT-HD-NONE", bv_empty, "Nháp",
-			[{"item": "_T-TCAT-NONE", "item_name": "VT Nháp", "uom": "Cái", "quota_qty": 100, "used_qty": 10}],
+			"_T-TCAT-HD-NONE",
+			bv_empty,
+			"Nháp",
+			[
+				{
+					"item": "_T-TCAT-NONE",
+					"item_name": "VT Nháp",
+					"uom": "Cái",
+					"quota_qty": 100,
+					"used_qty": 10,
+				}
+			],
 		)
 		res = cust.tender_catalog(bv_empty)
 		self.assertIsNone(res["contract"])
@@ -813,12 +893,32 @@ class TestTenderCatalog(FrappeTestCase):
 
 		bv_mg = _mk_hospital("_T-TCAT-MG", "BV Tender Merge").name
 		_mk_contract_status(
-			"_T-TCAT-HD-MG1", bv_mg, "Hiệu lực",
-			[{"item": "_T-TCAT-MGSKU", "item_name": "VT Gộp", "uom": "Cái", "quota_qty": 100, "used_qty": 40}],
+			"_T-TCAT-HD-MG1",
+			bv_mg,
+			"Hiệu lực",
+			[
+				{
+					"item": "_T-TCAT-MGSKU",
+					"item_name": "VT Gộp",
+					"uom": "Cái",
+					"quota_qty": 100,
+					"used_qty": 40,
+				}
+			],
 		)
 		_mk_contract_status(
-			"_T-TCAT-HD-MG2", bv_mg, "Sắp hết hạn",
-			[{"item": "_T-TCAT-MGSKU", "item_name": "VT Gộp", "uom": "Cái", "quota_qty": 100, "used_qty": 56}],
+			"_T-TCAT-HD-MG2",
+			bv_mg,
+			"Sắp hết hạn",
+			[
+				{
+					"item": "_T-TCAT-MGSKU",
+					"item_name": "VT Gộp",
+					"uom": "Cái",
+					"quota_qty": 100,
+					"used_qty": 56,
+				}
+			],
 		)
 		res = cust.tender_catalog(bv_mg)
 		self.assertEqual(len(res["items"]), 1, msg=f"phải gộp 1 dòng: {res['items']}")
@@ -836,11 +936,15 @@ class TestTenderCatalog(FrappeTestCase):
 
 		bv_multi = _mk_hospital("_T-TCAT-MULTI", "BV Tender Multi").name
 		c1 = _mk_contract_status(
-			"_T-TCAT-HD-M1", bv_multi, "Hiệu lực",
+			"_T-TCAT-HD-M1",
+			bv_multi,
+			"Hiệu lực",
 			[{"item": "_T-TCAT-M1", "item_name": "VT HĐ1", "uom": "Cái", "quota_qty": 100, "used_qty": 20}],
 		).name
 		c2 = _mk_contract_status(
-			"_T-TCAT-HD-M2", bv_multi, "Sắp hết hạn",
+			"_T-TCAT-HD-M2",
+			bv_multi,
+			"Sắp hết hạn",
 			[{"item": "_T-TCAT-M2", "item_name": "VT HĐ2", "uom": "Hộp", "quota_qty": 100, "used_qty": 30}],
 		).name
 		res = cust.tender_catalog(bv_multi)
@@ -874,7 +978,9 @@ class TestTenderCatalog(FrappeTestCase):
 		bv_nn = _mk_hospital("_T-TCAT-NN", "BV Tender NplusOne").name
 		for no, code in (("_T-TCAT-NN-1", "_T-TCAT-NN-S1"), ("_T-TCAT-NN-2", "_T-TCAT-NN-S2")):
 			_mk_contract_status(
-				no, bv_nn, "Hiệu lực",
+				no,
+				bv_nn,
+				"Hiệu lực",
 				[{"item": code, "item_name": code, "uom": "Cái", "quota_qty": 100, "used_qty": 20}],
 			)
 		orig_get_all = frappe.get_all
@@ -890,9 +996,7 @@ class TestTenderCatalog(FrappeTestCase):
 			res = cust.tender_catalog(bv_nn)
 		finally:
 			frappe.get_all = orig_get_all
-		self.assertEqual(
-			calls["quota"], 1, msg=f"quota phải 1 get_all (batch), thực tế={calls['quota']}"
-		)
+		self.assertEqual(calls["quota"], 1, msg=f"quota phải 1 get_all (batch), thực tế={calls['quota']}")
 		self.assertEqual(len(res["items"]), 2, msg=f"items={res['items']}")
 
 	def test_tender_catalog_zero_quota_no_zero_division(self):
@@ -901,8 +1005,18 @@ class TestTenderCatalog(FrappeTestCase):
 
 		bv_zero = _mk_hospital("_T-TCAT-ZERO", "BV Tender Zero").name
 		_mk_contract_status(
-			"_T-TCAT-HD-ZERO", bv_zero, "Hiệu lực",
-			[{"item": "_T-TCAT-ZSKU", "item_name": "VT Zero Quota", "uom": "Cái", "quota_qty": 0, "used_qty": 0}],
+			"_T-TCAT-HD-ZERO",
+			bv_zero,
+			"Hiệu lực",
+			[
+				{
+					"item": "_T-TCAT-ZSKU",
+					"item_name": "VT Zero Quota",
+					"uom": "Cái",
+					"quota_qty": 0,
+					"used_qty": 0,
+				}
+			],
 		)
 		res = cust.tender_catalog(bv_zero)
 		self.assertEqual(len(res["items"]), 1)

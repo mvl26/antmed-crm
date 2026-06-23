@@ -2,9 +2,9 @@
 
 | Mục | Giá trị |
 |---|---|
-| Module folder | `crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) |
-| DocType folder | `crm/antmed/doctype/antmed_instrument_set/`, `.../antmed_instrument_loan/`, `.../antmed_sterilization/`, + child `.../antmed_instrument_set_component/`, `.../antmed_loan_checklist_item/`, `.../antmed_loan_incident/` |
-| Code path BE | `crm/api/antmed/instrument_loan.py` → `antmed_crm.api.antmed.instrument_loan.<fn>` · module hooks `crm/antmed/instrument_loan_hooks.py` (wired qua `doc_events` trong `crm/hooks.py`) |
+| Module folder | `antmed_crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) |
+| DocType folder | `antmed_crm/antmed/doctype/antmed_instrument_set/`, `.../antmed_instrument_loan/`, `.../antmed_sterilization/`, + child `.../antmed_instrument_set_component/`, `.../antmed_loan_checklist_item/`, `.../antmed_loan_incident/` |
+| Code path BE | `antmed_crm/api/antmed/instrument_loan.py` → `antmed_crm.api.antmed.instrument_loan.<fn>` · module hooks `antmed_crm/antmed/instrument_loan_hooks.py` (wired qua `doc_events` trong `antmed_crm/hooks.py`) |
 | FE pages | `frontend/src/pages/AntmedInstrumentSets.vue`, `AntmedInstrumentLoan.vue` (3 tab), `AntmedInstrumentSetDetail.vue` + route `/antmed/instrument-sets`, `/antmed/loans`, `/antmed/loans/:name` |
 | Wave (PLAN) | **W3 — Đặc thù AntMed** (điểm nhấn cạnh tranh; chạy ‖ M07, sau W1) |
 | Role chính (VI) | `NV kinh doanh` (đặt/bàn giao/nhận trả), `Thủ kho` (tiệt khuẩn + mark Sẵn sàng), `Quản lý` (giám sát/sự cố) — DEC-A |
@@ -15,7 +15,7 @@
 | Cập nhật | 2026-06-17 |
 
 > **Trạng thái: [PLANNED — chưa code]**
-> Toàn bộ schema/API/workflow dưới đây là **DESIGN (đề xuất)**, ground trên scaffold cũ (separate-app, prefix `AM `) đã ADAPT sang in-place native-lite (`AntMed `). Chưa có DocType/endpoint nào tồn tại trên site `miyano`. Mọi mục không truy được nguồn → đánh dấu `[UNVERIFIED]` / `[cần khảo sát]`.
+> Toàn bộ schema/API/workflow dưới đây là **DESIGN (đề xuất)**, ground trên scaffold cũ (separate-app, prefix `AM `) đã ADAPT sang app RIÊNG `antmed_crm` native-lite (`AntMed `). Chưa có DocType/endpoint nào tồn tại trên site `miyano`. Mọi mục không truy được nguồn → đánh dấu `[UNVERIFIED]` / `[cần khảo sát]`.
 
 ---
 
@@ -66,7 +66,7 @@ M05 là **module đặc thù AntMed** — không có trong Frappe CRM gốc, **x
 
 ## 3. Workflow
 
-**Có state machine** — đây là điểm nhấn M05 (`AntMed_CRM_Modules.md §5` dòng 55). Engine = **Frappe Workflow gốc** (D2): fixture `crm/fixtures/workflow.json` + field `workflow_state` trên `AntMed Instrument Loan`, kết hợp `docstatus` (is_submittable=1). Tên state/transition **tiếng Việt**.
+**Có state machine** — đây là điểm nhấn M05 (`AntMed_CRM_Modules.md §5` dòng 55). Engine = **Frappe Workflow gốc** (D2): fixture `antmed_crm/fixtures/workflow.json` + field `workflow_state` trên `AntMed Instrument Loan`, kết hợp `docstatus` (is_submittable=1). Tên state/transition **tiếng Việt**.
 
 ### Vòng đời 7 trạng thái (trên `AntMed Instrument Loan`)
 
@@ -109,7 +109,7 @@ Sẵn sàng → Đã đặt → Đang giao → Đang sử dụng tại BV → Đ
 |---|---|---|
 | **BR-05** | **Chặn đặt trùng lịch**: 1 bộ không được đặt cho 2 ca chồng thời gian. Khi book → kiểm tra không tồn tại loan khác cùng `instrument_set` còn hiệu lực (state ∈ {Đã đặt, Đang giao, Đang sử dụng tại BV}) trong khoảng `booked_at..due_return_at` giao nhau. | `antmed_crm.api.antmed.instrument_loan.book` + module hook `validate` trên `AntMed Instrument Loan`. `frappe.throw(_("BR-05: Bộ dụng cụ đã có lịch mượn trùng khoảng thời gian này"))` |
 | **BR-09** | **Chỉ "Sẵn sàng" lại sau tiệt khuẩn Pass**: transition "Đang xử lý/tiệt khuẩn → Sẵn sàng" yêu cầu tồn tại ≥1 `AntMed Sterilization` với `loan`=loan hiện tại và `result="Pass"`. | `antmed_crm.api.antmed.instrument_loan.mark_ready` + module hook (kiểm tra trước khi đổi `workflow_state`/`current_status`). `frappe.throw(_("BR-09: Chưa có bản ghi tiệt khuẩn Pass — không thể chuyển về Sẵn sàng"))` |
-| **BR (cảnh báo) quá hạn** | Bộ ở {Đang giao, Đang sử dụng tại BV} mà `due_return_at` < now → cảnh báo realtime + đỏ trên UI. **Warn, không chặn.** | Scheduler `check_overdue_loans` (ground @ scaffold `scheduler.py`) → `frappe.publish_realtime("loan_overdue", ...)`; wired qua `scheduler_events` trong `crm/hooks.py`. |
+| **BR (cảnh báo) quá hạn** | Bộ ở {Đang giao, Đang sử dụng tại BV} mà `due_return_at` < now → cảnh báo realtime + đỏ trên UI. **Warn, không chặn.** | Scheduler `check_overdue_loans` (ground @ scaffold `scheduler.py`) → `frappe.publish_realtime("loan_overdue", ...)`; wired qua `scheduler_events` trong `antmed_crm/hooks.py`. |
 | **BR-13** | **Data-scope**: `NV kinh doanh` chỉ thấy lượt mượn / bộ thuộc tuyến mình (gắn `employee`/`current_holder` = NV đó). | `[ROADMAP]` — `permission_query_conditions` cho `AntMed Instrument Loan`/`AntMed Instrument Set` (M14). Invariant `count==rows` vẫn enforce ngay. |
 | **BR-10** | **Audit log** mọi thao tác trên bộ dụng cụ (mượn/trả/tiệt khuẩn/sự cố) — phục vụ thanh kiểm tra. | `[ROADMAP M14]` — hash-chain `AntMed Audit Log`; M05 chỉ phát event/`track_changes=1` ở W3. |
 
@@ -119,7 +119,7 @@ Sẵn sàng → Đã đặt → Đang giao → Đang sử dụng tại BV → Đ
 
 ## 5. API
 
-> File `crm/api/antmed/instrument_loan.py`. Mọi hàm `@frappe.whitelist`, **type-annotated** (`crm/hooks.py:28 require_type_annotated_api_methods=True`), trả **RAW dict/list** (KHÔNG `_ok`/`_err`). Lỗi nghiệp vụ = `frappe.throw(_("BR-XX: …"))`. List giữ bất biến **count == rows** (`get_list(limit_page_length=0)`).
+> File `antmed_crm/api/antmed/instrument_loan.py`. Mọi hàm `@frappe.whitelist`, **type-annotated** (`antmed_crm/hooks.py:28 require_type_annotated_api_methods=True`), trả **RAW dict/list** (KHÔNG `_ok`/`_err`). Lỗi nghiệp vụ = `frappe.throw(_("BR-XX: …"))`. List giữ bất biến **count == rows** (`get_list(limit_page_length=0)`).
 
 | Endpoint (`antmed_crm.api.antmed.instrument_loan.<fn>`) | Verb | Mô tả |
 |---|---|---|
@@ -145,7 +145,7 @@ Sẵn sàng → Đã đặt → Đang giao → Đang sử dụng tại BV → Đ
   - **M03**: `AntMed Instrument Set.current_warehouse`→`AntMed Warehouse` (kho cá nhân NV giữ bộ). Nếu M03 chưa land → field optional, set sau `[cần khảo sát]`.
 - **Ra (cấp dữ liệu):**
   - **M10 (KPI)**: đọc `AntMed Instrument Loan` (đúng-đủ-hạn: `returned_at` vs `due_return_at`; số sự cố) + `AntMed Instrument Set.lifetime_loans` (vòng quay). M05 KHÔNG gọi M10; M10 query đọc.
-- **doc_events (wired trong `crm/hooks.py`, module hooks tại `crm/antmed/instrument_loan_hooks.py`):**
+- **doc_events (wired trong `antmed_crm/hooks.py`, module hooks tại `antmed_crm/antmed/instrument_loan_hooks.py`):**
 
 | DocType | event | handler | tác dụng |
 |---|---|---|---|
@@ -208,13 +208,13 @@ Sẵn sàng → Đã đặt → Đang giao → Đang sử dụng tại BV → Đ
 - **Decision**: SSoT vòng đời = `AntMed Instrument Loan.workflow_state` (Frappe Workflow). `AntMed Instrument Set.current_status` cập nhật **derive** qua module hook `sync_set_status` (không nhập tay) để tra cứu nhanh "bộ đang ở đâu" + giữ trạng thái dài hạn `Lost`/`Damaged`.
 - **Consequences**: (+) một nguồn sự thật, gương phục vụ UI; (−) phải đảm bảo hook chạy mọi đường đổi state — cần test đồng bộ. Tham chiếu D2 (Frappe Workflow) trong `../SPEC_AntMed_CRM.md §8`.
 
-> Kế thừa ADR-M01-01 (in-place), ADR-M01-02 (prefix `AntMed `), DEC-A (role VI), DEC D1/D2 (native-lite + Frappe Workflow) — không Supersede.
+> Kế thừa ADR-M01-01 (app RIÊNG `antmed_crm`; gốc: in-place; THỰC TẾ = app RIÊNG `antmed_crm`), ADR-M01-02 (prefix `AntMed `), DEC-A (role VI), DEC D1/D2 (native-lite + Frappe Workflow) — không Supersede.
 
 ---
 
 ## 10. Acceptance / DoD (theo SPEC §6)
 
-- **BE test** `crm/tests/test_antmed_instrument_loan.py` → `bench --site miyano run-tests --module crm.tests.test_antmed_instrument_loan` = **`Ran N tests ... OK`**, 0 fail. TC tối thiểu:
+- **BE test** `antmed_crm/tests/test_antmed_instrument_loan.py` → `bench --site miyano run-tests --module antmed_crm.tests.test_antmed_instrument_loan` = **`Ran N tests ... OK`**, 0 fail. TC tối thiểu:
   1. 6 DocType tồn tại sau migrate (3 chính + 3 child) với field tối thiểu; naming sinh `AntMed-LN-…`/`-STR-…`/`-INC-…`.
   2. `list_instrument_sets`/`list_loans` trả `{data, total_count}`; **`len(data)==total_count`** khi không phân trang.
   3. **BR-05**: `book` cùng bộ trùng khoảng thời gian → `frappe.throw` (ValidationError).

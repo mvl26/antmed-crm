@@ -13,9 +13,10 @@ from antmed_crm.api.antmed import doctor_care
 
 
 def _ensure(doctype, key, val, values):
-	return frappe.db.get_value(doctype, {key: val}, "name") or frappe.get_doc(
-		{"doctype": doctype, key: val, **values}
-	).insert(ignore_permissions=True).name
+	return (
+		frappe.db.get_value(doctype, {key: val}, "name")
+		or frappe.get_doc({"doctype": doctype, key: val, **values}).insert(ignore_permissions=True).name
+	)
 
 
 class TestAntMedCallLog(FrappeTestCase):
@@ -24,11 +25,15 @@ class TestAntMedCallLog(FrappeTestCase):
 		super().setUpClass()
 		cls.hosp = _ensure("AntMed Hospital", "hospital_code", "_T-CALL-BV", {"hospital_name": "BV Call"})
 		cls.doctor = _ensure(
-			"AntMed Doctor", "doctor_code", "_T-CALL-BS",
+			"AntMed Doctor",
+			"doctor_code",
+			"_T-CALL-BS",
 			{"full_name": "BS Call", "hospital": cls.hosp, "phone": "0900000001"},
 		)
 		cls.doctor_nophone = _ensure(
-			"AntMed Doctor", "doctor_code", "_T-CALL-BS2",
+			"AntMed Doctor",
+			"doctor_code",
+			"_T-CALL-BS2",
 			{"full_name": "BS NoPhone", "hospital": cls.hosp},
 		)
 
@@ -46,8 +51,10 @@ class TestAntMedCallLog(FrappeTestCase):
 
 	def test_outcome_maps_to_status(self):
 		for outcome, status in {
-			"Nghe máy": "Completed", "Không nghe": "No Answer",
-			"Máy bận": "Busy", "Hộp thư": "No Answer",
+			"Nghe máy": "Completed",
+			"Không nghe": "No Answer",
+			"Máy bận": "Busy",
+			"Hộp thư": "No Answer",
 		}.items():
 			self.assertEqual(doctor_care.log_call(doctor=self.doctor, outcome=outcome)["status"], status)
 
@@ -66,7 +73,9 @@ class TestAntMedCallLog(FrappeTestCase):
 			doctor_care.log_call(doctor=self.doctor, outcome="XYZ")
 
 	def test_list_call_logs_shape_and_sort(self):
-		doctor_care.log_call(doctor=self.doctor, outcome="Nghe máy", note="N1", called_at="2026-01-01 08:00:00")
+		doctor_care.log_call(
+			doctor=self.doctor, outcome="Nghe máy", note="N1", called_at="2026-01-01 08:00:00"
+		)
 		newer = doctor_care.log_call(doctor=self.doctor, outcome="Máy bận", called_at="2026-06-01 09:00:00")
 		res = doctor_care.list_call_logs(doctor=self.doctor)
 		self.assertGreaterEqual(res["total_count"], 2)
@@ -81,19 +90,31 @@ class TestAntMedCallLog(FrappeTestCase):
 		res = doctor_care.log_call(doctor=self.doctor, outcome="Nghe máy", note="rep-visible")
 		email = "_t-call-rep@example.com"
 		if not frappe.db.exists("User", email):
-			frappe.get_doc({
-				"doctype": "User", "email": email, "first_name": "RepCall",
-				"send_welcome_email": 0, "roles": [{"role": "NV kinh doanh"}],
-			}).insert(ignore_permissions=True)
+			frappe.get_doc(
+				{
+					"doctype": "User",
+					"email": email,
+					"first_name": "RepCall",
+					"send_welcome_email": 0,
+					"roles": [{"role": "NV kinh doanh"}],
+				}
+			).insert(ignore_permissions=True)
 		else:
 			u = frappe.get_doc("User", email)
 			if "NV kinh doanh" not in [r.role for r in u.roles]:
-				u.append("roles", {"role": "NV kinh doanh"}); u.save(ignore_permissions=True)
-		if not frappe.db.exists("User Permission", {"user": email, "allow": "AntMed Hospital", "for_value": self.hosp}):
-			frappe.get_doc({
-				"doctype": "User Permission", "user": email,
-				"allow": "AntMed Hospital", "for_value": self.hosp,
-			}).insert(ignore_permissions=True)
+				u.append("roles", {"role": "NV kinh doanh"})
+				u.save(ignore_permissions=True)
+		if not frappe.db.exists(
+			"User Permission", {"user": email, "allow": "AntMed Hospital", "for_value": self.hosp}
+		):
+			frappe.get_doc(
+				{
+					"doctype": "User Permission",
+					"user": email,
+					"allow": "AntMed Hospital",
+					"for_value": self.hosp,
+				}
+			).insert(ignore_permissions=True)
 		frappe.set_user(email)
 		try:
 			out = doctor_care.list_call_logs(doctor=self.doctor)

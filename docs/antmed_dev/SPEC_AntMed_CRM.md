@@ -1,4 +1,4 @@
-# Spec: AntMed CRM (in-place trên Frappe CRM)
+# Spec: AntMed CRM (app riêng `antmed_crm`, fork từ Frappe CRM)
 
 > **Trạng thái:** Phase 1 — Specify · *chờ human duyệt trước khi sang Plan/Tasks/Implement.*
 > **Cập nhật:** 2026-06-17 · **Vị trí:** `docs/antmed_dev/` (tài liệu phát triển — tracked) · **Nguồn BA tham khảo:** `docs/antmed_crm/docs/` (read-only) · **Loại:** governing spec cấp dự án.
@@ -8,7 +8,7 @@
 
 ## 1. Objective (Mục tiêu)
 
-Xây **CRM cho Công ty TNHH AntMed** — phân phối vật tư y tế (VTYT) và **cho mượn bộ dụng cụ phẫu thuật** cho bệnh viện — bằng cách **fork & mở rộng Frappe CRM (`apps/crm` v1.73.2) tại chỗ**, KHÔNG tạo app `antmed_crm` riêng.
+Xây **CRM cho Công ty TNHH AntMed** — phân phối vật tư y tế (VTYT) và **cho mượn bộ dụng cụ phẫu thuật** cho bệnh viện — bằng **app RIÊNG `antmed_crm`** (`apps/antmed_crm`), fork từ Frappe CRM v1.73.2 và cài đặt như app riêng.
 
 - **Người dùng:** NV kinh doanh (mobile-first, làm tại phòng mổ), Thủ kho, NV chứng từ, Kế toán/AR, Trưởng phòng KD, CEO/BGĐ, và bác sỹ/điều dưỡng (portal). 7 persona — xem `AntMed_CRM_UI_Design.md`.
 - **Phạm vi nghiệp vụ:** 14 module M01–M14 (`AntMed_CRM_Modules.md`). Khác biệt lõi vs CRM thường: **M04 giao phòng mổ (SLA giờ ca)**, **M05 vòng đời bộ dụng cụ mượn + tiệt khuẩn**, **M03 kho ký gửi BV + truy vết lot CO/CQ**, **M06 chứng từ pháp lý + HĐĐT**.
@@ -24,7 +24,7 @@ Xây **CRM cho Công ty TNHH AntMed** — phân phối vật tư y tế (VTYT) v
 
 | Lớp | Công nghệ |
 |---|---|
-| Backend | Frappe Framework **v15**, Frappe CRM app `crm` **v1.73.2**, Python 3.10+ |
+| Backend | Frappe Framework **v15**, app `antmed_crm` (fork Frappe CRM **v1.73.2**), Python 3.10+ |
 | DB / cache | MariaDB · Redis 7 |
 | Frontend | **Vue 3 + frappe-ui** SPA (`createResource`/`createListResource`/`useDocument`), Vue Router, TailwindCSS, Vite |
 | Bench/site | bench `/home/miyano/frappe-bench` · site **`miyano`** (KHÔNG `antmed.local`) |
@@ -38,12 +38,12 @@ Xây **CRM cho Công ty TNHH AntMed** — phân phối vật tư y tế (VTYT) v
 
 ```bash
 # Backend test (TDD — chạy theo module)
-bench --site miyano run-tests --module crm.tests.test_antmed_customer
-bench --site miyano run-tests --module crm.tests.test_antmed_bootstrap
+bench --site miyano run-tests --module antmed_crm.tests.test_antmed_customer
+bench --site miyano run-tests --module antmed_crm.tests.test_antmed_bootstrap
 
-# Frontend test + build  (chạy trong apps/crm/frontend)
-cd /home/miyano/frappe-bench/apps/crm/frontend && yarn vitest run
-cd /home/miyano/frappe-bench/apps/crm/frontend && yarn build      # hoặc: bench build --app crm
+# Frontend test + build  (chạy trong apps/antmed_crm/frontend)
+cd /home/miyano/frappe-bench/apps/antmed_crm/frontend && yarn vitest run
+cd /home/miyano/frappe-bench/apps/antmed_crm/frontend && yarn build      # hoặc: bench build --app antmed_crm
 
 # Migrate (sau khi thêm/sửa DocType / fixtures)
 bench --site miyano migrate
@@ -57,13 +57,13 @@ sudo supervisorctl restart frappe-bench-web: && bench --site miyano clear-cache
 
 ---
 
-## 4. Project Structure (in-place trong `apps/crm`)
+## 4. Project Structure (app riêng `apps/antmed_crm`)
 
 ```
-crm/                                 # Python package (Frappe CRM gốc + AntMed)
+antmed_crm/                          # Python package (fork Frappe CRM + AntMed)
   modules.txt                        # + dòng "AntMed"
   hooks.py                           # CHỈ THÊM key (fixtures, doc_events AntMed…); KHÔNG sửa key gốc
-  fixtures/<doctype_snake>.json      # role.json … (Frappe chỉ đọc apps/crm/crm/fixtures/)
+  fixtures/<doctype_snake>.json      # role.json … (Frappe chỉ đọc apps/antmed_crm/antmed_crm/fixtures/)
   antmed/                            # code module AntMed
     doctype/<snake>/<snake>.{json,py}   # AntMed Hospital, AntMed Doctor, …
     README.md                        # mirror naming convention
@@ -85,7 +85,7 @@ docs/antmed_crm/docs/                # BA SOURCE (read-only, gitignored): AntMed
 
 **Backend (Frappe-standard, KHÔNG 3-tier):**
 ```python
-# crm/api/antmed/customer.py
+# antmed_crm/api/antmed/customer.py
 import frappe
 from frappe import _
 
@@ -120,7 +120,7 @@ export const listHospitals = createResource({ url: 'antmed_crm.api.antmed.custom
 
 | Lớp | Framework | Vị trí | Mức kỳ vọng |
 |---|---|---|---|
-| BE unit/controller/BR | Frappe test runner | `crm/tests/test_antmed_<module>.py` | TDD failing-first; mỗi feature ≥1 test; **0 fail**; assert shape (Hyrum) |
+| BE unit/controller/BR | Frappe test runner | `antmed_crm/tests/test_antmed_<module>.py` | TDD failing-first; mỗi feature ≥1 test; **0 fail**; assert shape (Hyrum) |
 | BE no-regression | như trên | test gốc CRM | bootstrap + Lead + Task + Organization vẫn OK |
 | FE unit | vitest | `frontend/tests/unit/antmed*.test.js` | route/lazy/props, gọi đúng `antmed_crm.api.antmed.*`, gate cấm-import |
 | FE build | vite | — | `yarn build` xanh, SFC compile sạch |
@@ -138,7 +138,7 @@ export const listHospitals = createResource({ url: 'antmed_crm.api.antmed.custom
 - Chỉ THÊM vào CRM gốc (route/hook/doctype mới prefix AntMed); giữ no-regression.
 
 **Ask first (hỏi trước):**
-- Reload/restart gunicorn (HARD-STOP USER — bench dùng chung), `bench migrate` trên site thật, đổi schema DocType đã có data, thêm dependency, sửa file gốc CRM (`crm/api/session.py`, router guard…), commit/push.
+- Reload/restart gunicorn (HARD-STOP USER — bench dùng chung), `bench migrate` trên site thật, đổi schema DocType đã có data, thêm dependency, sửa file gốc CRM (`antmed_crm/api/session.py`, router guard…), commit/push.
 
 **Never (không bao giờ):**
 - Dùng namespace cũ `crm.api.*` (giả định app tên `crm`) — app cài thật là `antmed_crm`, mọi endpoint là `antmed_crm.api.antmed.*`. KHÔNG đẻ thêm app khác.
@@ -152,7 +152,7 @@ export const listHospitals = createResource({ url: 'antmed_crm.api.antmed.custom
 
 | ID | Quyết định | Ghi chú |
 |---|---|---|
-| ADR-M01-01 | **In-place** trong app `crm`, KHÔNG app riêng | user 2026-06-17 |
+| ADR-M01-01 | chủ trương gốc: **in-place** trong app `crm`; **THỰC TẾ triển khai = app RIÊNG `antmed_crm`** (fork từ Frappe CRM, cài như app riêng) | user 2026-06-17 |
 | ADR-M01-02 | DocType/Role prefix **`AntMed `** (không `AM `) | map domain doc `AM Xxx` ↔ `AntMed Xxx` |
 | ADR-M01-04 | DocType **mới** `AntMed Hospital`/`AntMed Doctor`, KHÔNG extend `CRM Organization`/`Contact` | thiếu field y tế |
 | ADR-M01-05 | **Hoãn** data-scope BR-13 (R2 RBAC theo DocPerm) | invariant count==rows vẫn enforce |
@@ -164,7 +164,7 @@ export const listHospitals = createResource({ url: 'antmed_crm.api.antmed.custom
 ## 9. Success Criteria (cụ thể, kiểm chứng được)
 
 **Lát cắt M01 Customer 360° (đang làm):**
-1. `bench --site miyano run-tests --module crm.tests.test_antmed_customer` → `Ran N OK`, 0 fail. ✅ (đã đạt: 11 OK)
+1. `bench --site miyano run-tests --module antmed_crm.tests.test_antmed_customer` → `Ran N OK`, 0 fail. ✅ (đã đạt: 11 OK)
 2. `yarn vitest run` xanh (≥136) + `yarn build` xanh. ✅
 3. Sau USER reload: `http://miyano/crm/antmed/hospitals` render list BV thật, search/lọc hạng đúng, click → detail 360° + danh sách bác sỹ, click bác sỹ → profile + link ngược BV; 0 console error; ping/API 200. ⏳ *chờ reload + pixel verify*
 4. No-regression: route/test Frappe CRM gốc còn nguyên. ✅

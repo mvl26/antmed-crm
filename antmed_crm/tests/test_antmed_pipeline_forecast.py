@@ -18,7 +18,10 @@ from antmed_crm.api.antmed import pipeline
 
 
 def _ensure(doctype, key, val, values):
-	return frappe.db.get_value(doctype, {key: val}, "name") or frappe.get_doc({"doctype": doctype, key: val, **values}).insert(ignore_permissions=True).name
+	return (
+		frappe.db.get_value(doctype, {key: val}, "name")
+		or frappe.get_doc({"doctype": doctype, key: val, **values}).insert(ignore_permissions=True).name
+	)
 
 
 class TestAntMedPipelineForecast(FrappeTestCase):
@@ -28,7 +31,9 @@ class TestAntMedPipelineForecast(FrappeTestCase):
 		cls.hosp = _ensure("AntMed Hospital", "hospital_code", "_T-FC-BV", {"hospital_name": "BV Forecast"})
 
 	def test_forecast_shape(self):
-		t = pipeline.create_tender(tender_no="_T-FC-001", tender_name="Gói FC", hospital=self.hosp, estimated_value=1000000000)["name"]
+		t = pipeline.create_tender(
+			tender_no="_T-FC-001", tender_name="Gói FC", hospital=self.hosp, estimated_value=1000000000
+		)["name"]
 		frappe.db.set_value("AntMed Tender", t, "win_probability_pct", 60)
 		res = pipeline.forecast()
 		self.assertEqual(set(res.keys()), {"total_weighted", "by_stage"})
@@ -36,7 +41,9 @@ class TestAntMedPipelineForecast(FrappeTestCase):
 		self.assertGreaterEqual(res["total_weighted"], 0)
 
 	def test_win_creates_contract(self):
-		t = pipeline.create_tender(tender_no="_T-FC-WIN", tender_name="Gói thắng", hospital=self.hosp, estimated_value=2000000000)["name"]
+		t = pipeline.create_tender(
+			tender_no="_T-FC-WIN", tender_name="Gói thắng", hospital=self.hosp, estimated_value=2000000000
+		)["name"]
 		pipeline.set_tender_result(t, result="Trúng", decision_no="QĐ-FC-1")
 		won = frappe.db.get_value("AntMed Tender", t, "won_contract")
 		self.assertIsNotNone(won)
@@ -44,7 +51,9 @@ class TestAntMedPipelineForecast(FrappeTestCase):
 		self.assertEqual(frappe.db.get_value("AntMed Contract", won, "hospital"), self.hosp)
 
 	def test_win_idempotent(self):
-		t = pipeline.create_tender(tender_no="_T-FC-IDEM", tender_name="Gói idem", hospital=self.hosp, estimated_value=500000000)["name"]
+		t = pipeline.create_tender(
+			tender_no="_T-FC-IDEM", tender_name="Gói idem", hospital=self.hosp, estimated_value=500000000
+		)["name"]
 		pipeline.set_tender_result(t, result="Trúng", decision_no="QĐ-FC-2")
 		won1 = frappe.db.get_value("AntMed Tender", t, "won_contract")
 		pipeline.set_tender_result(t, result="Trúng", decision_no="QĐ-FC-2")

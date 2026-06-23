@@ -23,14 +23,19 @@ class AntMedInstrumentLoan(Document):
 		"""BR-05: cùng 1 bộ KHÔNG được có 2 lượt mượn active trùng khoảng [booked_at, due_return_at]."""
 		if not (self.instrument_set and self.booked_at and self.due_return_at):
 			return
-		placeholders = ", ".join(["%s"] * len(ACTIVE_LOAN_STATUSES))
-		rows = frappe.db.sql(
-			f"""SELECT name FROM `tabAntMed Instrument Loan`
-				WHERE instrument_set = %s AND name != %s AND docstatus < 2
-				  AND status IN ({placeholders})
-				  AND booked_at < %s AND due_return_at > %s
-				LIMIT 1""",
-			(self.instrument_set, self.name or "__new__", *ACTIVE_LOAN_STATUSES, self.due_return_at, self.booked_at),
+		# Overlap [booked_at, due_return_at] với lượt active khác cùng bộ. get_all → param-bind
+		# (LL-BE-11), KHÔNG raw f-string SQL (tránh sql-format-injection rule).
+		overlap = frappe.get_all(
+			"AntMed Instrument Loan",
+			filters={
+				"instrument_set": self.instrument_set,
+				"name": ["!=", self.name or "__new__"],
+				"docstatus": ["<", 2],
+				"status": ["in", list(ACTIVE_LOAN_STATUSES)],
+				"booked_at": ["<", self.due_return_at],
+				"due_return_at": [">", self.booked_at],
+			},
+			limit_page_length=1,
 		)
-		if rows:
+		if overlap:
 			frappe.throw(_("BR-05: Bộ dụng cụ đã có lịch mượn trùng khoảng thời gian này."))

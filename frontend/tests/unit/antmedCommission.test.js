@@ -9,7 +9,10 @@ import { formatVnMoney } from '../../src/utils/antmedUi'
 
 const srcDir = path.resolve(__dirname, '../../src')
 const dataSrc = readFileSync(path.join(srcDir, 'data/antmed.js'), 'utf8')
-const pageSrc = readFileSync(path.join(srcDir, 'pages/AntmedCommissionPage.vue'), 'utf8')
+const pageSrc = readFileSync(
+  path.join(srcDir, 'pages/AntmedCommissionPage.vue'),
+  'utf8',
+)
 const routerSrc = readFileSync(path.join(srcDir, 'router.js'), 'utf8')
 
 // Negative content-asserts (KHÔNG .data.data / KHÔNG 'Sắp có'...) phải chạy trên CODE thật, KHÔNG dính
@@ -30,18 +33,26 @@ describe('M09-1 data layer — getCommissionSummary url commission_summary + met
   })
 
   it('url == antmed_crm.api.antmed.finance.commission_summary (naming contract)', () => {
-    expect(dataSrc).toMatch(/antmed_crm\.api\.antmed\.finance\.commission_summary/)
+    expect(dataSrc).toMatch(
+      /antmed_crm\.api\.antmed\.finance\.commission_summary/,
+    )
     // KHÔNG prefix sai crm.api.* (thiếu antmed_crm) cho commission_summary.
-    expect(dataSrc).not.toMatch(/['"]crm\.api\.antmed\.finance\.commission_summary/)
+    expect(dataSrc).not.toMatch(
+      /['"]crm\.api\.antmed\.finance\.commission_summary/,
+    )
   })
 
   it("resource có method === 'GET' (chống defect POST→403)", () => {
-    const block = dataSrc.slice(dataSrc.indexOf('export function getCommissionSummary'))
+    const block = dataSrc.slice(
+      dataSrc.indexOf('export function getCommissionSummary'),
+    )
     expect(block).toMatch(/method:\s*'GET'/)
   })
 
   it('dùng createResource (dict THƯỜNG), KHÔNG createListResource', () => {
-    expect(dataSrc).toMatch(/import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/)
+    expect(dataSrc).toMatch(
+      /import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/,
+    )
     expect(dataSrc).not.toMatch(/import[^\n]*createListResource/)
   })
 })
@@ -171,14 +182,20 @@ describe('M09-1 router — AntmedCommissionPage /antmed/finance/commission + stu
 // MIRROR <script setup> AntmedCommissionPage.vue: expose totalCommission/totalRevenue/repCount/
 // groupCount/periodLabel/rules (đọc thẳng resourceData, KHÔNG aggregate) + formatVnMoney THẬT.
 describe('M09-1 SSR render-verify — AntmedCommissionPage render HTML thật', () => {
-  async function renderTemplate(resourceData, { loading = false, error = null } = {}) {
+  async function renderTemplate(
+    resourceData,
+    { loading = false, error = null } = {},
+  ) {
     const { parse } = await import('@vue/compiler-sfc')
     const { compile } = await import('@vue/compiler-dom')
     const vue = await import('vue')
     const { renderToString } = await import('@vue/server-renderer')
     const ui = await import('../../src/utils/antmedUi')
 
-    const raw = readFileSync(path.join(srcDir, 'pages/AntmedCommissionPage.vue'), 'utf8')
+    const raw = readFileSync(
+      path.join(srcDir, 'pages/AntmedCommissionPage.vue'),
+      'utf8',
+    )
     const { descriptor } = parse(raw, { filename: 'AntmedCommissionPage.vue' })
     const { code } = compile(descriptor.template.content, {
       mode: 'function',
@@ -191,18 +208,43 @@ describe('M09-1 SSR render-verify — AntmedCommissionPage render HTML thật', 
     const i18n = (s) => s
     const comp = {
       components: {
-        Badge: { props: ['label'], render() { return vue.h('span', {}, this.label) } },
-        Button: { props: ['label'], emits: ['click'], render() { return vue.h('button', {}, this.label) } },
-        RouterLink: { render() { return vue.h('a', {}, this.$slots.default?.()) } },
-        LoadingIndicator: { render() { return vue.h('span', {}, '...') } },
+        Badge: {
+          props: ['label'],
+          render() {
+            return vue.h('span', {}, this.label)
+          },
+        },
+        Button: {
+          props: ['label'],
+          emits: ['click'],
+          render() {
+            return vue.h('button', {}, this.label)
+          },
+        },
+        RouterLink: {
+          render() {
+            return vue.h('a', {}, this.$slots.default?.())
+          },
+        },
+        LoadingIndicator: {
+          render() {
+            return vue.h('span', {}, '...')
+          },
+        },
       },
       setup() {
         const commission = { data: resourceData, loading, error, reload() {} }
-        const totalCommission = vue.computed(() => commission.data?.total_commission ?? 0)
-        const totalRevenue = vue.computed(() => commission.data?.total_revenue ?? 0)
+        const totalCommission = vue.computed(
+          () => commission.data?.total_commission ?? 0,
+        )
+        const totalRevenue = vue.computed(
+          () => commission.data?.total_revenue ?? 0,
+        )
         const repCount = vue.computed(() => commission.data?.rep_count ?? 0)
         const groupCount = vue.computed(() => commission.data?.group_count ?? 0)
-        const periodLabel = vue.computed(() => commission.data?.period_label || '')
+        const periodLabel = vue.computed(
+          () => commission.data?.period_label || '',
+        )
         const rules = vue.computed(() => commission.data?.rules || [])
         return {
           __: i18n,

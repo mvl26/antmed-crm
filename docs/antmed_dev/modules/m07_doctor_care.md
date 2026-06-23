@@ -2,10 +2,10 @@
 
 | Mục | Giá trị |
 |---|---|
-| Module folder | `crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) — DocType tại `crm/antmed/doctype/<snake>/` |
-| Code path BE | `crm/antmed/doctype/antmed_doctor_visit/` … + endpoint `crm/api/antmed/doctor_care.py` (đường gọi `antmed_crm.api.antmed.doctor_care.<fn>`) |
-| Module hooks | business rule (BR-11) wiring qua `doc_events` trong `crm/hooks.py` → `crm/antmed/doctype/antmed_doctor_gift/antmed_doctor_gift.py:validate` |
-| Scheduler | nhắc lịch ghé thăm + nhắc sinh nhật trong `crm/antmed/doctor_care_scheduler.py` (wire `scheduler_events` ở `hooks.py`) |
+| Module folder | `antmed_crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) — DocType tại `antmed_crm/antmed/doctype/<snake>/` |
+| Code path BE | `antmed_crm/antmed/doctype/antmed_doctor_visit/` … + endpoint `antmed_crm/api/antmed/doctor_care.py` (đường gọi `antmed_crm.api.antmed.doctor_care.<fn>`) |
+| Module hooks | business rule (BR-11) wiring qua `doc_events` trong `antmed_crm/hooks.py` → `antmed_crm/antmed/doctype/antmed_doctor_gift/antmed_doctor_gift.py:validate` |
+| Scheduler | nhắc lịch ghé thăm + nhắc sinh nhật trong `antmed_crm/antmed/doctor_care_scheduler.py` (wire `scheduler_events` ở `hooks.py`) |
 | FE pages | `frontend/src/pages/AntmedDoctorCare*.vue` (tab trong profile bác sỹ M01) + route `/antmed/doctors/:name` (mở rộng) · `/antmed/visits` |
 | Wave (PLAN) | **W3 — Đặc thù AntMed** (chạy song song W2, sau W1) |
 | Role chính (VI) | `NV kinh doanh` (ghé thăm/ghi chú/quà), `Quản lý` (duyệt quà — compliance BR-11) — xem `./m14_rbac_w0_role_naming.md`. `[PLANNED]` role `CSKH` nếu tách đội chăm sóc (xem ADR-M07-03). |
@@ -16,7 +16,7 @@
 | Cập nhật | 2026-06-17 |
 
 > **Trạng thái: [PLANNED — chưa code]**
-> Toàn bộ schema/API/workflow dưới đây là **DESIGN (đề xuất)**, ground @ scaffold `m07_doctor_care` (bản app-riêng cũ — đã ADAPT `AM `→`AntMed `, ERPNext-reuse→native-lite) + `AntMed_CRM_Modules.md §7` + `AntMed_CRM_UI_Design.md §3.4`. **Chưa có code** trong `crm/antmed/` cho module này. Bất cứ điểm nào không truy được nguồn → đánh dấu `[UNVERIFIED]` / `[cần khảo sát]`.
+> Toàn bộ schema/API/workflow dưới đây là **DESIGN (đề xuất)**, ground @ scaffold `m07_doctor_care` (bản app-riêng cũ — đã ADAPT `AM `→`AntMed `, ERPNext-reuse→native-lite) + `AntMed_CRM_Modules.md §7` + `AntMed_CRM_UI_Design.md §3.4`. **Chưa có code** trong `antmed_crm/antmed/` cho module này. Bất cứ điểm nào không truy được nguồn → đánh dấu `[UNVERIFIED]` / `[cần khảo sát]`.
 
 ---
 
@@ -65,7 +65,7 @@ Theo `AntMed_CRM_Modules.md §7` (ground-truth nghiệp vụ):
 
 **Ghi chú ADAPT quan trọng (scaffold cũ → native-lite):**
 - Scaffold `am_doctor_visit` dùng `is_submittable: 1` + `status` Select `Planned/CheckedIn/Completed/Reviewed`. **Đề xuất giữ submittable** cho Visit (để có `docstatus` neo audit + workflow nhẹ — xem §3), nhưng **đổi nhãn status sang tiếng Việt**.
-- Scaffold dùng `Employee` (Link) cho NV. Site `miyano` (app `crm`, không ERPNext) **không có `Employee`** → ADAPT sang **`User`** (`sales_rep`). `[cần khảo sát]`: nếu sau này có DocType nhân sự AntMed-native thì đổi Link.
+- Scaffold dùng `Employee` (Link) cho NV. Site `miyano` (app `antmed_crm`, không ERPNext) **không có `Employee`** → ADAPT sang **`User`** (`sales_rep`). `[cần khảo sát]`: nếu sau này có DocType nhân sự AntMed-native thì đổi Link.
 - Scaffold `hospital` Link→`Customer`; ADAPT → **`AntMed Hospital`** (M01).
 - Scaffold survey Link→`Delivery Note` + `AM Instrument Loan`; ADAPT → **`AntMed Delivery`** (M04) + loan-record của **M05** (`[cần khảo sát]` tên DocType loan chính xác — M05 chưa chốt; tạm để optional Link, gắn khi M05 land).
 - `AntMed Care Note` **không có trong scaffold** nhưng có trong PLAN component-inventory (`AntMed Doctor Visit`, `AntMed Care Note`). Đề xuất tách Note khỏi Visit để ghi chú có thể tồn tại độc lập (gọi điện, không ghé). `[UNVERIFIED]`: ranh giới Visit↔Note có thể gộp — chốt ở build slice S2.
@@ -79,7 +79,7 @@ Theo `AntMed_CRM_Modules.md §7` (ground-truth nghiệp vụ):
 
 M07 có **một state machine nhẹ trên `AntMed Doctor Visit`** (vòng đời ghé thăm) + **gate duyệt trên `AntMed Doctor Gift`** (không phải workflow đầy đủ, là validate BR-11 — xem §4). Các DocType còn lại (Care Note, Call Plan, Survey) **không có workflow**.
 
-### Workflow `AntMed Doctor Visit` (Frappe-native — fixtures `crm/fixtures/workflow.json`)
+### Workflow `AntMed Doctor Visit` (Frappe-native — fixtures `antmed_crm/fixtures/workflow.json`)
 
 State field đề xuất: **`status`** (Select; giữ field scaffold) — hoặc `workflow_state` chuẩn Frappe Workflow. `[cần khảo sát]` BE chốt 1 trong 2; nếu dùng Frappe Workflow engine thì field = `workflow_state`.
 
@@ -96,7 +96,7 @@ State field đề xuất: **`status`** (Select; giữ field scaffold) — hoặc
 | Hoàn thành | `Đã check-in` → `Hoàn thành` | NV kinh doanh | `topic` không rỗng; submit (docstatus 0→1) |
 | Review | `Hoàn thành` → `Đã review` | Quản lý | — |
 
-> Native Frappe Workflow: định nghĩa trong `crm/fixtures/workflow.json` (state + transition + role tiếng Việt), `docstatus` map theo bảng. **KHÔNG** dùng `workflowcore`.
+> Native Frappe Workflow: định nghĩa trong `antmed_crm/fixtures/workflow.json` (state + transition + role tiếng Việt), `docstatus` map theo bảng. **KHÔNG** dùng `workflowcore`.
 > `[cần khảo sát]`: có thể đơn giản hoá bỏ `Lên kế hoạch` nếu Visit luôn tạo tại thời điểm check-in (mobile). Chốt ở slice S1.
 
 **`AntMed Doctor Gift`**: KHÔNG workflow. Gate duyệt = controller `validate` (BR-11). Scaffold `is_submittable: 0` → giữ non-submittable; trạng thái "đã duyệt" = `approved_by` có giá trị.
@@ -109,7 +109,7 @@ State field đề xuất: **`status`** (Select; giữ field scaffold) — hoặc
 
 | BR | Mô tả | Nơi enforce |
 |---|---|---|
-| **BR-11** | **Quà tặng/tài trợ cần người duyệt** (compliance anti-bribery): không được lưu/hoàn tất `AntMed Doctor Gift` nếu `approved_by` rỗng. Ground @ README `BR-11 → AM Doctor Gift.validate (approved_by)`. | Controller `crm/antmed/doctype/antmed_doctor_gift/antmed_doctor_gift.py::validate` → `frappe.throw(_("BR-11: Quà tặng/tài trợ phải có người duyệt (compliance)."))`. Wire bằng class method (đi theo DocType), KHÔNG cần `doc_events` riêng. |
+| **BR-11** | **Quà tặng/tài trợ cần người duyệt** (compliance anti-bribery): không được lưu/hoàn tất `AntMed Doctor Gift` nếu `approved_by` rỗng. Ground @ README `BR-11 → AM Doctor Gift.validate (approved_by)`. | Controller `antmed_crm/antmed/doctype/antmed_doctor_gift/antmed_doctor_gift.py::validate` → `frappe.throw(_("BR-11: Quà tặng/tài trợ phải có người duyệt (compliance)."))`. Wire bằng class method (đi theo DocType), KHÔNG cần `doc_events` riêng. |
 | BR-11b `[đề xuất]` | Ngưỡng giá trị: nếu `value_vnd` ≥ ngưỡng (vd 500.000đ) thì `approved_by` **bắt buộc là `Quản lý`** (không tự duyệt). `[cần khảo sát]` ngưỡng + chính sách công ty. | cùng `validate` — `[UNVERIFIED]` ngưỡng chưa có nguồn, để PLANNED. |
 | BR-13 | Data-scope: NV chỉ thấy bác sỹ/visit của tuyến được giao. | `[ROADMAP]` — `permission_query_conditions` cho `AntMed Doctor Visit`/`AntMed Doctor Gift`/… (M14). Cần mô hình "NV phụ trách bác sỹ/BV" (xem M01 ADR-M01-05). Invariant `count == rows` vẫn enforce ngay từ M07. |
 | BR-10 | Audit hash-chain cho hành vi nhạy cảm (duyệt quà). | `[ROADMAP]` M14 — khi M14 land, ghi audit log cho sự kiện duyệt `AntMed Doctor Gift`. |
@@ -120,7 +120,7 @@ State field đề xuất: **`status`** (Select; giữ field scaffold) — hoặc
 
 ## 5. API
 
-> File: `crm/api/antmed/doctor_care.py`. Mọi hàm `@frappe.whitelist(methods=["GET"|"POST"])`, **type-annotated** (`crm/hooks.py:28 require_type_annotated_api_methods=True`), trả **RAW dict/list** (KHÔNG `_ok/_err`/envelope). Lỗi nghiệp vụ = `frappe.throw(_("BR-XX: …"))`; permission = `frappe.throw(..., frappe.PermissionError)`. List endpoint giữ **count == rows** (`get_list(limit_page_length=0)` để đếm, không bị cắt phân trang).
+> File: `antmed_crm/api/antmed/doctor_care.py`. Mọi hàm `@frappe.whitelist(methods=["GET"|"POST"])`, **type-annotated** (`antmed_crm/hooks.py:28 require_type_annotated_api_methods=True`), trả **RAW dict/list** (KHÔNG `_ok/_err`/envelope). Lỗi nghiệp vụ = `frappe.throw(_("BR-XX: …"))`; permission = `frappe.throw(..., frappe.PermissionError)`. List endpoint giữ **count == rows** (`get_list(limit_page_length=0)` để đếm, không bị cắt phân trang).
 
 | Endpoint (`antmed_crm.api.antmed.doctor_care.<fn>`) | Verb | Mô tả |
 |---|---|---|
@@ -153,9 +153,9 @@ State field đề xuất: **`status`** (Select; giữ field scaffold) — hoặc
 
 **doc_events / hooks:**
 - `AntMed Doctor Gift` → `validate` (BR-11) là **class method** trên controller (không cần khai `doc_events`).
-- **Scheduler** (`scheduler_events` trong `crm/hooks.py`), ground @ scaffold `scheduler.py`:
+- **Scheduler** (`scheduler_events` trong `antmed_crm/hooks.py`), ground @ scaffold `scheduler.py`:
   - **Daily** `send_call_plan_today`: tìm `AntMed Call Plan` có `next_visit == today` → `frappe.publish_realtime("call_plan_due", …, user=<sales_rep>)`.
-  - **Daily** `notify_doctor_birthdays`: bác sỹ có sinh nhật sau **7 ngày** → nhắc NV phụ trách. ADAPT scaffold: scaffold tra NV qua `AM Employee Route` (chưa có ở in-place) → **`[cần khảo sát]`** lấy NV phụ trách từ đâu (Call Plan.sales_rep, hay field "NV phụ trách" trên `AntMed Doctor`). Đề xuất: dùng `AntMed Call Plan.sales_rep` (đã có Link doctor↔sales_rep); fallback bỏ qua nếu không có.
+  - **Daily** `notify_doctor_birthdays`: bác sỹ có sinh nhật sau **7 ngày** → nhắc NV phụ trách. ADAPT scaffold: scaffold tra NV qua `AM Employee Route` (chưa có ở app `antmed_crm`) → **`[cần khảo sát]`** lấy NV phụ trách từ đâu (Call Plan.sales_rep, hay field "NV phụ trách" trên `AntMed Doctor`). Đề xuất: dùng `AntMed Call Plan.sales_rep` (đã có Link doctor↔sales_rep); fallback bỏ qua nếu không có.
 - **Gate compliance BR-11**: chặn tại controller, không phải doc_events chéo.
 
 ---
@@ -204,7 +204,7 @@ Ground @ `UI_Design.md §3.4` ("Khách hàng — CRM bác sỹ") + §3.2 (GPS au
 
 ### ADR-M07-02: Native-lite Link thay ERPNext/Employee (ADAPT scaffold)
 - **Status**: Accepted (kế thừa D1 + ADR-M01-04)
-- **Context**: Scaffold cũ Link→`Employee`/`Customer`/`Delivery Note`/`AM Instrument Loan`. Site `miyano` (app `crm`) **không có ERPNext/Employee**.
+- **Context**: Scaffold cũ Link→`Employee`/`Customer`/`Delivery Note`/`AM Instrument Loan`. Site `miyano` (app `antmed_crm`) **không có ERPNext/Employee**.
 - **Decision**: `Employee`→**`User`** (`sales_rep`); `Customer`→**`AntMed Hospital`**; `Delivery Note`→**`AntMed Delivery`** (M04); loan→DocType M05 (gắn khi land). Tuân D1 native-lite, ADR-M01-02 prefix `AntMed `.
 - **Consequences**: (+) không phụ thuộc ERPNext; (−) `[cần khảo sát]` mô hình nhân sự — nếu sau có DocType NV AntMed-native thì migrate Link.
 
@@ -222,7 +222,7 @@ Ground @ `UI_Design.md §3.4` ("Khách hàng — CRM bác sỹ") + §3.2 (GPS au
 
 Theo SPEC §6 (DoD một lát cắt = BE test + FE vitest + build + pixel + no-regression):
 
-**BE (TDD — `Ran N OK`, 0 fail):** file `crm/tests/test_antmed_doctor_care.py`, lệnh `bench --site miyano run-tests --module crm.tests.test_antmed_doctor_care`. TC tối thiểu:
+**BE (TDD — `Ran N OK`, 0 fail):** file `antmed_crm/tests/test_antmed_doctor_care.py`, lệnh `bench --site miyano run-tests --module antmed_crm.tests.test_antmed_doctor_care`. TC tối thiểu:
 1. DocTypes tồn tại sau migrate + field tối thiểu (`frappe.get_meta`): `AntMed Doctor Visit`, `AntMed Care Note`, (S2+) `AntMed Doctor Gift`, `AntMed Satisfaction Survey`, `AntMed Call Plan`.
 2. `AntMed Doctor Visit` Link `doctor`→`AntMed Doctor` resolve; naming sinh `AM-VISIT-…`.
 3. `check_in()` set `checked_in_at` + GPS + status `Đã check-in`.

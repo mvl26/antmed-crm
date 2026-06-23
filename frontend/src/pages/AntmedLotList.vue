@@ -1,7 +1,9 @@
 <template>
   <main class="flex h-full flex-col" aria-labelledby="antmed-lot-list-title">
     <!-- Header + breadcrumb: Trang chủ › Tồn kho › Quản lý lot -->
-    <header class="flex flex-col gap-2 border-b border-outline-gray-modals px-6 py-4">
+    <header
+      class="flex flex-col gap-2 border-b border-outline-gray-modals px-6 py-4"
+    >
       <nav class="text-p-xs text-ink-gray-5" :aria-label="__('Đường dẫn')">
         <RouterLink
           to="/antmed"
@@ -12,14 +14,23 @@
         <span class="px-1.5 text-ink-gray-4" aria-hidden="true">›</span>
         <span class="text-ink-gray-6">{{ __('Tồn kho') }}</span>
         <span class="px-1.5 text-ink-gray-4" aria-hidden="true">›</span>
-        <span class="text-ink-gray-7" aria-current="page">{{ __('Quản lý lot') }}</span>
+        <span class="text-ink-gray-7" aria-current="page">{{
+          __('Quản lý lot')
+        }}</span>
       </nav>
       <div class="flex flex-col gap-1">
-        <h1 id="antmed-lot-list-title" class="text-xl font-semibold text-ink-gray-9">
+        <h1
+          id="antmed-lot-list-title"
+          class="text-xl font-semibold text-ink-gray-9"
+        >
           {{ __('Quản lý lô vật tư') }}
         </h1>
         <p class="text-p-sm text-ink-gray-6">
-          {{ __('Tra cứu, lọc lô theo vật tư / HSD / trạng thái thu hồi và truy vết từng lô.') }}
+          {{
+            __(
+              'Tra cứu, lọc lô theo vật tư / HSD / trạng thái thu hồi và truy vết từng lô.',
+            )
+          }}
         </p>
       </div>
     </header>
@@ -27,9 +38,15 @@
     <section class="flex-1 overflow-auto px-6 py-5">
       <div class="flex flex-col gap-4">
         <!-- Bộ lọc -->
-        <div class="flex flex-col gap-3 rounded-lg border border-outline-gray-modals bg-surface-white p-4 sm:flex-row sm:items-end">
+        <div
+          class="flex flex-col gap-3 rounded-lg border border-outline-gray-modals bg-surface-white p-4 sm:flex-row sm:items-end"
+        >
           <div class="flex flex-1 flex-col gap-1">
-            <label for="lot-search" class="text-p-xs font-medium text-ink-gray-6">{{ __('Tìm số lô') }}</label>
+            <label
+              for="lot-search"
+              class="text-p-xs font-medium text-ink-gray-6"
+              >{{ __('Tìm số lô') }}</label
+            >
             <FormControl
               id="lot-search"
               v-model="search"
@@ -40,28 +57,51 @@
             />
           </div>
           <div class="flex flex-1 flex-col gap-1">
-            <label for="lot-item" class="text-p-xs font-medium text-ink-gray-6">{{ __('Vật tư') }}</label>
+            <label
+              for="lot-item"
+              class="text-p-xs font-medium text-ink-gray-6"
+              >{{ __('Vật tư') }}</label
+            >
             <FormControl
               id="lot-item"
               type="select"
               :options="itemOptions"
               :modelValue="itemFilter"
               :aria-label="__('Lọc theo vật tư')"
-              @update:modelValue="(v) => { itemFilter = v; applyFilters() }"
+              @update:modelValue="
+                (v) => {
+                  itemFilter = v
+                  applyFilters()
+                }
+              "
             />
           </div>
           <div class="flex flex-1 flex-col gap-1">
-            <label for="lot-recall" class="text-p-xs font-medium text-ink-gray-6">{{ __('Trạng thái thu hồi') }}</label>
+            <label
+              for="lot-recall"
+              class="text-p-xs font-medium text-ink-gray-6"
+              >{{ __('Trạng thái thu hồi') }}</label
+            >
             <FormControl
               id="lot-recall"
               type="select"
               :options="recallOptions"
               :modelValue="recallFilter"
               :aria-label="__('Lọc theo trạng thái thu hồi')"
-              @update:modelValue="(v) => { recallFilter = v; applyFilters() }"
+              @update:modelValue="
+                (v) => {
+                  recallFilter = v
+                  applyFilters()
+                }
+              "
             />
           </div>
-          <Button variant="solid" :label="__('Lọc')" :loading="lots.loading" @click="applyFilters" />
+          <Button
+            variant="solid"
+            :label="__('Lọc')"
+            :loading="lots.loading"
+            @click="applyFilters"
+          />
         </div>
 
         <!-- loading / error / empty / data -->
@@ -78,8 +118,17 @@
           class="flex flex-col items-center gap-3 py-16 text-center"
           role="alert"
         >
-          <Badge variant="subtle" theme="red" size="lg" :label="__('Không tải được danh sách lô')" />
-          <Button variant="outline" :label="__('Thử lại')" @click="lots.reload()" />
+          <Badge
+            variant="subtle"
+            theme="red"
+            size="lg"
+            :label="__('Không tải được danh sách lô')"
+          />
+          <Button
+            variant="outline"
+            :label="__('Thử lại')"
+            @click="lots.reload()"
+          />
         </div>
         <div
           v-else-if="!rows.length"
@@ -89,33 +138,87 @@
         </div>
 
         <!-- Bảng lô -->
-        <div v-else class="overflow-x-auto rounded-lg border border-outline-gray-modals bg-surface-white">
+        <div
+          v-else
+          class="overflow-x-auto rounded-lg border border-outline-gray-modals bg-surface-white"
+        >
           <table class="w-full border-separate border-spacing-0 text-left">
-            <caption class="sr-only">{{ __('Danh sách lô vật tư') }}</caption>
+            <caption class="sr-only">
+              {{
+                __('Danh sách lô vật tư')
+              }}
+            </caption>
             <thead>
               <tr class="text-p-xs text-ink-gray-6">
-                <th class="border-b border-outline-gray-1 px-3 py-2 font-medium">{{ __('Số lô') }}</th>
-                <th class="border-b border-outline-gray-1 px-3 py-2 font-medium">{{ __('Vật tư') }}</th>
-                <th class="border-b border-outline-gray-1 px-3 py-2 font-medium">{{ __('NCC') }}</th>
-                <th class="border-b border-outline-gray-1 px-3 py-2 font-medium">{{ __('HSD') }}</th>
-                <th class="border-b border-outline-gray-1 px-3 py-2 font-medium">{{ __('Thu hồi') }}</th>
-                <th class="border-b border-outline-gray-1 px-3 py-2 text-right font-medium">{{ __('Hành động') }}</th>
+                <th
+                  class="border-b border-outline-gray-1 px-3 py-2 font-medium"
+                >
+                  {{ __('Số lô') }}
+                </th>
+                <th
+                  class="border-b border-outline-gray-1 px-3 py-2 font-medium"
+                >
+                  {{ __('Vật tư') }}
+                </th>
+                <th
+                  class="border-b border-outline-gray-1 px-3 py-2 font-medium"
+                >
+                  {{ __('NCC') }}
+                </th>
+                <th
+                  class="border-b border-outline-gray-1 px-3 py-2 font-medium"
+                >
+                  {{ __('HSD') }}
+                </th>
+                <th
+                  class="border-b border-outline-gray-1 px-3 py-2 font-medium"
+                >
+                  {{ __('Thu hồi') }}
+                </th>
+                <th
+                  class="border-b border-outline-gray-1 px-3 py-2 text-right font-medium"
+                >
+                  {{ __('Hành động') }}
+                </th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="row in rows" :key="row.name" class="text-p-sm text-ink-gray-8">
-                <td class="border-b border-outline-gray-1 px-3 py-2.5 font-medium text-ink-gray-9">{{ row.lot_no }}</td>
-                <td class="border-b border-outline-gray-1 px-3 py-2.5">{{ row.item_name || row.item || '—' }}</td>
-                <td class="border-b border-outline-gray-1 px-3 py-2.5 text-ink-gray-7">{{ row.supplier || '—' }}</td>
-                <td class="border-b border-outline-gray-1 px-3 py-2.5 tabular-nums">{{ fmtDate(row.expiry_date) }}</td>
+              <tr
+                v-for="row in rows"
+                :key="row.name"
+                class="text-p-sm text-ink-gray-8"
+              >
+                <td
+                  class="border-b border-outline-gray-1 px-3 py-2.5 font-medium text-ink-gray-9"
+                >
+                  {{ row.lot_no }}
+                </td>
+                <td class="border-b border-outline-gray-1 px-3 py-2.5">
+                  {{ row.item_name || row.item || '—' }}
+                </td>
+                <td
+                  class="border-b border-outline-gray-1 px-3 py-2.5 text-ink-gray-7"
+                >
+                  {{ row.supplier || '—' }}
+                </td>
+                <td
+                  class="border-b border-outline-gray-1 px-3 py-2.5 tabular-nums"
+                >
+                  {{ fmtDate(row.expiry_date) }}
+                </td>
                 <td class="border-b border-outline-gray-1 px-3 py-2.5">
                   <span
-                    :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-p-xs font-medium', recallChipClass(row.recall_status)]"
+                    :class="[
+                      'inline-flex items-center rounded-full px-2.5 py-0.5 text-p-xs font-medium',
+                      recallChipClass(row.recall_status),
+                    ]"
                   >
                     {{ row.recall_status || '—' }}
                   </span>
                 </td>
-                <td class="border-b border-outline-gray-1 px-3 py-2.5 text-right">
+                <td
+                  class="border-b border-outline-gray-1 px-3 py-2.5 text-right"
+                >
                   <RouterLink
                     :to="{ name: 'AntmedLotTrace', query: { lot: row.lot_no } }"
                     class="rounded text-p-sm text-teal-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-3"
@@ -161,7 +264,8 @@ function buildParams() {
   const p = { page_length: 200, start: 0 }
   if (search.value.trim()) p.search = search.value.trim()
   if (itemFilter.value) p.item = itemFilter.value
-  if (recallFilter.value) p.filters = JSON.stringify({ recall_status: recallFilter.value })
+  if (recallFilter.value)
+    p.filters = JSON.stringify({ recall_status: recallFilter.value })
   return p
 }
 
@@ -177,6 +281,9 @@ function applyFilters() {
 const items = listItems({ params: { page_length: 0 }, auto: true })
 const itemOptions = computed(() => [
   { value: '', label: __('Tất cả vật tư') },
-  ...(items.data?.data || []).map((it) => ({ value: it.name, label: it.item_name || it.item_code })),
+  ...(items.data?.data || []).map((it) => ({
+    value: it.name,
+    label: it.item_name || it.item_code,
+  })),
 ])
 </script>

@@ -1,12 +1,13 @@
 {
-  "name": "crm-ui",
+  "name": "antmed-crm-ui",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "predev": "node scripts/free-dev-port.mjs 3001",
     "dev": "vite",
     "build": "vite build --base=/assets/antmed_crm/frontend/ && yarn copy-html-entry",
-    "copy-html-entry": "cp ../antmed_crm/public/frontend/index.html ../antmed_crm/www/crm.html",
+    "copy-html-entry": "cp ../antmed_crm/public/frontend/index.html ../antmed_crm/www/antmed.html",
     "serve": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
@@ -38,7 +39,6 @@
   },
   "resolutions": {
     "dompurify": "3.4.0",
-    "brace-expansion": "2.1.0",
     "picomatch": "4.0.4"
   },
   "devDependencies": {

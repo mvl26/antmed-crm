@@ -19,7 +19,9 @@
         class="text-p-xs text-ink-gray-5"
       >
         {{ __('Tổng tiêu hao') }}:
-        <span class="font-medium tabular-nums text-ink-gray-7">{{ totalQtyText }}</span>
+        <span class="font-medium tabular-nums text-ink-gray-7">{{
+          totalQtyText
+        }}</span>
       </span>
     </header>
 
@@ -39,7 +41,12 @@
       class="flex flex-col items-center gap-3 py-10 text-center"
       role="alert"
     >
-      <Badge variant="subtle" theme="red" size="sm" :label="__('Không tải được')" />
+      <Badge
+        variant="subtle"
+        theme="red"
+        size="sm"
+        :label="__('Không tải được')"
+      />
       <p class="max-w-xs text-p-sm text-ink-gray-6">
         {{ __('Không tải được dữ liệu tiêu hao theo tháng.') }}
       </p>

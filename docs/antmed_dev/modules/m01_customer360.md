@@ -2,9 +2,9 @@
 
 | Mục | Giá trị |
 |---|---|
-| Module folder | `crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) |
-| DocType folder | `crm/antmed/doctype/antmed_hospital/`, `crm/antmed/doctype/antmed_doctor/` |
-| API package | `crm/api/antmed/customer.py` (đường gọi `antmed_crm.api.antmed.customer.<fn>`) |
+| Module folder | `antmed_crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) |
+| DocType folder | `antmed_crm/antmed/doctype/antmed_hospital/`, `antmed_crm/antmed/doctype/antmed_doctor/` |
+| API package | `antmed_crm/api/antmed/customer.py` (đường gọi `antmed_crm.api.antmed.customer.<fn>`) |
 | FE pages | `frontend/src/pages/Antmed*` + route `/antmed/hospitals`, `/antmed/hospitals/:name`, `/antmed/doctors/:name` |
 | Phase triển khai | 1 — Lõi vận hành (đây là **feature nghiệp vụ M1 thật**, khác R1 foundation) |
 | Round | **R2** (nối tiếp R1 Bootstrap — xem `m01_bootstrap.md`) |
@@ -13,7 +13,7 @@
 | Trạng thái docs | Stable (spec chốt cho R2 — đủ để BE/FE code) |
 | Cập nhật | 2026-06-17 |
 
-> 🔗 **Tiền đề (R1 đã land, verified @ source)**: module `AntMed` đã khai trong `crm/modules.txt`; package `crm/api/antmed/` tồn tại (`health.py::ping`); 3 Role fixture đã có (`crm/fixtures/role.json`); FE đã có route `/antmed` + `AntmedHome.vue` + `data/antmed.js`. R2 **mở rộng** namespace này, KHÔNG dựng lại nền.
+> 🔗 **Tiền đề (R1 đã land, verified @ source)**: module `AntMed` đã khai trong `antmed_crm/modules.txt`; package `antmed_crm/api/antmed/` tồn tại (`health.py::ping`); 3 Role fixture đã có (`antmed_crm/fixtures/role.json`); FE đã có route `/antmed` + `AntmedHome.vue` + `data/antmed.js`. R2 **mở rộng** namespace này, KHÔNG dựng lại nền.
 
 ---
 
@@ -45,10 +45,10 @@ Theo `AntMed_CRM_Modules.md §1` (mô tả nghiệp vụ ground-truth):
 ## Scope — Boundaries (Always / Never)
 
 ### Always (R2 LUÔN làm)
-- **Always** tạo DocType **`AntMed Hospital`** tại `crm/antmed/doctype/antmed_hospital/` với module = `AntMed`, custom = 0 (doctype của app, đi theo code).
-- **Always** tạo DocType **`AntMed Doctor`** tại `crm/antmed/doctype/antmed_doctor/`, module = `AntMed`.
+- **Always** tạo DocType **`AntMed Hospital`** tại `antmed_crm/antmed/doctype/antmed_hospital/` với module = `AntMed`, custom = 0 (doctype của app, đi theo code).
+- **Always** tạo DocType **`AntMed Doctor`** tại `antmed_crm/antmed/doctype/antmed_doctor/`, module = `AntMed`.
 - **Always** dùng naming an toàn (xem §DocTypes): Hospital autoname `field:hospital_code` (hoặc series riêng), Doctor naming_series `AM-DOC-.YYYY.-.####`. **Never** dùng `AM-DR` (reserve cho M04 Delivery Request).
-- **Always** đặt endpoint trong `crm/api/antmed/customer.py`, đường gọi `antmed_crm.api.antmed.customer.<fn>`, **type-annotated** (vì `crm/hooks.py:28 require_type_annotated_api_methods = True`), trả **RAW dict/list** (KHÔNG envelope).
+- **Always** đặt endpoint trong `antmed_crm/api/antmed/customer.py`, đường gọi `antmed_crm.api.antmed.customer.<fn>`, **type-annotated** (vì `antmed_crm/hooks.py:28 require_type_annotated_api_methods = True`), trả **RAW dict/list** (KHÔNG envelope).
 - **Always** giữ invariant **count == len(data)** ở `list_hospitals` khi không phân trang (BR-13 count==rows).
 - **Always** `get_hospital`/`get_doctor` gọi `frappe.has_permission(...)` và `frappe.throw(..., frappe.PermissionError)` khi không read được.
 - **Always** thêm DocPerm cho 3 Role R1 trên 2 DocType mới (read tối thiểu cho Sales Rep; read+write cho Manager) — xem §Permissions.
@@ -56,7 +56,7 @@ Theo `AntMed_CRM_Modules.md §1` (mô tả nghiệp vụ ground-truth):
 
 ### Never (R2 TUYỆT ĐỐI KHÔNG)
 - **Never** extend/sửa `CRM Organization` hay `Contact` để nhồi field y tế (ADR-M01-04). 2 DocType mới là độc lập.
-- **Never** dùng naming series `AM-DR-…` (đụng M04). **Never** tái dùng prefix doctype `AM ` (in-place dùng `AntMed ` — ADR-M01-02).
+- **Never** dùng naming series `AM-DR-…` (đụng M04). **Never** tái dùng prefix doctype `AM ` (app riêng `antmed_crm` dùng `AntMed ` — ADR-M01-02).
 - **Never** tạo child table (departments / decision_makers / preferences / interaction timeline) ở R2 — **OUT-of-scope, backlog R3+**.
 - **Never** wiring `contract_status` vào quota/BR-01/BR-06 — nhãn tĩnh thôi.
 - **Never** đụng route/page/store Frappe CRM gốc (Leads/Deals/Contacts/Organizations còn NGUYÊN). Chỉ THÊM route `/antmed/...`.
@@ -131,7 +131,7 @@ Theo `AntMed_CRM_Modules.md §1` (mô tả nghiệp vụ ground-truth):
 
 ## API
 
-> File: `crm/api/antmed/customer.py`. Mọi hàm `@frappe.whitelist(methods=["GET"])`, **type-annotated**, trả **RAW**. Lỗi nghiệp vụ/permission = `frappe.throw(...)` in-handler (Frappe trả exception JSON; KHÔNG envelope).
+> File: `antmed_crm/api/antmed/customer.py`. Mọi hàm `@frappe.whitelist(methods=["GET"])`, **type-annotated**, trả **RAW**. Lỗi nghiệp vụ/permission = `frappe.throw(...)` in-handler (Frappe trả exception JSON; KHÔNG envelope).
 
 ### 1) `antmed_crm.api.antmed.customer.list_hospitals`
 
@@ -269,10 +269,10 @@ R2 gắn DocPerm tối thiểu cho 2 DocType mới (định nghĩa trong JSON Do
 
 ## Integration
 
-- **R2 KHÔNG thêm `doc_events` / `permission_query_conditions` mới vào `crm/hooks.py`.** Chỉ thêm 2 DocType + 1 file API. `hooks.py` chỉ có thể cần append fixtures nếu export DocPerm qua fixture — **KHÔNG bắt buộc**: DocPerm đi trong JSON DocType (theo code), không cần fixture riêng.
+- **R2 KHÔNG thêm `doc_events` / `permission_query_conditions` mới vào `antmed_crm/hooks.py`.** Chỉ thêm 2 DocType + 1 file API. `hooks.py` chỉ có thể cần append fixtures nếu export DocPerm qua fixture — **KHÔNG bắt buộc**: DocPerm đi trong JSON DocType (theo code), không cần fixture riêng.
 - **No-regression bắt buộc** (giữ xanh sau R2):
-  - `crm.tests.test_antmed_bootstrap` (6 test R1).
-  - 4 test gốc CRM: `crm.permissions.test_org_hierarchy`, `crm.fcrm.doctype.crm_lead.test_crm_lead`, `crm.fcrm.doctype.crm_task.test_crm_task`, `crm.fcrm.doctype.crm_territory.test_crm_territory`.
+  - `antmed_crm.tests.test_antmed_bootstrap` (6 test R1).
+  - 4 test gốc CRM: `antmed_crm.permissions.test_org_hierarchy`, `antmed_crm.fcrm.doctype.crm_lead.test_crm_lead`, `antmed_crm.fcrm.doctype.crm_task.test_crm_task`, `antmed_crm.fcrm.doctype.crm_territory.test_crm_territory`.
 - FE: `yarn build` emit chunk mới (Antmed*) **không vỡ** chunk cũ; route CRM gốc còn nguyên.
 - **Dependency hướng tới**: M02 (hợp đồng) Link→`AntMed Hospital`; M04 (giao phòng mổ) Link→`AntMed Doctor`/`AntMed Hospital`; M08 pipeline phân vai KH dựa trên `contract_status`. Vì vậy 2 DocType này phải **ổn định tên + khoá** ngay R2 (lý do reserve `AM-DR`, chốt naming `AM-DOC-`).
 
@@ -320,8 +320,8 @@ R2 gắn DocPerm tối thiểu cho 2 DocType mới (định nghĩa trong JSON Do
 ## Test harness (acceptance)
 
 ### BE test (TDD — phải xanh THẬT)
-- File *(BE chốt)*: `crm/tests/test_antmed_customer.py` (chạy chung `before_tests`).
-- Lệnh: `bench --site miyano run-tests --module crm.tests.test_antmed_customer` → **`Ran N tests ... OK`**.
+- File *(BE chốt)*: `antmed_crm/tests/test_antmed_customer.py` (chạy chung `before_tests`).
+- Lệnh: `bench --site miyano run-tests --module antmed_crm.tests.test_antmed_customer` → **`Ran N tests ... OK`**.
 - TC tối thiểu (BE viết failing-first):
   1. `AntMed Hospital` tồn tại sau migrate + có đủ field tối thiểu (`frappe.get_meta` chứa `hospital_code`, `hospital_name`, `rank`, `tax_code`, `address`, `contract_status`).
   2. `hospital_code` unique (tạo 2 BV cùng code → `frappe.exceptions.DuplicateEntryError`/ValidationError).
@@ -344,11 +344,11 @@ R2 gắn DocPerm tối thiểu cho 2 DocType mới (định nghĩa trong JSON Do
 
 > BA chốt spec; dev thực thi. TDD: viết test failing trước.
 
-1. **BE**: tạo DocType JSON `crm/antmed/doctype/antmed_hospital/antmed_hospital.json` (+ `.py` controller rỗng kế thừa `Document`, `__init__.py`) theo §DocTypes; gắn DocPerm §Permissions.
+1. **BE**: tạo DocType JSON `antmed_crm/antmed/doctype/antmed_hospital/antmed_hospital.json` (+ `.py` controller rỗng kế thừa `Document`, `__init__.py`) theo §DocTypes; gắn DocPerm §Permissions.
 2. **BE**: tạo DocType `antmed_doctor` tương tự (naming_series `AM-DOC-.YYYY.-.####`).
 3. **BE**: `bench --site miyano migrate` → verify `frappe.db.exists("DocType","AntMed Hospital")` & `"AntMed Doctor"`; verify naming sinh `AM-DOC-…`.
-4. **BE**: viết `crm/api/antmed/customer.py` 4 hàm (type hint, RAW, count==rows, PermissionError).
-5. **BE**: viết `crm/tests/test_antmed_customer.py` (failing-first) → cho xanh; chạy lại no-regression (bootstrap 6 + 4 gốc).
+4. **BE**: viết `antmed_crm/api/antmed/customer.py` 4 hàm (type hint, RAW, count==rows, PermissionError).
+5. **BE**: viết `antmed_crm/tests/test_antmed_customer.py` (failing-first) → cho xanh; chạy lại no-regression (bootstrap 6 + 4 gốc).
 6. **FE**: tạo 3 page Antmed* + APPEND 3 route vào `router.js`; wire `createResource`→`antmed_crm.api.antmed.customer.*`; vitest + `yarn build` xanh.
 7. **QA**: sau khi user reload BE (gunicorn --preload), Playwright smoke `/antmed/hospitals` → click → detail → doctor.
 
@@ -361,11 +361,11 @@ R2 gắn DocPerm tối thiểu cho 2 DocType mới (định nghĩa trong JSON Do
 ### ADR-M01-04: DocType mới `AntMed Hospital` + `AntMed Doctor` (KHÔNG extend `CRM Organization`/`Contact`)
 - **Status**: Accepted
 - **Date**: 2026-06-17
-- **Context**: Customer 360° cần field y tế đặc thù — hạng BV (Đặc biệt/I/II/III), MST pháp nhân, trạng thái hợp đồng, chuyên khoa, sinh nhật, ghi chú cá nhân, Link bác sỹ→BV. `CRM Organization` (autoname `field:organization_name`) và `Contact` của Frappe **thiếu toàn bộ** field này; ERPNext `Customer` **không cài** trong app `crm` (site `miyano` không có ERPNext) nên reference scaffold `am_hospital_profile` autoname:customer KHÔNG mirror 1:1 được. (Verified @ source: `crm/fcrm/doctype/crm_organization/crm_organization.json` không có rank/tax_code/contract_status; PM đã chốt @ STATE R2.)
+- **Context**: Customer 360° cần field y tế đặc thù — hạng BV (Đặc biệt/I/II/III), MST pháp nhân, trạng thái hợp đồng, chuyên khoa, sinh nhật, ghi chú cá nhân, Link bác sỹ→BV. `CRM Organization` (autoname `field:organization_name`) và `Contact` của Frappe **thiếu toàn bộ** field này; ERPNext `Customer` **không cài** trong app `antmed_crm` (site `miyano` không có ERPNext) nên reference scaffold `am_hospital_profile` autoname:customer KHÔNG mirror 1:1 được. (Verified @ source: `antmed_crm/fcrm/doctype/crm_organization/crm_organization.json` không có rank/tax_code/contract_status; PM đã chốt @ STATE R2.)
 - **Decision**: Tạo 2 DocType độc lập `AntMed Hospital` + `AntMed Doctor` trong module `AntMed`, KHÔNG extend/sửa Organization/Contact.
 - **Alternatives**:
   - *Custom Field nhồi vào `CRM Organization`/`Contact`* — loại: trộn dữ liệu CRM bán hàng gốc với master data y tế, khó data-scope BR-13 về sau, dễ đụng test gốc, autoname không khớp khoá nghiệp vụ (mã BV).
-  - *Tái dùng ERPNext `Customer`* — loại: ERPNext không có trong app `crm`/site `miyano`.
+  - *Tái dùng ERPNext `Customer`* — loại: ERPNext không có trong app `antmed_crm`/site `miyano`.
 - **Consequences**:
   - (+) Schema sạch, khoá nghiệp vụ tự nhiên (`hospital_code`), độc lập để gắn quota/giao hàng/audit về sau.
   - (−) Không tự hưởng tính năng Contact/Organization gốc (timeline, social) — chấp nhận, timeline hợp nhất là backlog R3+.
@@ -381,14 +381,14 @@ R2 gắn DocPerm tối thiểu cho 2 DocType mới (định nghĩa trong JSON Do
   - (+) R2 gọn, list endpoint chạy thật, test count==rows xanh.
   - (−) Tạm thời mọi Sales Rep thấy mọi BV — chấp nhận ở R2 (master data nội bộ); khi R3 thêm assignment + `permission_query_conditions`, viết ADR Supersede và bổ sung test data-scope (count==rows theo từng NV).
 
-> ADR-M01-01..03 (in-place, prefix `AntMed `, fixtures) ở `m01_bootstrap.md` vẫn áp dụng — R2 kế thừa, không Supersede.
+> ADR-M01-01..03 (gốc: in-place; THỰC TẾ = app RIÊNG `antmed_crm`, prefix `AntMed `, fixtures) ở `m01_bootstrap.md` vẫn áp dụng — R2 kế thừa, không Supersede.
 
 ---
 
 ## Tham chiếu chéo
 - **Boot gate cho pages `/antmed/*` (W0-2, DEC-B)**: `./m14_rbac_w0_antmed_boot.md` — user role AntMed thuần (`NV kinh doanh`) boot được vào các page Customer 360° này qua allow-check additive (mở Gate-1 HTML / Gate-2 session / Gate-3 router cho route `/antmed/*`).
 - Foundation R1: `./m01_bootstrap.md` (namespace, 3 Role, ping, ADR-01..03)
-- Convention naming FE↔BE: `./m01_naming_conventions.md` (+ `crm/antmed/README.md`)
+- Convention naming FE↔BE: `./m01_naming_conventions.md` (+ `antmed_crm/antmed/README.md`)
 - Mô tả nghiệp vụ 14 module: `../../antmed_crm/docs/AntMed_CRM_Modules.md` §1 (dòng 13–14 ground-truth field)
 - UI 7 vai trò: `../../antmed_crm/docs/AntMed_CRM_UI_Design.md`
-- Source thật đã verify: `crm/modules.txt` (module `AntMed`), `crm/api/antmed/` (package), `crm/fixtures/role.json` (3 Role), `crm/fcrm/doctype/crm_organization/crm_organization.json` (autoname `field:`, thiếu field y tế), `frontend/src/router.js` (route `/antmed` đã có), `crm/hooks.py:28` (`require_type_annotated_api_methods`).
+- Source thật đã verify: `antmed_crm/modules.txt` (module `AntMed`), `antmed_crm/api/antmed/` (package), `antmed_crm/fixtures/role.json` (3 Role), `antmed_crm/fcrm/doctype/crm_organization/crm_organization.json` (autoname `field:`, thiếu field y tế), `frontend/src/router.js` (route `/antmed` đã có), `antmed_crm/hooks.py:28` (`require_type_annotated_api_methods`).

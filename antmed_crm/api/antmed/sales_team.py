@@ -240,7 +240,9 @@ def _statuses_of_type(types: list[str]) -> set[str]:
 	get_all trên doctype cấu hình (CRM Deal Status) — KHÔNG bị data-scope NV, dùng để PHÂN LOẠI
 	status (không phải đọc deal). Trả set tên status (dùng so khớp deal.status ở Python).
 	"""
-	rows = frappe.get_all(DEAL_STATUS_DOCTYPE, filters={"type": ["in", types]}, pluck="name", limit_page_length=0)
+	rows = frappe.get_all(
+		DEAL_STATUS_DOCTYPE, filters={"type": ["in", types]}, pluck="name", limit_page_length=0
+	)
 	return set(rows)
 
 
@@ -645,6 +647,7 @@ def rep_profile(owner: str) -> dict:
 		},
 		"deals": deals,
 	}
+
 
 # ════════════════════════════════════════════════════════════════════════════
 # M02-10 "Doanh thu theo NV Kinh doanh × Bệnh viện" (mockup A3) — revenue_by_rep_hospital()

@@ -67,18 +67,52 @@ def _build_lines(delivery_name: str) -> tuple[list, list]:
 	"""Dựng dòng chứng từ từ phiếu giao + đánh dấu CO/CQ. Trả (lines, missing_item_codes).
 
 	requires_cocq lấy từ AntMed Item; co/cq attached = lô có co_cert/cq_cert (AntMed Lot).
+	KHÔNG N+1: bulk-fetch distinct item/lot (≤2 query) → map ở Python (giống list_release_queue).
+	Output-identical với loop get_value cũ: item/lot absent trong map → default 0 (= get_value None→0).
 	"""
 	dlv = frappe.get_doc(DELIVERY_DOCTYPE, delivery_name)
+
+	# BULK 1: item distinct → requires_cocq (1 query, rỗng-safe — KHÔNG query `in []`).
+	item_codes = list({it.item for it in dlv.items if it.item})
+	requires_map: dict = {}
+	if item_codes:
+		for r in frappe.get_all(
+			"AntMed Item",
+			filters=[["name", "in", item_codes]],
+			fields=["name", "requires_cocq"],
+			limit_page_length=0,
+		):
+			requires_map[r["name"]] = int(r.get("requires_cocq") or 0)
+
+	# BULK 2: lot distinct → (co_cert, cq_cert) (1 query, rỗng-safe).
+	lot_codes = list({it.lot for it in dlv.items if it.lot})
+	cert_map: dict = {}
+	if lot_codes:
+		for r in frappe.get_all(
+			"AntMed Lot",
+			filters=[["name", "in", lot_codes]],
+			fields=["name", "co_cert", "cq_cert"],
+			limit_page_length=0,
+		):
+			cert_map[r["name"]] = (r.get("co_cert"), r.get("cq_cert"))
+
 	lines, missing = [], []
 	for it in dlv.items:
-		requires = int(frappe.db.get_value("AntMed Item", it.item, "requires_cocq") or 0) if it.item else 0
+		requires = requires_map.get(it.item, 0) if it.item else 0
 		co = cq = 0
 		if it.lot:
-			cert = frappe.db.get_value("AntMed Lot", it.lot, ["co_cert", "cq_cert"]) or (None, None)
+			cert = cert_map.get(it.lot) or (None, None)
 			co = 1 if cert[0] else 0
 			cq = 1 if cert[1] else 0
 		lines.append(
-			{"item": it.item, "lot": it.lot, "qty": it.requested_qty, "requires_cocq": requires, "co_attached": co, "cq_attached": cq}
+			{
+				"item": it.item,
+				"lot": it.lot,
+				"qty": it.requested_qty,
+				"requires_cocq": requires,
+				"co_attached": co,
+				"cq_attached": cq,
+			}
 		)
 		if requires and not (co and cq):
 			missing.append(it.item)
@@ -139,7 +173,11 @@ def refresh_release_status(delivery: str) -> dict:
 	bundle.missing_items = json.dumps(missing, ensure_ascii=False)
 	bundle.save(ignore_permissions=True)
 	if frappe.db.exists(QUEUE_DOCTYPE, delivery):
-		frappe.db.set_value(QUEUE_DOCTYPE, delivery, {"status": status, "missing_chips": json.dumps(missing, ensure_ascii=False)})
+		frappe.db.set_value(
+			QUEUE_DOCTYPE,
+			delivery,
+			{"status": status, "missing_chips": json.dumps(missing, ensure_ascii=False)},
+		)
 	return {"bundle": bundle_name, "status": status, "missing": missing}
 
 
@@ -278,7 +316,9 @@ def get_bundle(name: str) -> dict:
 
 
 @frappe.whitelist(methods=["POST"])
-def attach_cocq(lot: str, cert_type: str, cert_no: str, item: str | None = None, file_url: str | None = None) -> dict:
+def attach_cocq(
+	lot: str, cert_type: str, cert_no: str, item: str | None = None, file_url: str | None = None
+) -> dict:
 	"""Gắn 1 chứng từ CO hoặc CQ vào lô (tạo AntMed Certificate + set lô.co_cert/cq_cert).
 
 	(hash_sha256 file + audit BR-10 wire ở M14.)
@@ -288,7 +328,14 @@ def attach_cocq(lot: str, cert_type: str, cert_no: str, item: str | None = None,
 	if not frappe.has_permission(CERTIFICATE_DOCTYPE, "create"):
 		frappe.throw(_("Bạn không có quyền gắn chứng từ."), frappe.PermissionError)
 	cert = frappe.get_doc(
-		{"doctype": CERTIFICATE_DOCTYPE, "cert_no": cert_no, "cert_type": cert_type, "lot": lot, "item": item, "file_url": file_url}
+		{
+			"doctype": CERTIFICATE_DOCTYPE,
+			"cert_no": cert_no,
+			"cert_type": cert_type,
+			"lot": lot,
+			"item": item,
+			"file_url": file_url,
+		}
 	)
 	cert.insert(ignore_permissions=True)
 	field = "co_cert" if cert_type == "CO" else "cq_cert"
@@ -297,7 +344,9 @@ def attach_cocq(lot: str, cert_type: str, cert_no: str, item: str | None = None,
 
 
 @frappe.whitelist(methods=["GET"])
-def list_cocq_store(cert_type: str | None = None, search: str | None = None, start: int = 0, page_length: int = 20) -> dict:
+def list_cocq_store(
+	cert_type: str | None = None, search: str | None = None, start: int = 0, page_length: int = 20
+) -> dict:
 	"""Kho CO/CQ (danh sách chứng từ). Trả RAW {data, total_count} — count==rows dưới DocPerm."""
 	conditions = []
 	if cert_type:
@@ -315,7 +364,9 @@ def list_cocq_store(cert_type: str | None = None, search: str | None = None, sta
 		order_by="modified desc",
 	)
 	data = [{k: r.get(k) for k in CERT_LIST_ITEM_KEYS} for r in rows]
-	total_count = len(frappe.get_list(CERTIFICATE_DOCTYPE, filters=conditions, pluck="name", limit_page_length=0))
+	total_count = len(
+		frappe.get_list(CERTIFICATE_DOCTYPE, filters=conditions, pluck="name", limit_page_length=0)
+	)
 	return {"data": data, "total_count": total_count}
 
 
@@ -344,7 +395,11 @@ def issue_einvoice(delivery: str) -> dict:
 		frappe.throw(_("Bạn không có quyền phát hành hóa đơn điện tử."), frappe.PermissionError)
 	existing = frappe.db.get_value(EINVOICE_DOCTYPE, {"delivery": delivery}, "name")
 	if existing:
-		return {"einvoice": existing, "status": frappe.db.get_value(EINVOICE_DOCTYPE, existing, "status"), "stub": True}
+		return {
+			"einvoice": existing,
+			"status": frappe.db.get_value(EINVOICE_DOCTYPE, existing, "status"),
+			"stub": True,
+		}
 
 	assert_cocq_complete(delivery)  # BR-03 hard gate
 
@@ -353,7 +408,13 @@ def issue_einvoice(delivery: str) -> dict:
 	bundle = frappe.db.get_value(DOCUMENT_DOCTYPE, {"delivery": delivery}, "name")
 	provider = frappe.db.get_single_value(PROVIDER_DOCTYPE, "default_provider") or "Viettel"
 	ev = frappe.get_doc(
-		{"doctype": EINVOICE_DOCTYPE, "delivery": delivery, "document_bundle": bundle, "provider": provider, "status": "Chờ ký"}
+		{
+			"doctype": EINVOICE_DOCTYPE,
+			"delivery": delivery,
+			"document_bundle": bundle,
+			"provider": provider,
+			"status": "Chờ ký",
+		}
 	)
 	ev.insert(ignore_permissions=True)
 	# STUB ký + phát hành (dev-mode): KHÔNG network thật, mã CQT giả.
@@ -385,7 +446,9 @@ def list_einvoices(status: str | None = None, start: int = 0, page_length: int =
 		order_by="modified desc",
 	)
 	data = [{k: r.get(k) for k in EINVOICE_LIST_ITEM_KEYS} for r in rows]
-	total_count = len(frappe.get_list(EINVOICE_DOCTYPE, filters=conditions, pluck="name", limit_page_length=0))
+	total_count = len(
+		frappe.get_list(EINVOICE_DOCTYPE, filters=conditions, pluck="name", limit_page_length=0)
+	)
 	return {"data": data, "total_count": total_count}
 
 
@@ -404,7 +467,9 @@ def get_provider_settings() -> dict:
 
 
 @frappe.whitelist(methods=["POST"])
-def confirm_handover(delivery: str, hospital_contact: str | None = None, signature_file: str | None = None) -> dict:
+def confirm_handover(
+	delivery: str, hospital_contact: str | None = None, signature_file: str | None = None
+) -> dict:
 	"""BV ký nhận chứng từ → tạo + submit AntMed Handover Confirmation (hash chống sửa), bundle 'BV đã ký nhận'.
 
 	Idempotent: 1 xác nhận / phiếu giao. (Audit hash-chain đầy đủ ở M14.)
@@ -413,7 +478,11 @@ def confirm_handover(delivery: str, hospital_contact: str | None = None, signatu
 		frappe.throw(_("Bạn không có quyền xác nhận ký nhận."), frappe.PermissionError)
 	existing = frappe.db.get_value(HANDOVER_DOCTYPE, {"delivery": delivery}, "name")
 	if existing:
-		return {"handover": existing, "status": "BV đã ký nhận", "hash": frappe.db.get_value(HANDOVER_DOCTYPE, existing, "hash_sha256")}
+		return {
+			"handover": existing,
+			"status": "BV đã ký nhận",
+			"hash": frappe.db.get_value(HANDOVER_DOCTYPE, existing, "hash_sha256"),
+		}
 
 	import hashlib
 
@@ -456,5 +525,7 @@ def list_handover_review(start: int = 0, page_length: int = 20) -> dict:
 		order_by=f"`tab{DOCUMENT_DOCTYPE}`.modified desc",
 	)
 	data = [{k: r.get(k) for k in HANDOVER_LIST_ITEM_KEYS} for r in rows]
-	total_count = len(frappe.get_list(DOCUMENT_DOCTYPE, filters=conditions, pluck="name", limit_page_length=0))
+	total_count = len(
+		frappe.get_list(DOCUMENT_DOCTYPE, filters=conditions, pluck="name", limit_page_length=0)
+	)
 	return {"data": data, "total_count": total_count}

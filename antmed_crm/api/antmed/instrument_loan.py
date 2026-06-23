@@ -11,6 +11,8 @@ import frappe
 from frappe import _
 from frappe.utils import date_diff, get_datetime, get_first_day, now_datetime
 
+from antmed_crm.api.antmed._filters import coerce_filters
+
 SET_DOCTYPE = "AntMed Instrument Set"
 LOAN_DOCTYPE = "AntMed Instrument Loan"
 STERILIZATION_DOCTYPE = "AntMed Sterilization"
@@ -38,7 +40,15 @@ OPEN_LOAN_STATES = (
 OVERDUE_STATES = ("Đang sử dụng tại BV", "Đã trả về NV KD")
 
 LOAN_LIST_FIELDS = ["name", "instrument_set", "hospital", "status", "employee", "booked_at", "due_return_at"]
-LOAN_LIST_ITEM_KEYS = ("name", "instrument_set", "hospital", "status", "employee", "booked_at", "due_return_at")
+LOAN_LIST_ITEM_KEYS = (
+	"name",
+	"instrument_set",
+	"hospital",
+	"status",
+	"employee",
+	"booked_at",
+	"due_return_at",
+)
 LOAN_DETAIL_FIELDS = (
 	"name",
 	"instrument_set",
@@ -59,8 +69,16 @@ def _check_loan_write(name: str) -> None:
 	if not frappe.has_permission(LOAN_DOCTYPE, "write", doc=name):
 		frappe.throw(_("Bạn không có quyền cập nhật lượt mượn này."), frappe.PermissionError)
 
+
 SET_LIST_FIELDS = ["name", "set_code", "surgery_type", "current_status", "current_holder", "lifetime_loans"]
-SET_LIST_ITEM_KEYS = ("name", "set_code", "surgery_type", "current_status", "current_holder", "lifetime_loans")
+SET_LIST_ITEM_KEYS = (
+	"name",
+	"set_code",
+	"surgery_type",
+	"current_status",
+	"current_holder",
+	"lifetime_loans",
+)
 SET_DETAIL_FIELDS = (
 	"name",
 	"set_code",
@@ -77,13 +95,7 @@ COMPONENT_KEYS = ("component_name", "qty", "criticality", "reference_photo")
 
 
 def _coerce_filters(filters: dict | str | None) -> list:
-	if not filters:
-		return []
-	if isinstance(filters, str):
-		filters = frappe.parse_json(filters) or []
-	if isinstance(filters, dict):
-		return [[k, "=", v] for k, v in filters.items()]
-	return list(filters)
+	return coerce_filters(filters)
 
 
 @frappe.whitelist(methods=["GET"])
@@ -210,8 +222,12 @@ def receive_return(loan: str) -> dict:
 	if doc.status != "Đang sử dụng tại BV":
 		frappe.throw(_("Chỉ nhận về lượt đang 'Đang sử dụng tại BV' (hiện: {0}).").format(doc.status))
 	now = now_datetime()
-	frappe.db.set_value(LOAN_DOCTYPE, loan, {"status": "Đã trả về NV KD", "returned_at": now}, update_modified=False)
-	frappe.db.set_value(SET_DOCTYPE, doc.instrument_set, "current_status", "Đã trả về NV KD", update_modified=False)
+	frappe.db.set_value(
+		LOAN_DOCTYPE, loan, {"status": "Đã trả về NV KD", "returned_at": now}, update_modified=False
+	)
+	frappe.db.set_value(
+		SET_DOCTYPE, doc.instrument_set, "current_status", "Đã trả về NV KD", update_modified=False
+	)
 	return {"name": loan, "status": "Đã trả về NV KD", "returned_at": str(now)}
 
 
@@ -259,14 +275,18 @@ def get_loan(name: str) -> dict:
 
 	# Enrich cho FE C3 — tên đọc được (LL-FE *_name) + ngữ cảnh bộ + cờ quá hạn.
 	sinfo = (
-		frappe.db.get_value(SET_DOCTYPE, doc.get("instrument_set"), ["set_code", "surgery_type"], as_dict=True)
+		frappe.db.get_value(
+			SET_DOCTYPE, doc.get("instrument_set"), ["set_code", "surgery_type"], as_dict=True
+		)
 		if doc.get("instrument_set")
 		else None
 	) or {}
 	result["set_code"] = sinfo.get("set_code")
 	result["surgery_type"] = sinfo.get("surgery_type")
 	result["hospital_name"] = (
-		frappe.db.get_value("AntMed Hospital", doc.get("hospital"), "hospital_name") if doc.get("hospital") else None
+		frappe.db.get_value("AntMed Hospital", doc.get("hospital"), "hospital_name")
+		if doc.get("hospital")
+		else None
 	)
 	result["doctor_name"] = (
 		frappe.db.get_value("AntMed Doctor", doc.get("doctor"), "full_name") if doc.get("doctor") else None
@@ -343,7 +363,9 @@ def mark_ready(loan: str) -> dict:
 	if not frappe.db.exists(STERILIZATION_DOCTYPE, {"loan": loan, "result": "Pass"}):
 		frappe.throw(_("BR-09: Bộ phải có kết quả tiệt khuẩn Pass trước khi sẵn sàng cho mượn lại."))
 	frappe.db.set_value(LOAN_DOCTYPE, loan, "status", "Đã đóng", update_modified=False)
-	frappe.db.set_value(SET_DOCTYPE, loan_doc.instrument_set, "current_status", "Sẵn sàng", update_modified=False)
+	frappe.db.set_value(
+		SET_DOCTYPE, loan_doc.instrument_set, "current_status", "Sẵn sàng", update_modified=False
+	)
 	return {"name": loan, "status": "Đã đóng", "set_status": "Sẵn sàng"}
 
 
@@ -404,7 +426,16 @@ def board(current_status: str | None = None, search: str | None = None) -> dict:
 		for ln in frappe.get_all(
 			LOAN_DOCTYPE,
 			filters={"instrument_set": ["in", set_names], "status": ["in", OPEN_LOAN_STATES]},
-			fields=["name", "instrument_set", "hospital", "doctor", "employee", "status", "booked_at", "due_return_at"],
+			fields=[
+				"name",
+				"instrument_set",
+				"hospital",
+				"doctor",
+				"employee",
+				"status",
+				"booked_at",
+				"due_return_at",
+			],
 			order_by="booked_at desc",
 			limit_page_length=0,
 		):
@@ -452,7 +483,10 @@ def _board_kpis() -> dict:
 	overdue = sum(
 		1
 		for ln in frappe.get_all(
-			LOAN_DOCTYPE, filters={"status": ["in", OVERDUE_STATES]}, fields=["due_return_at", "status"], limit_page_length=0
+			LOAN_DOCTYPE,
+			filters={"status": ["in", OVERDUE_STATES]},
+			fields=["due_return_at", "status"],
+			limit_page_length=0,
 		)
 		if _is_overdue(ln.due_return_at, ln.status)
 	)
@@ -568,7 +602,9 @@ def report_incident(
 	frappe.db.set_value(LOAN_DOCTYPE, loan, "status", "Sự cố", update_modified=False)
 	set_status = _INCIDENT_SET_STATUS.get(incident_type)
 	if set_status:
-		frappe.db.set_value(SET_DOCTYPE, loan_doc.instrument_set, "current_status", set_status, update_modified=False)
+		frappe.db.set_value(
+			SET_DOCTYPE, loan_doc.instrument_set, "current_status", set_status, update_modified=False
+		)
 	return {"incident": inc.name, "loan_status": "Sự cố", "set_status": set_status}
 
 
@@ -581,12 +617,18 @@ def check_overdue_loans() -> dict:
 	overdue = frappe.get_all(
 		LOAN_DOCTYPE,
 		filters={"status": ["in", OVERDUE_STATES], "due_return_at": ["<", now]},
-		fields=["name", "instrument_set", "hospital"],
+		fields=["name", "instrument_set", "hospital", "employee"],
 		limit_page_length=0,
 	)
 	for o in overdue:
 		try:
-			frappe.publish_realtime("antmed_loan_overdue", {"loan": o["name"], "instrument_set": o["instrument_set"]})
+			# Scope realtime tới NV chịu trách nhiệm lượt mượn (KHÔNG broadcast toàn site —
+			# tránh rò sang co-tenant + frappe-realtime-pick-room rule). Pattern: send_call_plan_today.
+			frappe.publish_realtime(
+				"antmed_loan_overdue",
+				{"loan": o["name"], "instrument_set": o["instrument_set"]},
+				user=o.get("employee"),
+			)
 		except Exception:
 			frappe.log_error(frappe.get_traceback(), "M05 check_overdue_loans publish_realtime")
 	return {"count": len(overdue), "overdue": [o["name"] for o in overdue]}

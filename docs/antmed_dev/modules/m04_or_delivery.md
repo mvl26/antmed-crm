@@ -2,9 +2,9 @@
 
 | Mục | Giá trị |
 |---|---|
-| Module folder | `crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) |
-| DocType folder | `crm/antmed/doctype/antmed_delivery/`, `.../antmed_or_schedule/`, `.../antmed_sla_log/`, `.../antmed_delivery_item/` … (đề xuất) |
-| Code path BE | `crm/antmed/doctype/<snake>/` + `crm/api/antmed/delivery.py` (đường gọi `antmed_crm.api.antmed.delivery.<fn>`) |
+| Module folder | `antmed_crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) |
+| DocType folder | `antmed_crm/antmed/doctype/antmed_delivery/`, `.../antmed_or_schedule/`, `.../antmed_sla_log/`, `.../antmed_delivery_item/` … (đề xuất) |
+| Code path BE | `antmed_crm/antmed/doctype/<snake>/` + `antmed_crm/api/antmed/delivery.py` (đường gọi `antmed_crm.api.antmed.delivery.<fn>`) |
 | FE pages | `frontend/src/pages/Antmed*` + route `/antmed/deliveries`, `/antmed/deliveries/:name`, `/antmed/dispatch` (kanban) |
 | Wave (PLAN) | **W2 — Chuỗi vận hành lõi** (M04 → M06 → M09, tuần tự) |
 | Role chính (VI) | `NV kinh doanh` (giao tại phòng mổ), `Quản lý` (điều phối/gán NV, duyệt ngoài thầu); `Thủ kho` (xuất kho cá nhân) — [PLANNED] thêm `Trưởng phòng KD` nếu tách vai điều phối khỏi `Quản lý` |
@@ -58,7 +58,7 @@ Vai trò trong 14 module (theo DAG `PLAN §2`): M04 nằm **giữa chuỗi vận
 
 ## 3. Workflow
 
-**CÓ workflow** (state machine) — đây là khác biệt lõi của M04. Dùng **Frappe Workflow gốc** (D2): định nghĩa trong fixture `crm/fixtures/workflow.json` + `docstatus`, state field = **`workflow_state`**. States/transitions **tiếng Việt** (key kỹ thuật giữ ở action; nhãn VI). Adapt từ scaffold `status` (`Draft\nTriaged\nAssigned\nInTransit\nDelivered\nClosed\nRejected`, ~7 trạng thái + submittable).
+**CÓ workflow** (state machine) — đây là khác biệt lõi của M04. Dùng **Frappe Workflow gốc** (D2): định nghĩa trong fixture `antmed_crm/fixtures/workflow.json` + `docstatus`, state field = **`workflow_state`**. States/transitions **tiếng Việt** (key kỹ thuật giữ ở action; nhãn VI). Adapt từ scaffold `status` (`Draft\nTriaged\nAssigned\nInTransit\nDelivered\nClosed\nRejected`, ~7 trạng thái + submittable).
 
 **Workflow `AntMed DR Workflow`** (đề xuất — ~6 state hữu dụng + 1 nhánh từ chối):
 
@@ -86,7 +86,7 @@ Vai trò trong 14 module (theo DAG `PLAN §2`): M04 nằm **giữa chuỗi vận
 
 ## 4. Business Rules
 
-> Enforce theo **Frappe-standard**: rule trong **module hooks** (`crm/antmed/m04_delivery_hooks.py` hoặc controller `antmed_delivery.py`) wired qua `doc_events` trong `crm/hooks.py`; lỗi nghiệp vụ = `frappe.throw(_("BR-XX: …tiếng Việt"))`. Adapt vị trí enforce từ README (cột "Vị trí" — đổi `AM Delivery Request`/`Delivery Note`→`AntMed Delivery`, `api/delivery`→`antmed_crm.api.antmed.delivery`).
+> Enforce theo **Frappe-standard**: rule trong **module hooks** (`antmed_crm/antmed/m04_delivery_hooks.py` hoặc controller `antmed_delivery.py`) wired qua `doc_events` trong `antmed_crm/hooks.py`; lỗi nghiệp vụ = `frappe.throw(_("BR-XX: …tiếng Việt"))`. Adapt vị trí enforce từ README (cột "Vị trí" — đổi `AM Delivery Request`/`Delivery Note`→`AntMed Delivery`, `api/delivery`→`antmed_crm.api.antmed.delivery`).
 
 | BR | Mô tả | Nơi enforce (đề xuất, native-lite) |
 |---|---|---|
@@ -103,7 +103,7 @@ Vai trò trong 14 module (theo DAG `PLAN §2`): M04 nằm **giữa chuỗi vận
 
 ## 5. API
 
-> File: `crm/api/antmed/delivery.py`. Mọi hàm `@frappe.whitelist(methods=["GET"|"POST"])`, **type-annotated** (`crm/hooks.py:require_type_annotated_api_methods`), trả **RAW dict/list** (KHÔNG `_ok/_err` envelope). Lỗi nghiệp vụ/permission = `frappe.throw(...)` in-handler. Đường gọi `antmed_crm.api.antmed.delivery.<fn>`.
+> File: `antmed_crm/api/antmed/delivery.py`. Mọi hàm `@frappe.whitelist(methods=["GET"|"POST"])`, **type-annotated** (`antmed_crm/hooks.py:require_type_annotated_api_methods`), trả **RAW dict/list** (KHÔNG `_ok/_err` envelope). Lỗi nghiệp vụ/permission = `frappe.throw(...)` in-handler. Đường gọi `antmed_crm.api.antmed.delivery.<fn>`.
 
 | Endpoint (đề xuất) | Verb | Mô tả |
 |---|---|---|
@@ -132,13 +132,13 @@ Vai trò trong 14 module (theo DAG `PLAN §2`): M04 nằm **giữa chuỗi vận
 - **M09** (Đơn/AR): `consumed_qty` từng item = **tiêu hao thực tế** → M09 lập đơn bán đúng thực tế (truyền PK delivery + dòng consumed). Gate: chỉ tạo đơn từ delivery đã `Đã bàn giao`.
 - **M10** (KPI): `sla_status` (OnTime/Late) + `AntMed SLA Log` → KPI "giao đúng SLA".
 
-**`doc_events` đề xuất (thêm vào `crm/hooks.py`, additive):**
+**`doc_events` đề xuất (thêm vào `antmed_crm/hooks.py`, additive):**
 ```python
 doc_events = {
   "AntMed Delivery": {
-    "validate":  "crm.antmed.m04_delivery_hooks.validate_delivery",   # BR-01, BR-06, BR-08(warn)
-    "on_submit": "crm.antmed.m04_delivery_hooks.on_handover",          # SLA, →M06, →M09, audit BR-10
-    "on_trash":  "crm.antmed.m04_delivery_hooks.block_delete_signed",  # BR-07
+    "validate":  "antmed_crm.antmed.m04_delivery_hooks.validate_delivery",   # BR-01, BR-06, BR-08(warn)
+    "on_submit": "antmed_crm.antmed.m04_delivery_hooks.on_handover",          # SLA, →M06, →M09, audit BR-10
+    "on_trash":  "antmed_crm.antmed.m04_delivery_hooks.block_delete_signed",  # BR-07
   }
 }
 ```
@@ -196,7 +196,7 @@ doc_events = {
 - **Decision**: Dùng **Frappe Workflow gốc** (fixture `workflow.json`) với `workflow_state`, 6 state VI + transition gán role VI + map `docstatus` (Delivered→1). KHÔNG dùng `workflowcore`.
 - **Consequences**: (+) chuẩn Frappe, transition có quyền + log. (−) phải bảo trì fixture workflow; nhãn VI là định danh state (lưu ý i18n).
 
-> Kế thừa **ADR-M01-01** (in-place app `crm`), **ADR-M01-02** (prefix `AntMed `), **DEC-2026-06-17-A** (role VI), **DEC-2026-06-17-B** (route AntMed riêng), **ADR-M01-05** (hoãn data-scope BR-13, giữ count==rows) — không Supersede.
+> Kế thừa **ADR-M01-01** (app RIÊNG `antmed_crm`; gốc: in-place; THỰC TẾ = app RIÊNG `antmed_crm`), **ADR-M01-02** (prefix `AntMed `), **DEC-2026-06-17-A** (role VI), **DEC-2026-06-17-B** (route AntMed riêng), **ADR-M01-05** (hoãn data-scope BR-13, giữ count==rows) — không Supersede.
 
 ---
 
@@ -204,7 +204,7 @@ doc_events = {
 
 Theo **SPEC §6**. Một slice M04 "xong" khi:
 
-1. **BE run-tests**: `bench --site miyano run-tests --module crm.tests.test_antmed_delivery` → **`Ran N tests … OK`**, 0 fail. TC tối thiểu:
+1. **BE run-tests**: `bench --site miyano run-tests --module antmed_crm.tests.test_antmed_delivery` → **`Ran N tests … OK`**, 0 fail. TC tối thiểu:
    - `AntMed Delivery` + child + `AntMed SLA Log`/`AntMed OR Schedule` tồn tại sau migrate, đủ field tối thiểu; naming sinh `AntMed-DR-…`.
    - Workflow `AntMed DR Workflow` load; transition hợp lệ `Nháp→…→Đã bàn giao` chạy; transition không-được-phép bị chặn.
    - BR-01: item ngoài danh mục thầu → set `out_of_contract_flag` + chặn `assign` khi chưa duyệt.

@@ -1,26 +1,40 @@
 <template>
   <main class="flex h-full flex-col" aria-labelledby="antmed-portal-title">
     <!-- Header + breadcrumb -->
-    <header class="flex flex-col gap-2 border-b border-outline-gray-modals px-6 py-4">
+    <header
+      class="flex flex-col gap-2 border-b border-outline-gray-modals px-6 py-4"
+    >
       <nav class="text-p-xs text-ink-gray-5" :aria-label="__('Đường dẫn')">
         <span class="text-ink-gray-7">{{ __('Portal Bệnh viện') }}</span>
         <span class="px-1.5 text-ink-gray-4" aria-hidden="true">›</span>
         <span class="text-ink-gray-7">{{ __('Trang chủ') }}</span>
       </nav>
       <div class="flex flex-col gap-1">
-        <h1 id="antmed-portal-title" class="text-xl font-semibold text-ink-gray-9">
+        <h1
+          id="antmed-portal-title"
+          class="text-xl font-semibold text-ink-gray-9"
+        >
           {{ __('Trang chủ Portal') }}
-          <span v-if="hospitalName" class="text-ink-gray-6">· {{ hospitalName }}</span>
+          <span v-if="hospitalName" class="text-ink-gray-6"
+            >· {{ hospitalName }}</span
+          >
         </h1>
         <p class="text-p-sm text-ink-gray-6">
-          {{ __('Gọi vật tư, mượn bộ dụng cụ và tra cứu chứng từ cho bệnh viện của bạn') }}
+          {{
+            __(
+              'Gọi vật tư, mượn bộ dụng cụ và tra cứu chứng từ cho bệnh viện của bạn',
+            )
+          }}
         </p>
       </div>
     </header>
 
     <section class="flex-1 overflow-auto px-6 py-5">
       <!-- ── Header: 3 quick-action card TĨNH (mockup G1 .cardrow.cols-3) ─────── -->
-      <div class="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3" :aria-label="__('Thao tác nhanh')">
+      <div
+        class="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3"
+        :aria-label="__('Thao tác nhanh')"
+      >
         <RouterLink
           v-for="qa in quickActions"
           :key="qa.key"
@@ -58,7 +72,11 @@
           role="note"
         >
           <p class="text-p-sm text-ink-gray-6">
-            {{ __('Chưa xác định bệnh viện. Mở Portal kèm mã bệnh viện để xem thông báo.') }}
+            {{
+              __(
+                'Chưa xác định bệnh viện. Mở Portal kèm mã bệnh viện để xem thông báo.',
+              )
+            }}
           </p>
         </div>
 
@@ -73,14 +91,31 @@
             <span class="text-p-base">{{ __('Đang tải…') }}</span>
           </div>
 
-          <div v-else-if="notif.error" class="flex flex-col items-start gap-2 py-3" role="alert">
-            <Badge variant="subtle" theme="red" size="lg" :label="__('Lỗi tải thông báo')" />
-            <Button variant="subtle" :label="__('Thử lại')" @click="notif.reload()" />
+          <div
+            v-else-if="notif.error"
+            class="flex flex-col items-start gap-2 py-3"
+            role="alert"
+          >
+            <Badge
+              variant="subtle"
+              theme="red"
+              size="lg"
+              :label="__('Lỗi tải thông báo')"
+            />
+            <Button
+              variant="subtle"
+              :label="__('Thử lại')"
+              @click="notif.reload()"
+            />
           </div>
 
           <template v-else>
             <!-- Timeline .tl > .e (mockup G1) — render v-for từ data THẬT, BE đã sort ts giảm dần -->
-            <div v-if="events.length" class="antmed-tl flex flex-col" :aria-label="__('Dòng thời gian thông báo')">
+            <div
+              v-if="events.length"
+              class="antmed-tl flex flex-col"
+              :aria-label="__('Dòng thời gian thông báo')"
+            >
               <div
                 v-for="(ev, i) in events"
                 :key="(ev.ref || ev.kind) + '-' + i"
@@ -97,7 +132,9 @@
               class="rounded-lg border border-dashed border-outline-gray-2 px-3 py-6 text-center"
               role="note"
             >
-              <p class="text-p-sm text-ink-gray-6">{{ __('Chưa có thông báo') }}</p>
+              <p class="text-p-sm text-ink-gray-6">
+                {{ __('Chưa có thông báo') }}
+              </p>
             </div>
           </template>
         </template>
@@ -109,7 +146,9 @@
       >
         <h2 class="text-p-base font-semibold text-ink-gray-9">
           {{ __('📋 Danh mục vật tư trúng thầu') }}
-          <span v-if="catalogHospitalName" class="text-ink-gray-6">· {{ catalogHospitalName }}</span>
+          <span v-if="catalogHospitalName" class="text-ink-gray-6"
+            >· {{ catalogHospitalName }}</span
+          >
         </h2>
 
         <!-- Chưa chọn bệnh viện (cùng giả định card thông báo: hospital qua query param). -->
@@ -119,7 +158,11 @@
           role="note"
         >
           <p class="text-p-sm text-ink-gray-6">
-            {{ __('Chưa xác định bệnh viện. Mở Portal kèm mã bệnh viện để xem danh mục.') }}
+            {{
+              __(
+                'Chưa xác định bệnh viện. Mở Portal kèm mã bệnh viện để xem danh mục.',
+              )
+            }}
           </p>
         </div>
 
@@ -134,24 +177,50 @@
             <span class="text-p-base">{{ __('Đang tải danh mục…') }}</span>
           </div>
 
-          <div v-else-if="catalog.error" class="flex flex-col items-start gap-2 py-3" role="alert">
-            <Badge variant="subtle" theme="red" size="lg" :label="__('Lỗi tải danh mục')" />
-            <Button variant="subtle" :label="__('Thử lại')" @click="catalog.reload()" />
+          <div
+            v-else-if="catalog.error"
+            class="flex flex-col items-start gap-2 py-3"
+            role="alert"
+          >
+            <Badge
+              variant="subtle"
+              theme="red"
+              size="lg"
+              :label="__('Lỗi tải danh mục')"
+            />
+            <Button
+              variant="subtle"
+              :label="__('Thử lại')"
+              @click="catalog.reload()"
+            />
           </div>
 
           <template v-else>
             <!-- Bảng danh mục SKU trúng thầu (mockup G1): SKU · tên · ĐVT · còn/tổng + chip quota. -->
             <div v-if="catalogItems.length" class="overflow-x-auto">
-              <table class="w-full text-p-sm" :aria-label="__('Danh mục vật tư trúng thầu')">
+              <table
+                class="w-full text-p-sm"
+                :aria-label="__('Danh mục vật tư trúng thầu')"
+              >
                 <thead>
-                  <tr class="border-b border-outline-gray-1 text-left text-ink-gray-5">
-                    <th scope="col" class="py-2 pr-3 font-medium">{{ __('Mã VT') }}</th>
-                    <th scope="col" class="py-2 pr-3 font-medium">{{ __('Tên vật tư') }}</th>
-                    <th scope="col" class="py-2 pr-3 font-medium">{{ __('ĐVT') }}</th>
+                  <tr
+                    class="border-b border-outline-gray-1 text-left text-ink-gray-5"
+                  >
+                    <th scope="col" class="py-2 pr-3 font-medium">
+                      {{ __('Mã VT') }}
+                    </th>
+                    <th scope="col" class="py-2 pr-3 font-medium">
+                      {{ __('Tên vật tư') }}
+                    </th>
+                    <th scope="col" class="py-2 pr-3 font-medium">
+                      {{ __('ĐVT') }}
+                    </th>
                     <th scope="col" class="py-2 pr-3 text-right font-medium">
                       {{ __('Còn / Tổng quota') }}
                     </th>
-                    <th scope="col" class="py-2 font-medium">{{ __('Trạng thái quota') }}</th>
+                    <th scope="col" class="py-2 font-medium">
+                      {{ __('Trạng thái quota') }}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -160,18 +229,29 @@
                     :key="(it.item || it.item_name || 'vt') + '-' + i"
                     class="border-b border-outline-gray-1 last:border-0"
                   >
-                    <td class="py-2 pr-3 text-ink-gray-6">{{ it.item || '—' }}</td>
-                    <td class="py-2 pr-3 font-medium text-ink-gray-8">{{ it.item_name || '—' }}</td>
-                    <td class="py-2 pr-3 text-ink-gray-6">{{ it.uom || '—' }}</td>
-                    <td class="py-2 pr-3 text-right tabular-nums text-ink-gray-7">
-                      {{ fmtQty(it.remaining_qty) }} / {{ fmtQty(it.quota_qty) }}
+                    <td class="py-2 pr-3 text-ink-gray-6">
+                      {{ it.item || '—' }}
+                    </td>
+                    <td class="py-2 pr-3 font-medium text-ink-gray-8">
+                      {{ it.item_name || '—' }}
+                    </td>
+                    <td class="py-2 pr-3 text-ink-gray-6">
+                      {{ it.uom || '—' }}
+                    </td>
+                    <td
+                      class="py-2 pr-3 text-right tabular-nums text-ink-gray-7"
+                    >
+                      {{ fmtQty(it.remaining_qty) }} /
+                      {{ fmtQty(it.quota_qty) }}
                     </td>
                     <td class="py-2">
                       <span
                         class="inline-flex items-center rounded-full px-2 py-0.5 text-p-xs font-medium"
                         :class="tenderQuotaChipClass(it.quota_chip)"
                       >
-                        {{ tenderQuotaChipLabel(it.quota_chip, it.remaining_pct) }}
+                        {{
+                          tenderQuotaChipLabel(it.quota_chip, it.remaining_pct)
+                        }}
                       </span>
                     </td>
                   </tr>
@@ -240,7 +320,9 @@ const catalog = getTenderCatalog({
   params: { hospital: hospital.value },
   auto: !!hospital.value,
   onError(err) {
-    toast.error(err.messages?.[0] || __('Không tải được danh mục vật tư trúng thầu'))
+    toast.error(
+      err.messages?.[0] || __('Không tải được danh mục vật tư trúng thầu'),
+    )
   },
 })
 

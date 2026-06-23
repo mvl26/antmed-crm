@@ -157,10 +157,14 @@ class TestAntMedGetLotTraceHelper(FrappeTestCase):
 		cls.lot = _mk_lot("_T-STKLT-LOT", cls.item).name
 		# Nhập NCC 100 vào kho Tổng (ngày sớm nhất) → xuất NV 30 (giữa) → chuyển ký gửi BV 20 (muộn nhất).
 		cls.se_in = inventory.create_stock_entry(
-			entry_type="Nhập NCC", to_warehouse=cls.wh_tong, items=[{"item": cls.item, "lot": cls.lot, "qty": 100}]
+			entry_type="Nhập NCC",
+			to_warehouse=cls.wh_tong,
+			items=[{"item": cls.item, "lot": cls.lot, "qty": 100}],
 		)["name"]
 		frappe.db.set_value("AntMed Stock Entry", cls.se_in, "posting_datetime", "2026-01-01 08:00:00")
-		frappe.db.set_value("AntMed Stock Ledger", {"stock_entry": cls.se_in}, "posting_datetime", "2026-01-01 08:00:00")
+		frappe.db.set_value(
+			"AntMed Stock Ledger", {"stock_entry": cls.se_in}, "posting_datetime", "2026-01-01 08:00:00"
+		)
 		cls.se_out = inventory.create_stock_entry(
 			entry_type="Xuất cho NV",
 			from_warehouse=cls.wh_tong,
@@ -168,7 +172,9 @@ class TestAntMedGetLotTraceHelper(FrappeTestCase):
 			items=[{"item": cls.item, "lot": cls.lot, "qty": 30}],
 		)["name"]
 		frappe.db.set_value("AntMed Stock Entry", cls.se_out, "posting_datetime", "2026-02-01 09:00:00")
-		frappe.db.set_value("AntMed Stock Ledger", {"stock_entry": cls.se_out}, "posting_datetime", "2026-02-01 09:00:00")
+		frappe.db.set_value(
+			"AntMed Stock Ledger", {"stock_entry": cls.se_out}, "posting_datetime", "2026-02-01 09:00:00"
+		)
 		cls.se_trf = inventory.create_stock_entry(
 			entry_type="Chuyển kho",
 			from_warehouse=cls.wh_tong,
@@ -247,9 +253,7 @@ class TestAntMedGetLotTraceHelper(FrappeTestCase):
 		issue = next(e for e in events if e["entry_type"] == "Xuất cho NV")
 		self.assertEqual(issue["nv_employee"], "Administrator")
 		# Chuyển kho ký gửi BV → có dòng vào kho Ký gửi BV (warehouse_type) + hospital.
-		cg_in = next(
-			e for e in events if e["warehouse"] == self.wh_cg and e["direction"] == "in"
-		)
+		cg_in = next(e for e in events if e["warehouse"] == self.wh_cg and e["direction"] == "in")
 		self.assertEqual(cg_in["warehouse_type"], "Ký gửi BV")
 		self.assertEqual(cg_in["hospital"], self.hosp)
 

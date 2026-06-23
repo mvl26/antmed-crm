@@ -24,7 +24,10 @@ VISIT_RE = re.compile(r"^AM-VISIT-\d{4}-\d+")
 
 
 def _ensure(doctype, key, val, values):
-	return frappe.db.get_value(doctype, {key: val}, "name") or frappe.get_doc({"doctype": doctype, key: val, **values}).insert(ignore_permissions=True).name
+	return (
+		frappe.db.get_value(doctype, {key: val}, "name")
+		or frappe.get_doc({"doctype": doctype, key: val, **values}).insert(ignore_permissions=True).name
+	)
 
 
 class TestAntMedDoctorVisit(FrappeTestCase):
@@ -32,7 +35,9 @@ class TestAntMedDoctorVisit(FrappeTestCase):
 	def setUpClass(cls):
 		super().setUpClass()
 		cls.hosp = _ensure("AntMed Hospital", "hospital_code", "_T-VIS-BV", {"hospital_name": "BV Visit"})
-		cls.doctor = _ensure("AntMed Doctor", "doctor_code", "_T-VIS-BS", {"full_name": "BS Thăm Khám", "hospital": cls.hosp})
+		cls.doctor = _ensure(
+			"AntMed Doctor", "doctor_code", "_T-VIS-BS", {"full_name": "BS Thăm Khám", "hospital": cls.hosp}
+		)
 
 	def test_doctypes(self):
 		self.assertTrue(frappe.db.exists("DocType", "AntMed Doctor Visit"))
@@ -40,15 +45,25 @@ class TestAntMedDoctorVisit(FrappeTestCase):
 		self.assertEqual(frappe.get_meta("AntMed Doctor Visit").is_submittable, 1)
 
 	def test_check_in(self):
-		res = doctor_care.check_in(doctor=self.doctor, hospital=self.hosp, gps_lat="10.77", gps_lng="106.7", topic="Giới thiệu stent mới")
+		res = doctor_care.check_in(
+			doctor=self.doctor,
+			hospital=self.hosp,
+			gps_lat="10.77",
+			gps_lng="106.7",
+			topic="Giới thiệu stent mới",
+		)
 		self.assertRegex(res["visit"], VISIT_RE)
 		self.assertEqual(res["status"], "Đã check-in")
 		self.assertIsNotNone(frappe.db.get_value("AntMed Doctor Visit", res["visit"], "checked_in_at"))
-		self.assertAlmostEqual(float(frappe.db.get_value("AntMed Doctor Visit", res["visit"], "gps_lat")), 10.77, places=2)
+		self.assertAlmostEqual(
+			float(frappe.db.get_value("AntMed Doctor Visit", res["visit"], "gps_lat")), 10.77, places=2
+		)
 
 	def test_save_care_note(self):
 		v = doctor_care.check_in(doctor=self.doctor, hospital=self.hosp)["visit"]
-		res = doctor_care.save_care_note(doctor=self.doctor, content="BS quan tâm sản phẩm A", visit=v, category="Chăm sóc")
+		res = doctor_care.save_care_note(
+			doctor=self.doctor, content="BS quan tâm sản phẩm A", visit=v, category="Chăm sóc"
+		)
 		self.assertTrue(frappe.db.exists("AntMed Care Note", res["note"]))
 		self.assertEqual(frappe.db.get_value("AntMed Care Note", res["note"], "doctor"), self.doctor)
 
@@ -62,7 +77,9 @@ class TestAntMedDoctorVisit(FrappeTestCase):
 		self.assertIn("care_notes", detail)
 		email = "_t_vis_noperm@example.com"
 		if not frappe.db.exists("User", email):
-			frappe.get_doc({"doctype": "User", "email": email, "first_name": "NoPermVis", "send_welcome_email": 0}).insert(ignore_permissions=True)
+			frappe.get_doc(
+				{"doctype": "User", "email": email, "first_name": "NoPermVis", "send_welcome_email": 0}
+			).insert(ignore_permissions=True)
 		frappe.set_user(email)
 		try:
 			with self.assertRaises(frappe.PermissionError):

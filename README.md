@@ -1,203 +1,123 @@
 <div align="center" markdown="1">
 
-<a href="https://frappe.io/products/crm">
-    <img src=".github/logo.svg" height="80" alt="Frappe CRM Logo">
-</a>
+<img src=".github/logo.svg" height="80" alt="AntMed CRM Logo">
 
-<h1>Frappe CRM</h1>
+<h1>AntMed CRM</h1>
 
-**Simplify Sales, Amplify Relationships**
+**Quản lý phân phối thiết bị & vật tư y tế (VTYT) và cho mượn bộ dụng cụ phẫu thuật cho bệnh viện**
 
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/frappe/crm)](https://github.com/frappe/crm/releases)
-
-<div>
-    <picture>
-        <source media="(prefers-color-scheme: dark)" srcset=".github/screenshots/FrappeCRMHeroImage.png">
-        <img width="1402" alt="Frappe CRM Hero Image" src=".github/screenshots/FrappeCRMHeroImage.png">
-    </picture>
-</div>
-
-[Live Demo](https://frappecrm-demo.frappe.cloud/api/method/crm.api.live_demo.login) - [Website](https://frappe.io/crm) - [Documentation](https://docs.frappe.io/crm)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPLv3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![Frappe v15](https://img.shields.io/badge/Frappe-v15-0d9488.svg)](https://github.com/frappe/frappe)
 
 </div>
 
-## Frappe CRM
+## Giới thiệu
 
-Frappe CRM is a simple, affordable, open-source CRM tool designed for modern sales teams with unlimited users. Frappe CRM is crafted for providing a great user experience, packed with features for core CRM activities helping you build strong customer relationships while keeping things clean and organised.
+**AntMed CRM** là phần mềm CRM chuyên ngành cho doanh nghiệp phân phối **thiết bị & vật tư y tế (VTYT)**:
+quản lý trọn vòng đời từ tiếp cận bệnh viện/bác sỹ → gói thầu/hợp đồng → kho ký gửi & truy vết lô →
+giao phòng mổ → mượn-trả bộ dụng cụ & tiệt khuẩn → chứng từ pháp lý (CO/CQ/ĐKLH/hóa đơn điện tử) →
+công nợ và KPI.
 
-### Motivation
+Sản phẩm được phát triển trên nền **Frappe Framework v15** (Python backend + giao diện **Vue 3 /
+frappe-ui** dạng SPA) theo hướng **native-lite** (không phụ thuộc ERPNext), kế thừa nền tảng
+[Frappe CRM](https://github.com/frappe/crm) cho lead/deal và bổ sung toàn bộ nghiệp vụ đặc thù ngành VTYT.
+Site phát triển: `miyano`.
 
-The motivation behind building Frappe CRM stems from the need for a simple, customizable, and open-source solution tailored to modern business needs. Many existing CRMs are either too complex, overly generic, or locked behind steep pricing models that hinder accessibility and flexibility. Frappe CRM was designed to bridge this gap, offering a tool that empowers businesses to manage their customer relationships seamlessly while being easy to adapt to specific workflows. Built on the Frappe framework, it prioritizes usability, extensibility, and affordability, making it an ideal choice for growing teams and organizations looking for a CRM that aligns with their unique processes.
+## Tính năng chính (14 module)
 
-### Key Features
+| Module                                    | Nghiệp vụ                                                                                                 |
+| :---------------------------------------- | :---------------------------------------------------------------------------------------------------------- |
+| **M01 — Khách hàng 360**         | Bệnh viện, khoa/phòng, bác sỹ; hồ sơ 360, lịch sử tương tác                                     |
+| **M02 — Hợp đồng & Gói thầu** | Hợp đồng, gói thầu, quota theo mặt hàng, theo dõi thực hiện                                       |
+| **M03 — Kho & Lô**                | Kho đa cấp + ký gửi BV, lô/CO/CQ, FIFO theo HSD, kiểm kê,**thu hồi (recall) & truy vết lô** |
+| **M04 — Giao phòng mổ**          | Phiếu giao (DO), điều phối ca mổ, SLA, ghi nhận tiêu hao theo lô                                    |
+| **M05 — Bộ dụng cụ mượn**     | Vòng đời mượn–trả, checklist,**tiệt khuẩn**                                                  |
+| **M06 — Chứng từ**               | CO/CQ, ĐKLH, giấy phép nhập khẩu,**hóa đơn điện tử**                                       |
+| **M07 — CSKH bác sỹ**            | Kế hoạch thăm khám, ghi chú chăm sóc, quà tặng                                                     |
+| **M08 — Pipeline**                 | Lead → thầu → cơ hội (CRM Deal), bảng Kanban kéo–thả                                               |
+| **M09 — Đơn hàng & Công nợ**  | Đơn hàng, công nợ AR, chặn đơn theo hạn mức                                                       |
+| **M10 — Nhân sự & KPI**          | Đội kinh doanh, chỉ tiêu, KPI                                                                           |
+| **M11 — Dashboard**                | Bảng điều khiển & báo cáo điều hành                                                                |
+| **M12 — Mobile / PWA**             | Trải nghiệm di động, đồng bộ offline                                                                 |
+| **M13 — Tích hợp**               | Zalo/SMS thông báo, nhà cung cấp hóa đơn điện tử                                                  |
+| **M14 — RBAC & Audit**             | Phân quyền, 2FA, nhật ký kiểm toán hash-chain                                                         |
 
--   **User-Friendly and Flexible:** A simple, intuitive interface that’s easy to navigate and highly customizable, enabling teams to adapt it to their specific processes effortlessly.
--   **All-in-One Lead/Deal Page:** Consolidate all essential actions and details—like activities, comments, notes, tasks, and more—into a single page for a seamless workflow experience.
--   **Kanban View:** Manage leads and deals visually with a drag-and-drop Kanban board, offering clarity and efficiency in tracking progress across stages.
--   **Custom Views:** Design personalized views to organize and display leads and deals using custom filters, sorting, and columns, ensuring quick access to the most relevant information.
+### Vai trò nghiệp vụ
 
-    <details>
-    <summary>Screenshots</summary>
+Ba vai trò chính: **NV kinh doanh** · **Thủ kho** · **Quản lý** — phân quyền và data-scoping
+(NV chỉ thấy bệnh viện được giao) qua RBAC native của Frappe.
 
-    <div>
-        <picture>
-            <source media="(prefers-color-scheme: dark)" srcset=".github/screenshots/LeadList.png">
-            <img width="1402" alt="Lead List" src=".github/screenshots/LeadList.png">
-        </picture>
-    </div>
-    <div>
-        <picture>
-            <source media="(prefers-color-scheme: dark)" srcset=".github/screenshots/LeadPage.png">
-            <img width="1402" alt="Lead Page" src=".github/screenshots/LeadPage.png">
-        </picture>
-    </div>
-    <div>
-        <picture>
-            <source media="(prefers-color-scheme: dark)" srcset=".github/screenshots/EmailTemplate.png">
-            <img width="1402" alt="Email Template" src=".github/screenshots/EmailTemplate.png">
-        </picture>
-    </div>
-    <div>
-        <picture>
-            <source media="(prefers-color-scheme: dark)" srcset=".github/screenshots/CallUI.png">
-            <img width="1402" alt="Call UI" src=".github/screenshots/CallUI.png">
-        </picture>
-    </div>
-    <div>
-        <picture>
-            <source media="(prefers-color-scheme: dark)" srcset=".github/screenshots/CallLog.png">
-            <img width="1402" alt="Call Log" src=".github/screenshots/CallLog.png">
-        </picture>
-    </div>
+## Công nghệ
 
-    </details>
+- [Frappe Framework](https://github.com/frappe/frappe) **v15** — full-stack web framework (Python).
+- [Frappe UI](https://github.com/frappe/frappe-ui) — thư viện UI dựa trên **Vue 3** cho giao diện SPA hiện đại.
+- **MariaDB** — cơ sở dữ liệu.
+- **Redis** — cache & hàng đợi tác vụ (queue).
+- **Native-lite:** không cài ERPNext; toàn bộ doctype nghiệp vụ là `AntMed *` thuần.
 
-### Integrations
+## Cấu trúc dự án
 
--   **Twilio:** Integrate Twilio to make and receive calls from the CRM. You can also record calls. It is a built-in integration.
--   **Exotel:** Integrate Exotel to make and receive calls via agents mobile phone from the CRM. You can also record calls. It is a built-in integration.
--   **WhatsApp:** Integrate WhatsApp to send and receive messages from the CRM. [Frappe WhatsApp](https://github.com/shridarpatil/frappe_whatsapp) is used for this integration.
--   **ERPNext:** Integrate with [ERPNext](https://erpnext.com) to extend the CRM capabilities to include invoicing, accounting, and more.
-
-### Under the Hood
-
-- [Frappe Framework](https://github.com/frappe/frappe): A full-stack web application framework.
-- [Frappe UI](https://github.com/frappe/frappe-ui): A Vue-based UI library, to provide a modern user interface.
-
-### Compatibility
-This app is compatible with the following versions of Frappe and ERPNext:
-
-| CRM branch            | Stability | Frappe branch        | ERPNext branch       |
-| :-------------------- | :-------- | :------------------- | :------------------- |
-| main - v1.x           | stable    | v15.x & v16.x        | v15.x & v16.x        |
-| develop - future/v2.x | unstable  | develop - future/v17 | develop - future/v17 |
-
-## Getting Started (Production)
-
-### Managed Hosting
-
-Get started with your personal or business site with a few clicks on Frappe Cloud - our official hosting service.
-<div>
-	<a href="https://frappecloud.com/crm/signup" target="_blank">
-		<picture>
-			<source media="(prefers-color-scheme: dark)" srcset="https://frappe.io/files/try-on-fc-white.png">
-			<img src="https://frappe.io/files/try-on-fc-black.png" alt="Try on Frappe Cloud" height="28" />
-		</picture>
-	</a>
-</div>
-
-### Self Hosting
-
-Follow these steps to set up Frappe CRM in production:
-
-**Step 1**: Download the easy install script
-
-```bash
-wget https://frappe.io/easy-install.py
+```text
+antmed_crm/                      # Repo (app antmed_crm)
+├── antmed_crm/                  # Python app package (app_name = antmed_crm)
+│   ├── api/antmed/              # Endpoint whitelisted: antmed_crm.api.antmed.<module>.<fn>
+│   │                            #   customer · contract · inventory · delivery · instrument_loan
+│   │                            #   documents · doctor_care · pipeline · finance · dashboard
+│   │                            #   sales_team · mobile_sync · integrations · rbac · audit ...
+│   ├── antmed/doctype/          # Module "AntMed" — 49 DocType (AntMed Hospital / Lot /
+│   │                            #   Stock Entry / Delivery / Contract / Instrument Loan /
+│   │                            #   Document / E-Invoice / Audit Log ...)
+│   ├── fixtures/                # workflow · role · naming_series · custom_field
+│   ├── hooks.py                 # định danh app · doc_events · scheduler_events
+│   ├── permissions/  overrides/  patches/  integrations/  tests/
+│   └── modules.txt              # AntMed · FCRM · Lead Syncing
+├── frontend/                    # SPA Vue 3 + frappe-ui (phục vụ tại base /crm)
+│   └── src/                     # pages/ (38 trang Antmed*.vue) · components/ · data/antmed.js
+│                                #   · router.js · stores/ · utils/
+├── docs/antmed_dev/             # Spec phát triển module M01–M14
+├── docker/   .github/           # Triển khai & CI/CD (image ghcr.io/mvl26/antmed_crm)
+├── .claude/                     # Quy tắc & skill cho phiên phát triển
+└── pyproject.toml   package.json
 ```
 
-**Step 2**: Run the deployment command
+> **Quy ước:** app = `antmed_crm` (snake_case); module nghiệp vụ = `antmed` (DocType prefix `AntMed `);
+> callpath API = `antmed_crm.api.antmed.<module>.<fn>`.
 
-```bash
-python3 ./easy-install.py deploy \
-    --project=crm_prod_setup \
-    --email=email.example.com \
-    --image=ghcr.io/frappe/crm \
-    --version=stable \
-    --app=crm \
-    --sitename subdomain.domain.tld
+## Bắt đầu (Development)
+
+1. [Cài đặt Bench](https://docs.frappe.io/framework/user/en/installation).
+2. Trong thư mục `frappe-bench`, chạy `bench start` và giữ tiến trình.
+3. Mở terminal mới, vào `frappe-bench` và chạy:
+   ```sh
+   # Lấy app
+   bench get-app antmed_crm        # hoặc: bench get-app https://github.com/mvl26/antmed_crm.git
+
+   # Cài app vào site (thay <site> bằng site của bạn, vd: miyano)
+   bench --site <site> install-app antmed_crm
+
+   bench browse <site> --user Administrator
+   ```
+4. Truy cập ứng dụng tại `<site>:8000/crm`.
+
+**Phát triển Frontend**
+
+```sh
+cd frappe-bench/apps/antmed_crm/frontend
+yarn install
+yarn dev
 ```
 
-Replace the following parameters with your values:
+Vite dev server chạy tại `http://sitename.localhost:8080`. Toàn bộ mã frontend nằm trong
+`frappe-bench/apps/antmed_crm/frontend`.
 
--   `email.example.com`: Your email address
--   `subdomain.domain.tld`: Your domain name where CRM will be hosted
+## Triển khai bằng Docker
 
-The script will set up a production-ready instance of Frappe CRM with all the necessary configurations in about 5 minutes.
+Image container được CI build và đẩy lên GitHub Container Registry:
 
-## Getting Started (Development)
+```
+ghcr.io/mvl26/antmed_crm:stable
+```
 
-### Local Setup
-
-1. [Setup Bench](https://docs.frappe.io/framework/user/en/installation).
-1. In the frappe-bench directory, run `bench start` and keep it running.
-1. Open a new terminal session and cd into `frappe-bench` directory and run following commands:
-    ```sh
-    $ bench get-app crm
-    $ bench new-site sitename.localhost --install-app crm
-    $ bench browse sitename.localhost --user Administrator
-    ```
-1. Access the crm page at `sitename.localhost:8000/crm` in your web browser.
-
-**For Frontend Development**
-1. Open a new terminal session and cd into `frappe-bench/apps/crm`, and run the following commands:
-    ```
-    yarn install
-    yarn dev
-    ```
-1. Now, you can access the site on vite dev server at `http://sitename.localhost:8080`
-
-**Note:** You'll find all the code related to Frappe CRM's frontend inside `frappe-bench/apps/crm/frontend`
-
-### Docker
-
-You need Docker, docker-compose and git setup on your machine. Refer [Docker documentation](https://docs.docker.com/). After that, follow below steps:
-
-**Step 1**: Setup folder and download the required files
-
-    mkdir frappe-crm
-    cd frappe-crm
-
-    # Download the docker-compose file
-    wget -O docker-compose.yml https://raw.githubusercontent.com/frappe/crm/develop/docker/docker-compose.yml
-
-    # Download the setup script
-    wget -O init.sh https://raw.githubusercontent.com/frappe/crm/develop/docker/init.sh
-
-**Step 2**: Run the container and daemonize it
-
-    docker compose up -d
-
-**Step 3**: The site [http://crm.localhost:8000/crm](http://crm.localhost:8000/crm) should now be available. The default credentials are:
-
--   Username: Administrator
--   Password: admin
-
-## Learn and connect
-
--   [Telegram Public Group](https://t.me/frappecrm)
--   [Discuss Forum](https://discuss.frappe.io/c/frappe-crm)
--   [Documentation](https://docs.frappe.io/crm)
--   [YouTube](https://www.youtube.com/@frappetech)
--   [X/Twitter](https://x.com/frappetech)
-
-<br>
-<br>
-<div align="center" style="padding-top: 0.75rem;">
-	<a href="https://frappe.io" target="_blank">
-		<picture>
-			<source media="(prefers-color-scheme: dark)" srcset="https://frappe.io/files/Frappe-white.png">
-			<img src="https://frappe.io/files/Frappe-black.png" alt="Frappe Technologies" height="28"/>
-		</picture>
-	</a>
-</div>
+Image đa kiến trúc (`linux/amd64`, `linux/arm64`) dựng từ
+[frappe_docker](https://github.com/frappe/frappe_docker) (layered Containerfile). Xem thư mục
+`docker/` và workflow `.github/workflows/builds.yml` để biết chi tiết.

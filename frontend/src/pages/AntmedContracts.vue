@@ -5,11 +5,18 @@
       class="flex flex-col gap-3 border-b border-outline-gray-modals px-6 py-4 sm:flex-row sm:items-center sm:justify-between"
     >
       <div class="flex flex-col gap-1">
-        <h1 id="antmed-contracts-title" class="text-xl font-semibold text-ink-gray-9">
+        <h1
+          id="antmed-contracts-title"
+          class="text-xl font-semibold text-ink-gray-9"
+        >
           {{ __('Hợp đồng') }}
         </h1>
         <p class="text-p-sm text-ink-gray-6">
-          {{ __('Danh mục hợp đồng / gói thầu trúng & hạn ngạch (quota) theo SKU') }}
+          {{
+            __(
+              'Danh mục hợp đồng / gói thầu trúng & hạn ngạch (quota) theo SKU',
+            )
+          }}
         </p>
       </div>
       <div class="w-full sm:w-72">
@@ -28,9 +35,14 @@
     </header>
 
     <!-- Bộ lọc: bệnh viện + trạng thái -->
-    <div class="flex flex-col gap-3 px-6 py-3 sm:flex-row sm:items-end sm:gap-4">
+    <div
+      class="flex flex-col gap-3 px-6 py-3 sm:flex-row sm:items-end sm:gap-4"
+    >
       <div class="flex flex-col gap-1 sm:w-64">
-        <label for="contract-filter-hospital" class="text-p-xs font-medium text-ink-gray-6">
+        <label
+          for="contract-filter-hospital"
+          class="text-p-xs font-medium text-ink-gray-6"
+        >
           {{ __('Bệnh viện') }}
         </label>
         <FormControl
@@ -43,7 +55,10 @@
         />
       </div>
       <div class="flex flex-col gap-1 sm:w-56">
-        <label for="contract-filter-status" class="text-p-xs font-medium text-ink-gray-6">
+        <label
+          for="contract-filter-status"
+          class="text-p-xs font-medium text-ink-gray-6"
+        >
           {{ __('Trạng thái') }}
         </label>
         <FormControl
@@ -65,7 +80,9 @@
         class="flex items-center justify-center gap-2 py-16 text-ink-gray-6"
       >
         <LoadingIndicator class="h-4 w-4" />
-        <span class="text-p-base">{{ __('Đang tải danh sách hợp đồng…') }}</span>
+        <span class="text-p-base">{{
+          __('Đang tải danh sách hợp đồng…')
+        }}</span>
       </div>
 
       <!-- Error -->
@@ -74,9 +91,18 @@
         class="flex flex-col items-center gap-3 py-16 text-center"
         role="alert"
       >
-        <Badge variant="subtle" theme="red" size="lg" :label="__('Không tải được')" />
+        <Badge
+          variant="subtle"
+          theme="red"
+          size="lg"
+          :label="__('Không tải được')"
+        />
         <p class="max-w-md text-p-sm text-ink-gray-6">{{ errorMessage }}</p>
-        <Button variant="outline" :label="__('Thử lại')" @click="contracts.reload()" />
+        <Button
+          variant="outline"
+          :label="__('Thử lại')"
+          @click="contracts.reload()"
+        />
       </div>
 
       <!-- Empty -->
@@ -84,29 +110,45 @@
         v-else-if="!rows.length"
         class="flex flex-col items-center gap-2 py-16 text-center text-ink-gray-6"
       >
-        <p class="text-p-base">{{ __('Chưa có hợp đồng nào khớp điều kiện.') }}</p>
+        <p class="text-p-base">
+          {{ __('Chưa có hợp đồng nào khớp điều kiện.') }}
+        </p>
         <p class="text-p-sm">
-          {{ __('Hợp đồng được tạo bởi Quản lý trong Frappe Desk (AntMed Contract) rồi tải lại.') }}
+          {{
+            __(
+              'Hợp đồng được tạo bởi Quản lý trong Frappe Desk (AntMed Contract) rồi tải lại.',
+            )
+          }}
         </p>
       </div>
 
       <!-- Data table -->
       <table v-else class="w-full border-separate border-spacing-0 text-left">
         <caption class="sr-only">
-          {{ __('Danh sách hợp đồng') }}
+          {{
+            __('Danh sách hợp đồng')
+          }}
         </caption>
         <thead>
           <tr class="text-p-sm text-ink-gray-6">
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('Số hợp đồng') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('Bệnh viện') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('Hiệu lực đến') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 text-right font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 text-right font-medium"
+            >
               {{ __('Giá trị HĐ') }}
             </th>
             <th class="border-b border-outline-gray-modals py-2 font-medium">
@@ -125,21 +167,31 @@
             :key="row.name"
             role="link"
             tabindex="0"
-            :aria-label="__('Xem chi tiết hợp đồng') + ' ' + (row.contract_no || row.name)"
+            :aria-label="
+              __('Xem chi tiết hợp đồng') + ' ' + (row.contract_no || row.name)
+            "
             class="cursor-pointer text-p-base text-ink-gray-8 transition hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-3"
             @click="openContract(row.name)"
             @keydown.enter="openContract(row.name)"
           >
-            <td class="border-b border-outline-gray-1 py-3 pr-4 font-medium text-ink-gray-9">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 font-medium text-ink-gray-9"
+            >
               {{ row.contract_no || row.name }}
             </td>
-            <td class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7"
+            >
               {{ row.hospital_name || row.hospital || '—' }}
             </td>
-            <td class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7"
+            >
               {{ formatDate(row.valid_to) }}
             </td>
-            <td class="border-b border-outline-gray-1 py-3 pr-4 text-right tabular-nums text-ink-gray-8">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 text-right tabular-nums text-ink-gray-8"
+            >
               {{ formatCurrency(row.total_value) }}
             </td>
             <td class="border-b border-outline-gray-1 py-3">
@@ -172,7 +224,11 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Badge, Button, FormControl, FeatherIcon, toast } from 'frappe-ui'
 import LoadingIndicator from '@/components/Icons/LoadingIndicator.vue'
-import { listContracts, listHospitals, CONTRACT_WORKFLOW_THEME } from '@/data/antmed'
+import {
+  listContracts,
+  listHospitals,
+  CONTRACT_WORKFLOW_THEME,
+} from '@/data/antmed'
 
 const router = useRouter()
 
@@ -221,7 +277,9 @@ const contracts = listContracts({
 })
 
 const rows = computed(() => contracts.data?.data || [])
-const totalCount = computed(() => contracts.data?.total_count ?? rows.value.length)
+const totalCount = computed(
+  () => contracts.data?.total_count ?? rows.value.length,
+)
 
 const errorMessage = computed(
   () =>
@@ -245,7 +303,11 @@ function formatCurrency(value) {
   if (value === null || value === undefined || value === '') return '—'
   const n = Number(value)
   if (Number.isNaN(n)) return String(value)
-  return n.toLocaleString('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 })
+  return n.toLocaleString('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+    maximumFractionDigits: 0,
+  })
 }
 
 // Param phát đi == UI selection (chống dead-control LL-FE-13): rebuild filters từ

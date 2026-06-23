@@ -1,7 +1,9 @@
 <template>
   <main class="flex h-full flex-col" aria-labelledby="antmed-alerts-title">
     <!-- Header + breadcrumb (mockup A1 widget "⚠ Cảnh báo điều hành") -->
-    <header class="flex flex-col gap-2 border-b border-outline-gray-modals px-6 py-4">
+    <header
+      class="flex flex-col gap-2 border-b border-outline-gray-modals px-6 py-4"
+    >
       <nav class="text-p-xs text-ink-gray-5" :aria-label="__('Đường dẫn')">
         <RouterLink
           to="/antmed"
@@ -13,11 +15,18 @@
         <span class="text-ink-gray-7">{{ __('Cảnh báo điều hành') }}</span>
       </nav>
       <div class="flex flex-col gap-1">
-        <h1 id="antmed-alerts-title" class="text-xl font-semibold text-ink-gray-9">
+        <h1
+          id="antmed-alerts-title"
+          class="text-xl font-semibold text-ink-gray-9"
+        >
           {{ __('Cảnh báo điều hành') }}
         </h1>
         <p class="text-p-sm text-ink-gray-6">
-          {{ __('Quota chạm ngưỡng 70/90/100% và hợp đồng sắp / đã hết hạn (≤ 30 ngày)') }}
+          {{
+            __(
+              'Quota chạm ngưỡng 70/90/100% và hợp đồng sắp / đã hết hạn (≤ 30 ngày)',
+            )
+          }}
         </p>
       </div>
     </header>
@@ -39,9 +48,18 @@
         class="flex flex-col items-center gap-3 py-16 text-center"
         role="alert"
       >
-        <Badge variant="subtle" theme="red" size="lg" :label="__('Không tải được')" />
+        <Badge
+          variant="subtle"
+          theme="red"
+          size="lg"
+          :label="__('Không tải được')"
+        />
         <p class="max-w-md text-p-sm text-ink-gray-6">{{ errorMessage }}</p>
-        <Button variant="outline" :label="__('Thử lại')" @click="alerts.reload()" />
+        <Button
+          variant="outline"
+          :label="__('Thử lại')"
+          @click="alerts.reload()"
+        />
       </div>
 
       <!-- Empty (total_count = 0) -->
@@ -141,6 +159,9 @@ function rowAccentClass(alert) {
 // Tái dùng màn chi tiết HĐ đã có; params { name: alert.contract } (KHÔNG mã thô lộ ra UI).
 function openContract(alert) {
   if (!alert?.contract) return
-  router.push({ name: 'AntmedContractDetail', params: { name: alert.contract } })
+  router.push({
+    name: 'AntmedContractDetail',
+    params: { name: alert.contract },
+  })
 }
 </script>

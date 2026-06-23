@@ -2,7 +2,7 @@
 
 | Mục | Giá trị |
 |---|---|
-| Module folder | `crm/antmed/` (RBAC nền — áp tại M01 bootstrap, thuộc trục M14 Security/RBAC) |
+| Module folder | `antmed_crm/antmed/` (RBAC nền — áp tại M01 bootstrap, thuộc trục M14 Security/RBAC) |
 | Phase triển khai | W0 — RBAC nền (chạy trước mọi feature có DocPerm) |
 | Đề mục | W0-1: Đổi 3 Role sang nhãn tiếng Việt + migrate rename idempotent |
 | Role chính (SAU đổi) | `NV kinh doanh`, `Thủ kho`, `Quản lý` |
@@ -30,11 +30,11 @@ W0-1 là **RBAC nền** (foundation, không phải feature nghiệp vụ): đổ
 - **Always** dùng đúng 3 `name` Role mới (tiếng Việt, có dấu): `NV kinh doanh`, `Thủ kho`, `Quản lý`.
 - **Always** giữ `is_custom=1`, `desk_access=1`, `disabled=0` cho cả 3 Role (không đổi flag).
 - **Always** đổi tên Role hiện hữu bằng **patch** `frappe.rename_doc('Role', old, new, force=True)` — chỉ gọi **khi `old` tồn tại VÀ `new` chưa tồn tại** (guard idempotent).
-- **Always** cập nhật `crm/fixtures/role.json`: cả `name` **và** `role_name` = nhãn VI (để `bench migrate` re-import KHÔNG tái tạo Role EN).
-- **Always** cập nhật filter `fixtures` trong `crm/hooks.py` sang 3 tên VI (không còn EN).
-- **Always** cập nhật DocPerm `role` trong `crm/antmed/doctype/antmed_hospital/antmed_hospital.json` và `.../antmed_doctor/antmed_doctor.json` sang tên VI, **giữ nguyên ma trận quyền** (xem §DocPerm).
+- **Always** cập nhật `antmed_crm/fixtures/role.json`: cả `name` **và** `role_name` = nhãn VI (để `bench migrate` re-import KHÔNG tái tạo Role EN).
+- **Always** cập nhật filter `fixtures` trong `antmed_crm/hooks.py` sang 3 tên VI (không còn EN).
+- **Always** cập nhật DocPerm `role` trong `antmed_crm/antmed/doctype/antmed_hospital/antmed_hospital.json` và `.../antmed_doctor/antmed_doctor.json` sang tên VI, **giữ nguyên ma trận quyền** (xem §DocPerm).
 - **Always** cập nhật test (`test_antmed_bootstrap.py`, `test_antmed_customer.py`) sang tên VI.
-- **Always** đặt patch ở **`[pre_model_sync]`** trong `crm/patches.txt` — chạy TRƯỚC khi doctype migrate, để khi Frappe sync DocType `AntMed Hospital`/`AntMed Doctor` (DocPerm đã trỏ role VI) thì Role VI ĐÃ tồn tại → KHÔNG lỗi "role không tồn tại".
+- **Always** đặt patch ở **`[pre_model_sync]`** trong `antmed_crm/patches.txt` — chạy TRƯỚC khi doctype migrate, để khi Frappe sync DocType `AntMed Hospital`/`AntMed Doctor` (DocPerm đã trỏ role VI) thì Role VI ĐÃ tồn tại → KHÔNG lỗi "role không tồn tại".
 
 ### Never (W0-1 TUYỆT ĐỐI KHÔNG)
 - **Never** để sót bất kỳ tên EN nào (`AntMed Sales Rep` / `AntMed Warehouse Keeper` / `AntMed Manager`) trong: `role.json`, `hooks.py`, 2 doctype JSON, test, doc. Grep phải = 0.
@@ -74,7 +74,7 @@ W0-1 là **RBAC nền** (foundation, không phải feature nghiệp vụ): đổ
 
 ## Fixtures (RBAC — 3 Role nhãn VI)
 
-`crm/fixtures/role.json` — cả `name` và `role_name` = nhãn VI:
+`antmed_crm/fixtures/role.json` — cả `name` và `role_name` = nhãn VI:
 
 ```json
 [
@@ -87,7 +87,7 @@ W0-1 là **RBAC nền** (foundation, không phải feature nghiệp vụ): đổ
 ]
 ```
 
-Filter `fixtures` trong `crm/hooks.py` (chỉ đổi list tên — KHÔNG đụng key khác):
+Filter `fixtures` trong `antmed_crm/hooks.py` (chỉ đổi list tên — KHÔNG đụng key khác):
 
 ```python
 fixtures = [
@@ -108,8 +108,8 @@ fixtures = [
 
 | Thuộc tính | Giá trị |
 |---|---|
-| File | `crm/patches/v1_0/rename_antmed_roles_to_vi.py` |
-| Khai trong | `crm/patches.txt`, mục **`[pre_model_sync]`** (cuối block) |
+| File | `antmed_crm/patches/v1_0/rename_antmed_roles_to_vi.py` |
+| Khai trong | `antmed_crm/patches.txt`, mục **`[pre_model_sync]`** (cuối block) |
 | Hàm | `def execute():` |
 | Cơ chế | `frappe.rename_doc('Role', old, new, force=True)` cho từng cặp, có guard |
 | Idempotent | Chạy lần 2: mọi `old` đã không còn → guard skip → KHÔNG lỗi, KHÔNG tạo trùng |
@@ -187,8 +187,8 @@ W0-1 là RBAC nền — **không thực thi BR nghiệp vụ mới**. Liên quan
 
 ## Integration
 
-- `crm/hooks.py`: chỉ đổi list tên trong `fixtures` filter. KHÔNG đụng `permission_query_conditions` / `doc_events` / `after_migrate` / `before_tests` / `scheduler_events` gốc.
-- `crm/patches.txt`: THÊM 1 dòng patch ở `[pre_model_sync]`. KHÔNG xoá/đổi thứ tự patch Frappe CRM gốc.
+- `antmed_crm/hooks.py`: chỉ đổi list tên trong `fixtures` filter. KHÔNG đụng `permission_query_conditions` / `doc_events` / `after_migrate` / `before_tests` / `scheduler_events` gốc.
+- `antmed_crm/patches.txt`: THÊM 1 dòng patch ở `[pre_model_sync]`. KHÔNG xoá/đổi thứ tự patch Frappe CRM gốc.
 - No-regression bắt buộc: 4 test gốc Frappe CRM vẫn PASS (`test_org_hierarchy`, `test_crm_lead`, `test_crm_territory`, `test_crm_task`).
 
 ---
@@ -196,23 +196,23 @@ W0-1 là RBAC nền — **không thực thi BR nghiệp vụ mới**. Liên quan
 ## Test harness (acceptance W0-1)
 
 ### BE
-- `crm/tests/test_antmed_bootstrap.py` — đổi 3 hằng tên Role sang VI; assert:
+- `antmed_crm/tests/test_antmed_bootstrap.py` — đổi 3 hằng tên Role sang VI; assert:
   - `frappe.db.exists("Role", x)` truthy cho cả 3 tên VI (sau migrate).
   - ĐÚNG 3 Role AntMed VI (không thừa Role EN). `frappe.db.exists("Role", "<EN>")` trả `None`/falsy cho cả 3 tên EN.
   - (giữ) `ping()` shape + GET-only + module registered.
-- `crm/tests/test_antmed_customer.py` — RBAC dương dùng role **`NV kinh doanh`** (thay `AntMed Sales Rep`): user gán `NV kinh doanh` đọc được BV + bác sỹ; `count == rows`.
+- `antmed_crm/tests/test_antmed_customer.py` — RBAC dương dùng role **`NV kinh doanh`** (thay `AntMed Sales Rep`): user gán `NV kinh doanh` đọc được BV + bác sỹ; `count == rows`.
 - Lệnh chạy THẬT:
   ```
   bench --site miyano migrate          # re-import fixtures, apply DocType — KHÔNG tái tạo Role EN
   bench --site miyano migrate          # chạy lần 2: patch idempotent, KHÔNG lỗi, count Role VI == 3
-  bench --site miyano run-tests --module crm.tests.test_antmed_bootstrap
-  bench --site miyano run-tests --module crm.tests.test_antmed_customer
+  bench --site miyano run-tests --module antmed_crm.tests.test_antmed_bootstrap
+  bench --site miyano run-tests --module antmed_crm.tests.test_antmed_customer
   ```
 
 ### Verify acceptance (count==rows / không rò rỉ)
 - Sau migrate: `frappe.get_all("Role", filters={"name": ["in", ["NV kinh doanh","Thủ kho","Quản lý"]]})` → đúng **3 rows**.
 - `frappe.db.exists("Role", "AntMed Sales Rep")` (và 2 tên EN khác) → `None`.
-- `grep -rn "AntMed Sales Rep\|AntMed Warehouse Keeper\|AntMed Manager" crm/` → **0 hit** (trừ doc lịch sử/ADR mô tả mapping).
+- `grep -rn "AntMed Sales Rep\|AntMed Warehouse Keeper\|AntMed Manager" antmed_crm/` → **0 hit** (trừ doc lịch sử/ADR mô tả mapping).
 
 ### FE
 - `yarn vitest run` (trong `frontend/`) xanh — no FE change. Verified grep role-string = 0.
@@ -221,9 +221,9 @@ W0-1 là RBAC nền — **không thực thi BR nghiệp vụ mới**. Liên quan
 
 ## Build sequence (cho BE — KHÔNG commit)
 
-1. **BE**: sửa `crm/fixtures/role.json` → 3 Role VI (`name`+`role_name`+`is_custom=1`).
-2. **BE**: sửa `crm/hooks.py` `fixtures` filter list → 3 tên VI.
-3. **BE**: tạo `crm/patches/v1_0/rename_antmed_roles_to_vi.py` (logic §Patch) + thêm dòng vào `crm/patches.txt` `[pre_model_sync]`.
+1. **BE**: sửa `antmed_crm/fixtures/role.json` → 3 Role VI (`name`+`role_name`+`is_custom=1`).
+2. **BE**: sửa `antmed_crm/hooks.py` `fixtures` filter list → 3 tên VI.
+3. **BE**: tạo `antmed_crm/patches/v1_0/rename_antmed_roles_to_vi.py` (logic §Patch) + thêm dòng vào `antmed_crm/patches.txt` `[pre_model_sync]`.
 4. **BE**: sửa DocPerm `role` trong `antmed_hospital.json` + `antmed_doctor.json` (3 chỗ EN → VI mỗi file: `AntMed Manager`→`Quản lý`, `AntMed Sales Rep`→`NV kinh doanh`).
 5. **BE**: sửa test `test_antmed_bootstrap.py` + `test_antmed_customer.py` sang tên VI.
 6. **BE**: `bench --site miyano migrate` (2 lần) → verify đúng 3 Role VI, 0 Role EN.
@@ -248,7 +248,7 @@ W0-1 là RBAC nền — **không thực thi BR nghiệp vụ mới**. Liên quan
   - (+) Rename giữ nguyên mọi reference (User role, DocPerm) — không mất dữ liệu phân quyền.
   - (−) `name` Role có dấu tiếng Việt + khoảng trắng → khi truyền trong URL/query phải URL-encode (Frappe xử lý sẵn ở desk; nếu round sau cần check role ở FE thì so sánh chuỗi VI — ghi nhớ).
   - (−) Mọi tài liệu/test/JSON tham chiếu tên EN phải đồng bộ (đã liệt kê trong build sequence). Tên EN chỉ còn xuất hiện trong ADR mô tả mapping (lịch sử).
-  - (−) Nếu sau này tách app `antmed_crm` riêng (ADR-M01-01) cần đối chiếu lại naming → khi đó viết ADR mới.
+  - (−) App đã cài THẬT là app RIÊNG `antmed_crm` (fork Frappe CRM, theo tinh thần ADR-M01-01 — KHÔNG in-place trong app `crm`); nếu sau này đổi naming Role lần nữa cần đối chiếu lại → khi đó viết ADR mới.
 
 ### ADR-M14W0-02: Dùng patch `rename_doc` (idempotent) thay vì chỉ đổi fixture
 - **Status**: Accepted
@@ -265,4 +265,4 @@ W0-1 là RBAC nền — **không thực thi BR nghiệp vụ mới**. Liên quan
 - Spec bootstrap R1 (đã light-touch trỏ về doc này cho phần Role): `./m01_bootstrap.md`
 - Convention naming (đã light-touch cập nhật bảng Role VI): `./m01_naming_conventions.md`
 - Customer 360° R2 (DocPerm dùng tên VI): `./m01_customer360.md`
-- Source thật: `crm/fixtures/role.json`, `crm/hooks.py`, `crm/patches.txt`, `crm/patches/v1_0/`, `crm/antmed/doctype/antmed_hospital/antmed_hospital.json`, `crm/antmed/doctype/antmed_doctor/antmed_doctor.json`, `crm/tests/test_antmed_bootstrap.py`, `crm/tests/test_antmed_customer.py`
+- Source thật: `antmed_crm/fixtures/role.json`, `antmed_crm/hooks.py`, `antmed_crm/patches.txt`, `antmed_crm/patches/v1_0/`, `antmed_crm/antmed/doctype/antmed_hospital/antmed_hospital.json`, `antmed_crm/antmed/doctype/antmed_doctor/antmed_doctor.json`, `antmed_crm/tests/test_antmed_bootstrap.py`, `antmed_crm/tests/test_antmed_customer.py`

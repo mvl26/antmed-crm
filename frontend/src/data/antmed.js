@@ -19,17 +19,6 @@
  */
 import { createResource } from 'frappe-ui'
 
-/**
- * Health-check nền AntMed — GET antmed_crm.api.antmed.health.ping.
- * Trả RAW dict { app, status, version }. Caller bật `auto: true` hoặc `.fetch()`.
- */
-export function getAntmedHealth() {
-  return createResource({
-    url: 'antmed_crm.api.antmed.health.ping',
-    method: 'GET',
-  })
-}
-
 // ── M01 R2: Customer 360° — Bệnh viện + Bác sỹ ──────────────────────────────
 
 /**
@@ -58,20 +47,6 @@ export function listHospitals({ params = {}, auto = false } = {}) {
 export function getHospital({ params = {}, auto = false } = {}) {
   return createResource({
     url: 'antmed_crm.api.antmed.customer.get_hospital',
-    method: 'GET',
-    params,
-    auto,
-  })
-}
-
-/**
- * Danh sách Bác sỹ — antmed_crm.api.antmed.customer.list_doctors.
- * BE: list_doctors(filters?, hospital?, start?, page_length?) -> { data, total_count }.
- * Item: name, full_name, specialty, hospital, phone (+ hospital_name nếu rẻ).
- */
-export function listDoctors({ params = {}, auto = false } = {}) {
-  return createResource({
-    url: 'antmed_crm.api.antmed.customer.list_doctors',
     method: 'GET',
     params,
     auto,
@@ -680,49 +655,6 @@ export function scanLot({ params = {}, auto = false } = {}) {
 }
 
 /**
- * Gợi ý lô theo FIFO cho 1 VTYT — antmed_crm.api.antmed.inventory.fifo_suggest (GET).
- * BE: fifo_suggest(item, warehouse, qty=1) -> RAW dict THƯỜNG:
- *   { item, warehouse, requested_qty, fulfillable(bool), shortage(float),
- *     lots:[{ lot, lot_no, expiry_date, available_qty, take_qty }] }.
- *   - lots = chuỗi lô đề xuất rút theo HSD sớm nhất (FIFO BR-08), BE đã sort → FE KHÔNG sort lại.
- *
- * ⚠️ Dict THƯỜNG, KHÔNG bọc → đọc `r.data.lots` / `r.data.fulfillable` TRỰC TIẾP. auto:false.
- *
- * @param {object} [opts]
- * @param {object} [opts.params] - params khởi tạo ({ item, warehouse, qty }).
- * @param {boolean} [opts.auto] - auto-fetch (mặc định false).
- */
-export function fifoSuggest({ params = {}, auto = false } = {}) {
-  return createResource({
-    url: 'antmed_crm.api.antmed.inventory.fifo_suggest',
-    method: 'GET',
-    params,
-    auto,
-  })
-}
-
-/**
- * Kiểm tra lô đang chọn có đúng ưu tiên FIFO không — antmed_crm.api.antmed.inventory.check_fifo (GET).
- * BE: check_fifo(item, warehouse, lot) -> RAW dict THƯỜNG:
- *   { is_priority(bool), chosen_lot, chosen_expiry, suggested_lot, suggested_expiry }.
- *   - is_priority=false → lô đang chọn KHÔNG phải HSD sớm nhất (FE chip cảnh báo 'Không ưu tiên FIFO').
- *
- * ⚠️ Dict THƯỜNG, KHÔNG bọc → đọc `r.data.is_priority` TRỰC TIẾP. auto:false.
- *
- * @param {object} [opts]
- * @param {object} [opts.params] - params khởi tạo ({ item, warehouse, lot }).
- * @param {boolean} [opts.auto] - auto-fetch (mặc định false).
- */
-export function checkFifo({ params = {}, auto = false } = {}) {
-  return createResource({
-    url: 'antmed_crm.api.antmed.inventory.check_fifo',
-    method: 'GET',
-    params,
-    auto,
-  })
-}
-
-/**
  * Tạo + submit 1 phiếu kho (Xuất cho NV / Nhập NCC / Chuyển kho) — antmed_crm.api.antmed.inventory
  *   .create_stock_entry (POST, MUTATION).
  * BE: create_stock_entry(entry_type, items, from_warehouse?, to_warehouse?, nv_employee?, hospital?,
@@ -849,28 +781,6 @@ export function createStockCount({ params = {}, auto = false } = {}) {
 export function listStockCounts({ params = {}, auto = false } = {}) {
   return createResource({
     url: 'antmed_crm.api.antmed.inventory.list_stock_counts',
-    method: 'GET',
-    params,
-    auto,
-  })
-}
-
-/**
- * Chi tiết 1 phiếu Kiểm kê (drill-down) — antmed_crm.api.antmed.inventory.get_stock_count (GET).
- * BE: get_stock_count(name) -> RAW dict THƯỜNG:
- *   { name, warehouse, warehouse_name, count_datetime, counted_by, counted_by_name,
- *     total_variance_qty, note, docstatus,
- *     items:[{ item, item_name, lot, lot_no, expiry_date, system_qty, counted_qty, variance }] }.
- *
- * ⚠️ Dict THƯỜNG, KHÔNG bọc → đọc `r.data.items` / `r.data.name` TRỰC TIẾP (KHÔNG .data.data). auto:false.
- *
- * @param {object} [opts]
- * @param {object} [opts.params] - params khởi tạo ({ name }).
- * @param {boolean} [opts.auto] - auto-fetch (mặc định false — cần name).
- */
-export function getStockCount({ params = {}, auto = false } = {}) {
-  return createResource({
-    url: 'antmed_crm.api.antmed.inventory.get_stock_count',
     method: 'GET',
     params,
     auto,
@@ -1302,62 +1212,6 @@ export const COMPONENT_CONDITION_THEME = {
   Damaged: 'orange',
 }
 
-// ── M06-1: màn "Hàng chờ phát hành chứng từ" (persona Chứng từ/Pháp lý — mockup E1) ──
-
-/**
- * KPI rollup màn Hàng chờ phát hành (E1) — antmed_crm.api.antmed.documents.release_queue_summary (GET).
- * BE: release_queue_summary() -> RAW dict THƯỜNG 3 key CỐ ĐỊNH (Hyrum-safe, KHÔNG bọc {data,total_count}):
- *   { missing_co: int, missing_cq: int, ready_to_release: int }
- *   - missing_co       = số hàng chờ có 'CO' trong missing_chips.
- *   - missing_cq       = số hàng chờ có 'CQ' trong missing_chips.
- *   - ready_to_release = số hàng chờ status='Chờ phát hành' AND missing_chips rỗng (đủ CO+CQ).
- *   Đếm DƯỚI DocPerm (BR-13) → khớp số dòng list_release_queue user được phép thấy.
- *   Fail-closed: user KHÔNG read-perm → {0,0,0} (KHÔNG throw) → FE render 3 số 0 (KHÔNG vỡ).
- *
- * ⚠️ Dict THƯỜNG → đọc r.data.missing_co / r.data.missing_cq / r.data.ready_to_release TRỰC TIẾP
- *    (KHÔNG .data.data — khác list bọc dict). createResource (KHÔNG createListResource).
- * ⚠️⚠️ BẮT BUỘC method:'GET' (@frappe.whitelist(methods=["GET"]) + KHÔNG params → createResource
- *    mặc định POST → BE reject 403 "Not permitted").
- *
- * @param {object} [opts]
- * @param {boolean} [opts.auto] - auto-fetch.
- * @param {function} [opts.onError] - callback lỗi (toast).
- */
-export function getReleaseQueueSummary({ auto = false, onError } = {}) {
-  return createResource({
-    url: 'antmed_crm.api.antmed.documents.release_queue_summary',
-    method: 'GET',
-    auto,
-    onError,
-  })
-}
-
-/**
- * Worklist Hàng chờ phát hành (E1) — antmed_crm.api.antmed.documents.list_release_queue (GET).
- * BE: list_release_queue(status?, start?, page_length?) -> RAW dict bọc { data, total_count }.
- *   Mỗi dòng: name, delivery, document_bundle, status, missing_chips (chuỗi JSON list),
- *     assigned_to, ts, hospital_name (resolve qua delivery→hospital), assigned_employee (NV — User).
- *   Count==rows dưới DocPerm (BR-13). status (Select VI) filter tuỳ chọn.
- *
- * ⚠️ List bọc dict → đọc r.data.data + r.data.total_count (createResource, KHÔNG createListResource).
- * ⚠️ method:'GET' (@frappe.whitelist(methods=["GET"])). Lọc bằng param `status` (string) — KHÔNG
- *    object filters (createResource GET serialize object thô thành "[object Object]" → BE parse lỗi).
- *
- * @param {object} [opts]
- * @param {object} [opts.params] - params khởi tạo ({ status?, start?, page_length? }).
- * @param {boolean} [opts.auto] - auto-fetch.
- * @param {function} [opts.onError] - callback lỗi (toast).
- */
-export function getReleaseQueue({ params = {}, auto = false, onError } = {}) {
-  return createResource({
-    url: 'antmed_crm.api.antmed.documents.list_release_queue',
-    method: 'GET',
-    params,
-    auto,
-    onError,
-  })
-}
-
 // ── H1: Quản trị User & Role (admin RBAC) ────────────────────────────────────
 
 /** Danh sách user + role + scope + 2FA + enabled. GET admin.list_users (admin-gated). */
@@ -1376,16 +1230,6 @@ export function getAdminRoles({ auto = false } = {}) {
   return createResource({
     url: 'antmed_crm.api.antmed.admin.list_roles',
     method: 'GET',
-    auto,
-  })
-}
-
-/** Ma trận quyền (Module × R/C/U/D) cho 1 role. GET admin.role_permissions(role). */
-export function getRolePermissions({ params = {}, auto = false } = {}) {
-  return createResource({
-    url: 'antmed_crm.api.antmed.admin.role_permissions',
-    method: 'GET',
-    params,
     auto,
   })
 }
@@ -1753,34 +1597,6 @@ export function saveLotTrace({ params = {}, auto = false } = {}) {
 }
 
 /**
- * Danh sách bản truy vết đã lưu — inventory.list_lot_traces (GET).
- * BE trả bọc { data:[{name,lot,lot_no,requested_by,requested_by_name,generated_at,
- *   affected_hospitals}], total_count } → đọc r.data.data + r.data.total_count.
- */
-export function listLotTraces({ params = {}, auto = false } = {}) {
-  return createResource({
-    url: 'antmed_crm.api.antmed.inventory.list_lot_traces',
-    method: 'GET',
-    params,
-    auto,
-  })
-}
-
-/**
- * Chi tiết 1 bản truy vết đã lưu — inventory.get_lot_trace_request (GET).
- * BE trả dict THƯỜNG { name, lot, lot_no, requested_by, requested_by_name, generated_at,
- *   affected_hospitals, note, graph } → đọc r.data.graph TRỰC TIẾP.
- */
-export function getLotTraceRequest({ params = {}, auto = false } = {}) {
-  return createResource({
-    url: 'antmed_crm.api.antmed.inventory.get_lot_trace_request',
-    method: 'GET',
-    params,
-    auto,
-  })
-}
-
-/**
  * Danh sách lô (màn Quản lý lot) — inventory.list_lots (GET).
  * BE trả bọc { data:[{name,lot_no,item,item_name,supplier,expiry_date,recall_status}],
  *   total_count } → đọc r.data.data. search khớp lot_no; params.item lọc theo VTYT;
@@ -1810,35 +1626,6 @@ export function listItems({ params = {}, auto = false } = {}) {
 }
 
 // ── M03 D3: Thông báo thu hồi (Recall Notification) + export PDF truy vết ──────
-
-/**
- * Danh sách thông báo thu hồi — inventory.list_recall_notifications (GET).
- * BE bọc { data:[{name,lot,lot_no,item,status,initiated_at,affected_count,notified_count}],
- *   total_count } → đọc r.data.data.
- */
-export function listRecallNotifications({ params = {}, auto = false } = {}) {
-  return createResource({
-    url: 'antmed_crm.api.antmed.inventory.list_recall_notifications',
-    method: 'GET',
-    params,
-    auto,
-  })
-}
-
-/**
- * Chi tiết 1 thông báo thu hồi — inventory.get_recall_notification (GET).
- * BE dict THƯỜNG { name, lot, lot_no, item, status, reason, initiated_by, initiated_at,
- *   affected_count, notified_count, hospitals:[{hospital,hospital_name,qty_consignment,
- *   qty_delivered}] } → đọc r.data.hospitals TRỰC TIẾP.
- */
-export function getRecallNotification({ params = {}, auto = false } = {}) {
-  return createResource({
-    url: 'antmed_crm.api.antmed.inventory.get_recall_notification',
-    method: 'GET',
-    params,
-    auto,
-  })
-}
 
 /**
  * Xuất PDF 1 bản truy vết đã lưu — inventory.export_lot_trace_pdf (POST mutation).
@@ -1873,14 +1660,6 @@ export function saveCareNote({ onSuccess, onError } = {}) {
 export function listVisits({ params = {}, auto = false } = {}) {
   return createResource({
     url: 'antmed_crm.api.antmed.doctor_care.list_visits',
-    method: 'GET',
-    params,
-    auto,
-  })
-}
-export function getVisit({ params = {}, auto = false } = {}) {
-  return createResource({
-    url: 'antmed_crm.api.antmed.doctor_care.get_visit',
     method: 'GET',
     params,
     auto,

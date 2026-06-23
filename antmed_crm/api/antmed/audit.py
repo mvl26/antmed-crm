@@ -34,7 +34,9 @@ def _json(v) -> str:
 	return json.dumps(v, sort_keys=True, ensure_ascii=False, default=str)
 
 
-def write_log(ref_doctype: str, ref_name: str, action: str, before=None, after=None, actor: str | None = None) -> str:
+def write_log(
+	ref_doctype: str, ref_name: str, action: str, before=None, after=None, actor: str | None = None
+) -> str:
 	"""Ghi 1 dòng audit nối chuỗi hash. Trả name. (KHÔNG whitelist — server-side only.)"""
 	ts = now_datetime().replace(microsecond=0)  # giây — tránh lệch hash khi round-trip Datetime
 	row = {
@@ -46,10 +48,14 @@ def write_log(ref_doctype: str, ref_name: str, action: str, before=None, after=N
 		"before_json": _json(before),
 		"after_json": _json(after),
 	}
-	last = frappe.get_all(AUDIT_DOCTYPE, fields=["hash_sha256"], order_by="creation desc", limit_page_length=1)
+	last = frappe.get_all(
+		AUDIT_DOCTYPE, fields=["hash_sha256"], order_by="creation desc", limit_page_length=1
+	)
 	prev = (last[0]["hash_sha256"] if last else "") or ""
 	row_hash = hashlib.sha256((prev + _payload_str(row)).encode()).hexdigest()
-	doc = frappe.get_doc({"doctype": AUDIT_DOCTYPE, **row, "ts": ts, "prev_hash": prev, "hash_sha256": row_hash})
+	doc = frappe.get_doc(
+		{"doctype": AUDIT_DOCTYPE, **row, "ts": ts, "prev_hash": prev, "hash_sha256": row_hash}
+	)
 	doc.insert(ignore_permissions=True)
 	return doc.name
 
@@ -64,7 +70,17 @@ def verify_chain() -> dict:
 		frappe.throw(_("Bạn không có quyền kiểm tra audit."), frappe.PermissionError)
 	logs = frappe.get_all(
 		AUDIT_DOCTYPE,
-		fields=["name", "ref_doctype", "ref_name", "action", "actor", "ts", "before_json", "after_json", "hash_sha256"],
+		fields=[
+			"name",
+			"ref_doctype",
+			"ref_name",
+			"action",
+			"actor",
+			"ts",
+			"before_json",
+			"after_json",
+			"hash_sha256",
+		],
 		order_by="creation asc",
 	)
 	prev = ""
@@ -78,7 +94,9 @@ def verify_chain() -> dict:
 
 
 @frappe.whitelist(methods=["GET"])
-def list_logs(ref_doctype: str | None = None, action: str | None = None, start: int = 0, page_length: int = 20) -> dict:
+def list_logs(
+	ref_doctype: str | None = None, action: str | None = None, start: int = 0, page_length: int = 20
+) -> dict:
 	"""Danh sách audit log. Trả RAW {data, total_count} — count==rows dưới DocPerm."""
 	conditions = []
 	if ref_doctype:
@@ -88,7 +106,14 @@ def list_logs(ref_doctype: str | None = None, action: str | None = None, start: 
 	start = max(0, int(start))
 	page_length = max(0, int(page_length))
 	fields = ["name", "ref_doctype", "ref_name", "action", "actor", "ts", "hash_sha256"]
-	rows = frappe.get_list(AUDIT_DOCTYPE, filters=conditions, fields=fields, limit_start=start, limit_page_length=page_length or 0, order_by="creation desc")
+	rows = frappe.get_list(
+		AUDIT_DOCTYPE,
+		filters=conditions,
+		fields=fields,
+		limit_start=start,
+		limit_page_length=page_length or 0,
+		order_by="creation desc",
+	)
 	total_count = len(frappe.get_list(AUDIT_DOCTYPE, filters=conditions, pluck="name", limit_page_length=0))
 	return {"data": rows, "total_count": total_count}
 

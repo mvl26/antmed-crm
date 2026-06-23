@@ -13,11 +13,9 @@ on:
     schedule:
         # Run everday at midnight UTC / 5:30 IST
         - cron: "0 0 * * *"
-env:
-    CRM_BRANCH: ${{ github.base_ref || github.ref_name }}
 
 concurrency:
-    group: develop-crm-${{ github.event.number }}
+    group: antmed-crm-server-${{ github.event.number || github.ref }}
     cancel-in-progress: true
 
 jobs:
@@ -53,7 +51,7 @@ jobs:
               with:
                   bench-path: "/home/runner/frappe-bench"
                   site: "test_site"
-                  app: "crm"
+                  app: "antmed_crm"
                   enable-coverage: "true"
                   type: "server"
                   ci-build-id: ${{ github.run_id }}

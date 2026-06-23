@@ -20,7 +20,9 @@ from antmed_crm.api.antmed import documents
 
 def _ensure(doctype, key, val, values):
 	name = frappe.db.get_value(doctype, {key: val}, "name")
-	return name or frappe.get_doc({"doctype": doctype, key: val, **values}).insert(ignore_permissions=True).name
+	return (
+		name or frappe.get_doc({"doctype": doctype, key: val, **values}).insert(ignore_permissions=True).name
+	)
 
 
 class TestAntMedCoCq(FrappeTestCase):
@@ -28,17 +30,37 @@ class TestAntMedCoCq(FrappeTestCase):
 	def setUpClass(cls):
 		super().setUpClass()
 		cls.hosp = _ensure("AntMed Hospital", "hospital_code", "_T-COCQ-BV", {"hospital_name": "BV CoCq"})
-		cls.item = _ensure("AntMed Item", "item_code", "_T-COCQ-STENT", {"item_name": "Stent CoCq", "requires_cocq": 1})
+		cls.item = _ensure(
+			"AntMed Item", "item_code", "_T-COCQ-STENT", {"item_name": "Stent CoCq", "requires_cocq": 1}
+		)
 
 	def _fresh_lot(self, suffix):
-		return frappe.get_doc(
-			{"doctype": "AntMed Lot", "lot_no": f"_T-COCQ-LOT-{suffix}", "item": self.item, "expiry_date": "2027-12-31"}
-		).insert(ignore_permissions=True).name
+		return (
+			frappe.get_doc(
+				{
+					"doctype": "AntMed Lot",
+					"lot_no": f"_T-COCQ-LOT-{suffix}",
+					"item": self.item,
+					"expiry_date": "2027-12-31",
+				}
+			)
+			.insert(ignore_permissions=True)
+			.name
+		)
 
 	def _mk_delivery(self, lot):
-		return frappe.get_doc(
-			{"doctype": "AntMed Delivery", "hospital": self.hosp, "surgery_datetime": "2026-08-01 08:00:00", "items": [{"item": self.item, "lot": lot, "requested_qty": 1}]}
-		).insert(ignore_permissions=True).name
+		return (
+			frappe.get_doc(
+				{
+					"doctype": "AntMed Delivery",
+					"hospital": self.hosp,
+					"surgery_datetime": "2026-08-01 08:00:00",
+					"items": [{"item": self.item, "lot": lot, "requested_qty": 1}],
+				}
+			)
+			.insert(ignore_permissions=True)
+			.name
+		)
 
 	def test_attach_co_cq(self):
 		lot = self._fresh_lot("ATT")
@@ -72,9 +94,9 @@ class TestAntMedCoCq(FrappeTestCase):
 		lot = self._fresh_lot("PERM")
 		email = "_t_cocq_noperm@example.com"
 		if not frappe.db.exists("User", email):
-			frappe.get_doc({"doctype": "User", "email": email, "first_name": "NoPermCoCq", "send_welcome_email": 0}).insert(
-				ignore_permissions=True
-			)
+			frappe.get_doc(
+				{"doctype": "User", "email": email, "first_name": "NoPermCoCq", "send_welcome_email": 0}
+			).insert(ignore_permissions=True)
 		frappe.set_user(email)
 		try:
 			with self.assertRaises(frappe.PermissionError):

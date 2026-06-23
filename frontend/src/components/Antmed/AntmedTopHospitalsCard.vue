@@ -7,7 +7,10 @@
     aria-labelledby="antmed-top-hospitals-title"
   >
     <header class="flex items-baseline justify-between gap-2">
-      <h2 id="antmed-top-hospitals-title" class="text-p-base font-semibold text-ink-gray-8">
+      <h2
+        id="antmed-top-hospitals-title"
+        class="text-p-base font-semibold text-ink-gray-8"
+      >
         {{ __('Top 10 Bệnh viện') }}
       </h2>
       <span
@@ -35,8 +38,18 @@
       class="flex flex-col items-center gap-3 py-8 text-center"
       role="alert"
     >
-      <Badge variant="subtle" theme="red" size="sm" :label="__('Không tải được')" />
-      <Button variant="outline" size="sm" :label="__('Thử lại')" @click="$emit('retry')" />
+      <Badge
+        variant="subtle"
+        theme="red"
+        size="sm"
+        :label="__('Không tải được')"
+      />
+      <Button
+        variant="outline"
+        size="sm"
+        :label="__('Thử lại')"
+        @click="$emit('retry')"
+      />
     </div>
 
     <!-- Empty -->
@@ -52,14 +65,18 @@
     <!-- Data — bảng 3 cột BV | DT | Quota -->
     <table v-else class="w-full border-separate border-spacing-0 text-left">
       <caption class="sr-only">
-        {{ __('Bảng xếp hạng bệnh viện theo doanh thu') }}
+        {{
+          __('Bảng xếp hạng bệnh viện theo doanh thu')
+        }}
       </caption>
       <thead>
         <tr class="text-p-xs text-ink-gray-6">
           <th class="border-b border-outline-gray-1 py-2 pr-4 font-medium">
             {{ __('Bệnh viện') }}
           </th>
-          <th class="border-b border-outline-gray-1 py-2 pr-4 text-right font-medium">
+          <th
+            class="border-b border-outline-gray-1 py-2 pr-4 text-right font-medium"
+          >
             {{ __('Doanh thu') }}
           </th>
           <th class="border-b border-outline-gray-1 py-2 font-medium">
@@ -74,18 +91,26 @@
           :key="row.hospital"
           role="link"
           tabindex="0"
-          :aria-label="__('Xem chi tiết bệnh viện') + ' ' + (row.hospital_name || row.hospital)"
+          :aria-label="
+            __('Xem chi tiết bệnh viện') +
+            ' ' +
+            (row.hospital_name || row.hospital)
+          "
           class="cursor-pointer text-p-sm text-ink-gray-8 transition hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-3"
           @click="$emit('open', row.hospital)"
           @keydown.enter="$emit('open', row.hospital)"
         >
           <!-- BV (tên, KHÔNG mã) -->
-          <td class="border-b border-outline-gray-1 py-2.5 pr-4 font-medium text-ink-gray-9">
+          <td
+            class="border-b border-outline-gray-1 py-2.5 pr-4 font-medium text-ink-gray-9"
+          >
             {{ row.hospital_name || row.hospital }}
           </td>
 
           <!-- DT — doanh thu HĐ (format VN gọn tr/tỷ) -->
-          <td class="border-b border-outline-gray-1 py-2.5 pr-4 text-right tabular-nums text-ink-gray-8">
+          <td
+            class="border-b border-outline-gray-1 py-2.5 pr-4 text-right tabular-nums text-ink-gray-8"
+          >
             {{ formatVnMoney(row.revenue) }}
           </td>
 
@@ -98,7 +123,9 @@
                 :aria-valuenow="clampPct(row.quota_used_pct)"
                 aria-valuemin="0"
                 aria-valuemax="100"
-                :aria-label="__('Quota đã dùng') + ' ' + pctLabel(row.quota_used_pct)"
+                :aria-label="
+                  __('Quota đã dùng') + ' ' + pctLabel(row.quota_used_pct)
+                "
               >
                 <div
                   class="h-full rounded-full transition-all"
@@ -106,7 +133,9 @@
                   :style="{ width: clampPct(row.quota_used_pct) + '%' }"
                 />
               </div>
-              <span class="min-w-[2.75rem] tabular-nums text-p-xs text-ink-gray-7">
+              <span
+                class="min-w-[2.75rem] tabular-nums text-p-xs text-ink-gray-7"
+              >
                 {{ pctLabel(row.quota_used_pct) }}
               </span>
             </div>

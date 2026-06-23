@@ -1,7 +1,9 @@
 <template>
   <main class="flex h-full flex-col" aria-labelledby="antmed-revenue-title">
     <!-- Header + breadcrumb 'Trang chủ › Doanh thu' -->
-    <header class="flex flex-col gap-2 border-b border-outline-gray-modals px-6 py-4">
+    <header
+      class="flex flex-col gap-2 border-b border-outline-gray-modals px-6 py-4"
+    >
       <nav class="text-p-xs text-ink-gray-5" :aria-label="__('Đường dẫn')">
         <RouterLink
           to="/antmed"
@@ -13,11 +15,18 @@
         <span class="text-ink-gray-7">{{ __('Doanh thu') }}</span>
       </nav>
       <div class="flex flex-col gap-1">
-        <h1 id="antmed-revenue-title" class="text-xl font-semibold text-ink-gray-9">
+        <h1
+          id="antmed-revenue-title"
+          class="text-xl font-semibold text-ink-gray-9"
+        >
           {{ __('Doanh thu') }}
         </h1>
         <p class="text-p-sm text-ink-gray-6">
-          {{ __('Doanh thu thực theo nhóm phân loại vật tư trong 12 tháng gần nhất') }}
+          {{
+            __(
+              'Doanh thu thực theo nhóm phân loại vật tư trong 12 tháng gần nhất',
+            )
+          }}
         </p>
       </div>
     </header>
@@ -34,7 +43,9 @@
             class="text-p-sm text-ink-gray-6"
           >
             {{ __('Tổng 12 tháng') }}:
-            <b class="tabular-nums text-ink-gray-8">{{ formatVnMoney(grandTotal) }}</b>
+            <b class="tabular-nums text-ink-gray-8">{{
+              formatVnMoney(grandTotal)
+            }}</b>
           </span>
         </div>
 
@@ -55,8 +66,17 @@
           class="flex flex-col items-center gap-3 py-16 text-center"
           role="alert"
         >
-          <Badge variant="subtle" theme="red" size="lg" :label="__('Lỗi tải doanh thu')" />
-          <Button variant="outline" :label="__('Thử lại')" @click="revenue.reload()" />
+          <Badge
+            variant="subtle"
+            theme="red"
+            size="lg"
+            :label="__('Lỗi tải doanh thu')"
+          />
+          <Button
+            variant="outline"
+            :label="__('Thử lại')"
+            @click="revenue.reload()"
+          />
         </div>
 
         <!-- Data — stacked bar 12 cột × tối đa 5 segment nhóm -->
@@ -85,7 +105,9 @@
             class="flex h-56 items-end gap-1.5"
             role="img"
             :aria-label="
-              __('Biểu đồ cột chồng doanh thu theo nhóm vật tư, 12 tháng gần nhất')
+              __(
+                'Biểu đồ cột chồng doanh thu theo nhóm vật tư, 12 tháng gần nhất',
+              )
             "
           >
             <div
@@ -105,12 +127,19 @@
                   :class="barClass(g.classification)"
                   :style="{ height: segmentHeight(g.monthly[i]) + '%' }"
                   :title="
-                    g.label + ': ' + formatVnMoney(g.monthly[i]) + ' (' + month + ')'
+                    g.label +
+                    ': ' +
+                    formatVnMoney(g.monthly[i]) +
+                    ' (' +
+                    month +
+                    ')'
                   "
                 />
               </div>
               <!-- Nhãn tháng trục X -->
-              <span class="text-p-xs tabular-nums text-ink-gray-5">{{ month }}</span>
+              <span class="text-p-xs tabular-nums text-ink-gray-5">{{
+                month
+              }}</span>
             </div>
           </div>
 
@@ -125,7 +154,9 @@
       </div>
 
       <!-- Card "Doanh thu theo NV Kinh doanh × Bệnh viện" (mockup A3 dòng 325-334) -->
-      <div class="mt-5 rounded-lg border border-outline-gray-2 bg-surface-white p-4">
+      <div
+        class="mt-5 rounded-lg border border-outline-gray-2 bg-surface-white p-4"
+      >
         <div class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
           <h2 class="text-base font-semibold text-teal-900">
             {{ __('Doanh thu theo NV Kinh doanh × Bệnh viện') }}
@@ -135,7 +166,9 @@
             class="text-p-sm text-ink-gray-6"
           >
             {{ __('Tổng') }}:
-            <b class="tabular-nums text-ink-gray-8">{{ formatVnMoney(repHospGrand) }}</b>
+            <b class="tabular-nums text-ink-gray-8">{{
+              formatVnMoney(repHospGrand)
+            }}</b>
           </span>
         </div>
 
@@ -154,8 +187,17 @@
           class="flex flex-col items-center gap-3 py-12 text-center"
           role="alert"
         >
-          <Badge variant="subtle" theme="red" size="lg" :label="__('Lỗi tải doanh thu')" />
-          <Button variant="outline" :label="__('Thử lại')" @click="repHosp.reload()" />
+          <Badge
+            variant="subtle"
+            theme="red"
+            size="lg"
+            :label="__('Lỗi tải doanh thu')"
+          />
+          <Button
+            variant="outline"
+            :label="__('Thử lại')"
+            @click="repHosp.reload()"
+          />
         </div>
 
         <!-- Empty-state: không có Deal Won nào → KHÔNG vỡ layout -->
@@ -188,7 +230,9 @@
             </thead>
             <tbody>
               <tr v-for="row in repHospRows" :key="row.deal_owner">
-                <td class="whitespace-nowrap px-2 py-1 text-left text-ink-gray-8">
+                <td
+                  class="whitespace-nowrap px-2 py-1 text-left text-ink-gray-8"
+                >
                   {{ row.full_name }}
                 </td>
                 <td
@@ -254,7 +298,9 @@ import {
 // (BE đã gộp bucket + classification).
 const revenue = getRevenueByGroup({ auto: true })
 revenue.onError = (err) => {
-  toast.error(err?.messages?.[0] || __('Không tải được doanh thu theo nhóm vật tư'))
+  toast.error(
+    err?.messages?.[0] || __('Không tải được doanh thu theo nhóm vật tư'),
+  )
 }
 
 const months = computed(() => revenue.data?.months || [])
@@ -281,7 +327,9 @@ function swatchClass(classification) {
 // FE KHÔNG reduce/sort/aggregate — BE đã gộp (owner×hospital), sort rows DESC, tính heat/total.
 const repHosp = getRevenueByRepHospital({ auto: true })
 repHosp.onError = (err) => {
-  toast.error(err?.messages?.[0] || __('Không tải được doanh thu theo NV × Bệnh viện'))
+  toast.error(
+    err?.messages?.[0] || __('Không tải được doanh thu theo NV × Bệnh viện'),
+  )
 }
 
 const repHospRows = computed(() => repHosp.data?.rows || [])

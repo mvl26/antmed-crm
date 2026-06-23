@@ -51,9 +51,7 @@ def _ensure_lost_reason():
 	"""
 	reason = "_T-TP-Lost-Reason"
 	if not frappe.db.exists("CRM Lost Reason", reason):
-		frappe.get_doc({"doctype": "CRM Lost Reason", "lost_reason": reason}).insert(
-			ignore_permissions=True
-		)
+		frappe.get_doc({"doctype": "CRM Lost Reason", "lost_reason": reason}).insert(ignore_permissions=True)
 	return reason
 
 
@@ -62,14 +60,9 @@ def _mk_lead(first_name, status, **kw):
 
 	Status type Lost (Junk/Unqualified) cần lost_reason — tự cấp nếu caller chưa truyền.
 	"""
-	if (
-		"lost_reason" not in kw
-		and frappe.get_cached_value("CRM Lead Status", status, "type") == "Lost"
-	):
+	if "lost_reason" not in kw and frappe.get_cached_value("CRM Lead Status", status, "type") == "Lost":
 		kw["lost_reason"] = _ensure_lost_reason()
-	doc = frappe.get_doc(
-		{"doctype": "CRM Lead", "first_name": first_name, "status": status, **kw}
-	)
+	doc = frappe.get_doc({"doctype": "CRM Lead", "first_name": first_name, "status": status, **kw})
 	doc.insert(ignore_permissions=True)
 	return doc
 
@@ -84,9 +77,7 @@ def _mk_deal(status, **kw):
 def _mk_hospital(code, name, **kw):
 	if frappe.db.exists("AntMed Hospital", code):
 		return frappe.get_doc("AntMed Hospital", code)
-	doc = frappe.get_doc(
-		{"doctype": "AntMed Hospital", "hospital_code": code, "hospital_name": name, **kw}
-	)
+	doc = frappe.get_doc({"doctype": "AntMed Hospital", "hospital_code": code, "hospital_name": name, **kw})
 	doc.insert(ignore_permissions=True)
 	return doc
 
@@ -230,9 +221,7 @@ class TestAntMedDashboard(FrappeTestCase):
 			dashboard.quota_summary, frappe.whitelisted, msg="quota_summary() chưa @frappe.whitelist()"
 		)
 		allowed = frappe.allowed_http_methods_for_whitelisted_func.get(dashboard.quota_summary)
-		self.assertEqual(
-			allowed, ["GET"], msg="quota_summary() phải @frappe.whitelist(methods=['GET'])"
-		)
+		self.assertEqual(allowed, ["GET"], msg="quota_summary() phải @frappe.whitelist(methods=['GET'])")
 
 	def test_avg_quota_used_pct(self):
 		"""Seed HĐ 25% + 90% + 50% (đặt riêng BV để đếm gọn) → avg khớp mean get_contract_health.

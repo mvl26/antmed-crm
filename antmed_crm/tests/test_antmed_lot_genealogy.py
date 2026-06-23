@@ -40,38 +40,71 @@ class TestLotGenealogy(FrappeTestCase):
 	@classmethod
 	def setUpClass(cls):
 		super().setUpClass()
-		cls.item = _mk("AntMed Item", "_T-GEN-ITEM", {"item_code": "_T-GEN-ITEM", "item_name": "Chỉ Vicryl GEN"}).name
-		cls.lot = _mk("AntMed Lot", "_T-GEN-LOT", {"lot_no": "_T-GEN-LOT", "item": cls.item, "expiry_date": "2028-12-31"}).name
-		cls.lot_empty = _mk("AntMed Lot", "_T-GEN-LOT-EMPTY", {"lot_no": "_T-GEN-LOT-EMPTY", "item": cls.item, "expiry_date": "2028-12-31"}).name
-		cls.hosp = _mk("AntMed Hospital", "_T-GEN-BV", {"hospital_code": "_T-GEN-BV", "hospital_name": "BV Việt Đức GEN"}).name
-		cls.doctor = _mk("AntMed Doctor", "_T-GEN-BS", {"doctor_code": "_T-GEN-BS", "full_name": "BS. Hùng GEN", "hospital": cls.hosp}).name
+		cls.item = _mk(
+			"AntMed Item", "_T-GEN-ITEM", {"item_code": "_T-GEN-ITEM", "item_name": "Chỉ Vicryl GEN"}
+		).name
+		cls.lot = _mk(
+			"AntMed Lot",
+			"_T-GEN-LOT",
+			{"lot_no": "_T-GEN-LOT", "item": cls.item, "expiry_date": "2028-12-31"},
+		).name
+		cls.lot_empty = _mk(
+			"AntMed Lot",
+			"_T-GEN-LOT-EMPTY",
+			{"lot_no": "_T-GEN-LOT-EMPTY", "item": cls.item, "expiry_date": "2028-12-31"},
+		).name
+		cls.hosp = _mk(
+			"AntMed Hospital", "_T-GEN-BV", {"hospital_code": "_T-GEN-BV", "hospital_name": "BV Việt Đức GEN"}
+		).name
+		cls.doctor = _mk(
+			"AntMed Doctor",
+			"_T-GEN-BS",
+			{"doctor_code": "_T-GEN-BS", "full_name": "BS. Hùng GEN", "hospital": cls.hosp},
+		).name
 
 		# 2 phiếu giao dùng lô (ca sớm + ca muộn) → kiểm sort + used_qty.
-		cls.del1 = frappe.get_doc(
-			{
-				"doctype": "AntMed Delivery",
-				"hospital": cls.hosp,
-				"doctor": cls.doctor,
-				"surgery_datetime": "2026-05-03 14:30:00",
-				"surgery_room": "P.Mổ 1",
-				"status": "Nháp",
-				"items": [{"item": cls.item, "lot": cls.lot, "requested_qty": 30, "consumed_qty": 30}],
-			}
-		).insert(ignore_permissions=True).name
-		cls.del2 = frappe.get_doc(
-			{
-				"doctype": "AntMed Delivery",
-				"hospital": cls.hosp,
-				"doctor": cls.doctor,
-				"surgery_datetime": "2026-05-05 09:00:00",
-				"status": "Nháp",
-				"items": [{"item": cls.item, "lot": cls.lot, "requested_qty": 40, "delivered_qty": 40}],
-			}
-		).insert(ignore_permissions=True).name
+		cls.del1 = (
+			frappe.get_doc(
+				{
+					"doctype": "AntMed Delivery",
+					"hospital": cls.hosp,
+					"doctor": cls.doctor,
+					"surgery_datetime": "2026-05-03 14:30:00",
+					"surgery_room": "P.Mổ 1",
+					"status": "Nháp",
+					"items": [{"item": cls.item, "lot": cls.lot, "requested_qty": 30, "consumed_qty": 30}],
+				}
+			)
+			.insert(ignore_permissions=True)
+			.name
+		)
+		cls.del2 = (
+			frappe.get_doc(
+				{
+					"doctype": "AntMed Delivery",
+					"hospital": cls.hosp,
+					"doctor": cls.doctor,
+					"surgery_datetime": "2026-05-05 09:00:00",
+					"status": "Nháp",
+					"items": [{"item": cls.item, "lot": cls.lot, "requested_qty": 40, "delivered_qty": 40}],
+				}
+			)
+			.insert(ignore_permissions=True)
+			.name
+		)
 		# E-Invoice gắn phiếu 1.
-		cls.einv = frappe.get_doc(
-			{"doctype": "AntMed E-Invoice", "delivery": cls.del1, "status": "Đã phát hành", "pdf_file": "/files/hd1.pdf"}
-		).insert(ignore_permissions=True).name
+		cls.einv = (
+			frappe.get_doc(
+				{
+					"doctype": "AntMed E-Invoice",
+					"delivery": cls.del1,
+					"status": "Đã phát hành",
+					"pdf_file": "/files/hd1.pdf",
+				}
+			)
+			.insert(ignore_permissions=True)
+			.name
+		)
 
 	def test_genealogy_shape(self):
 		res = inventory.lot_genealogy(self.lot)
@@ -128,15 +161,30 @@ class TestLotTraceRequest(FrappeTestCase):
 	@classmethod
 	def setUpClass(cls):
 		super().setUpClass()
-		cls.item = _mk("AntMed Item", "_T-LTR-ITEM", {"item_code": "_T-LTR-ITEM", "item_name": "VT lưu vết"}).name
-		cls.lot = _mk("AntMed Lot", "_T-LTR-LOT", {"lot_no": "_T-LTR-LOT", "item": cls.item, "expiry_date": "2028-12-31"}).name
-		cls.hosp = _mk("AntMed Hospital", "_T-LTR-BV", {"hospital_code": "_T-LTR-BV", "hospital_name": "BV Lưu Vết"}).name
-		cls.dlv = frappe.get_doc(
-			{
-				"doctype": "AntMed Delivery", "hospital": cls.hosp, "surgery_datetime": "2026-05-03 14:30:00",
-				"status": "Nháp", "items": [{"item": cls.item, "lot": cls.lot, "requested_qty": 10, "consumed_qty": 10}],
-			}
-		).insert(ignore_permissions=True).name
+		cls.item = _mk(
+			"AntMed Item", "_T-LTR-ITEM", {"item_code": "_T-LTR-ITEM", "item_name": "VT lưu vết"}
+		).name
+		cls.lot = _mk(
+			"AntMed Lot",
+			"_T-LTR-LOT",
+			{"lot_no": "_T-LTR-LOT", "item": cls.item, "expiry_date": "2028-12-31"},
+		).name
+		cls.hosp = _mk(
+			"AntMed Hospital", "_T-LTR-BV", {"hospital_code": "_T-LTR-BV", "hospital_name": "BV Lưu Vết"}
+		).name
+		cls.dlv = (
+			frappe.get_doc(
+				{
+					"doctype": "AntMed Delivery",
+					"hospital": cls.hosp,
+					"surgery_datetime": "2026-05-03 14:30:00",
+					"status": "Nháp",
+					"items": [{"item": cls.item, "lot": cls.lot, "requested_qty": 10, "consumed_qty": 10}],
+				}
+			)
+			.insert(ignore_permissions=True)
+			.name
+		)
 
 	def test_doctype_exists(self):
 		self.assertTrue(frappe.db.exists("DocType", "AntMed Lot Trace Request"))
@@ -182,8 +230,12 @@ class TestLotTraceRequest(FrappeTestCase):
 		res = inventory.export_lot_trace_pdf(saved)
 		self.assertTrue(res["exported_pdf"])
 		self.assertTrue(res["exported_pdf"].endswith(".pdf"))
-		self.assertEqual(frappe.db.get_value("AntMed Lot Trace Request", saved, "exported_pdf"), res["exported_pdf"])
+		self.assertEqual(
+			frappe.db.get_value("AntMed Lot Trace Request", saved, "exported_pdf"), res["exported_pdf"]
+		)
 		self.assertTrue(
-			frappe.db.exists("File", {"attached_to_doctype": "AntMed Lot Trace Request", "attached_to_name": saved}),
+			frappe.db.exists(
+				"File", {"attached_to_doctype": "AntMed Lot Trace Request", "attached_to_name": saved}
+			),
 			"phải tạo File PDF đính kèm",
 		)

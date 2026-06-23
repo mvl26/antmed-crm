@@ -95,7 +95,8 @@ def _assign_deal_to(deal_name: str, user: str):
 	khỏi deal cross-run mà Administrator thấy hết (mirror permission_query_conditions: own ∪ ToDo).
 	"""
 	if frappe.db.exists(
-		"ToDo", {"reference_type": "CRM Deal", "reference_name": deal_name, "allocated_to": user, "status": "Open"}
+		"ToDo",
+		{"reference_type": "CRM Deal", "reference_name": deal_name, "allocated_to": user, "status": "Open"},
 	):
 		return
 	frappe.get_doc(
@@ -232,7 +233,9 @@ class TestAntMedCommissionSummary(FrappeTestCase):
 	# (f) get-only -------------------------------------------------------------
 	def test_get_only(self):
 		self.assertIn(
-			finance.commission_summary, frappe.whitelisted, msg="commission_summary() chưa @frappe.whitelist()"
+			finance.commission_summary,
+			frappe.whitelisted,
+			msg="commission_summary() chưa @frappe.whitelist()",
 		)
 		allowed = frappe.allowed_http_methods_for_whitelisted_func.get(finance.commission_summary)
 		self.assertEqual(allowed, ["GET"], msg="commission_summary() phải @frappe.whitelist(methods=['GET'])")

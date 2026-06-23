@@ -83,7 +83,9 @@ class TestAntMedContractHealth(FrappeTestCase):
 		cls.green = _mk_contract("_T-CH-GREEN", cls.hosp, [_item("VTYT-GR", 100, 50)], far).name  # 50%
 		cls.orange = _mk_contract("_T-CH-ORANGE", cls.hosp, [_item("VTYT-OR", 100, 90)], far).name  # 90%
 		cls.red_cap = _mk_contract("_T-CH-REDCAP", cls.hosp, [_item("VTYT-RC", 100, 110)], far).name  # 110%
-		cls.red_exp = _mk_contract("_T-CH-REDEXP", cls.hosp, [_item("VTYT-RE", 100, 10)], soon).name  # 10% nhưng sắp hết hạn
+		cls.red_exp = _mk_contract(
+			"_T-CH-REDEXP", cls.hosp, [_item("VTYT-RE", 100, 10)], soon
+		).name  # 10% nhưng sắp hết hạn
 		cls.agg = _mk_contract(
 			"_T-CH-AGG", cls.hosp, [_item("VTYT-A1", 100, 30), _item("VTYT-A2", 100, 20)], far
 		).name  # (30+20)/(100+100)=25%

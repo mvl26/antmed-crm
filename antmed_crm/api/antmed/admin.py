@@ -44,7 +44,9 @@ PERMISSION_MODULES = [
 def _assert_admin() -> None:
 	roles = set(frappe.get_roles())
 	if not roles.intersection(ADMIN_ROLES):
-		frappe.throw(_("Chỉ Quản trị (System Manager / Quản lý) được truy cập màn này."), frappe.PermissionError)
+		frappe.throw(
+			_("Chỉ Quản trị (System Manager / Quản lý) được truy cập màn này."), frappe.PermissionError
+		)
 
 
 def _guard_target(user: str) -> None:
@@ -130,12 +132,15 @@ def role_permissions(role: str) -> dict:
 		frappe.throw(_("Vai trò không hợp lệ."))
 	rows = []
 	for doctype, label in PERMISSION_MODULES:
-		perm = frappe.db.get_value(
-			"DocPerm",
-			{"parent": doctype, "role": role, "permlevel": 0},
-			["read", "create", "write", "delete"],
-			as_dict=True,
-		) or {}
+		perm = (
+			frappe.db.get_value(
+				"DocPerm",
+				{"parent": doctype, "role": role, "permlevel": 0},
+				["read", "create", "write", "delete"],
+				as_dict=True,
+			)
+			or {}
+		)
 		rows.append(
 			{
 				"module": label,

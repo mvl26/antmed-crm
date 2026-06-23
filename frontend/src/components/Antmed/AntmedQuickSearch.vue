@@ -30,7 +30,11 @@
             aria-controls="quicksearch-list"
             :aria-activedescendant="activeId"
             class="w-full border-0 bg-transparent text-base text-ink-gray-9 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
-            :placeholder="__('Tìm chức năng, bệnh viện, hợp đồng, bộ dụng cụ, giao phòng mổ...')"
+            :placeholder="
+              __(
+                'Tìm chức năng, bệnh viện, hợp đồng, bộ dụng cụ, giao phòng mổ...',
+              )
+            "
             :aria-label="__('Tìm kiếm')"
           />
           <span
@@ -191,11 +195,31 @@ const flatItems = computed(() =>
 const groups = computed(() => {
   const items = flatItems.value
   return [
-    { key: 'fn', title: 'Chức năng', items: items.filter((i) => i.type === 'function') },
-    { key: 'hosp', title: 'Bệnh viện', items: items.filter((i) => i.type === 'hospital') },
-    { key: 'contract', title: 'Hợp đồng', items: items.filter((i) => i.type === 'contract') },
-    { key: 'instrument', title: 'Bộ dụng cụ', items: items.filter((i) => i.type === 'instrument') },
-    { key: 'delivery', title: 'Giao phòng mổ', items: items.filter((i) => i.type === 'delivery') },
+    {
+      key: 'fn',
+      title: 'Chức năng',
+      items: items.filter((i) => i.type === 'function'),
+    },
+    {
+      key: 'hosp',
+      title: 'Bệnh viện',
+      items: items.filter((i) => i.type === 'hospital'),
+    },
+    {
+      key: 'contract',
+      title: 'Hợp đồng',
+      items: items.filter((i) => i.type === 'contract'),
+    },
+    {
+      key: 'instrument',
+      title: 'Bộ dụng cụ',
+      items: items.filter((i) => i.type === 'instrument'),
+    },
+    {
+      key: 'delivery',
+      title: 'Giao phòng mổ',
+      items: items.filter((i) => i.type === 'delivery'),
+    },
   ]
 })
 
@@ -253,7 +277,7 @@ function runItem(it) {
   if (it?.to) {
     try {
       router.push(it.to)
-    } catch (e) {
+    } catch {
       // đích không hợp lệ → bỏ điều hướng, vẫn đóng palette.
     }
   }

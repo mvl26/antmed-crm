@@ -13,8 +13,7 @@ import frappe
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import add_to_date, now_datetime
 
-from antmed_crm.api.antmed import delivery
-from antmed_crm.api.antmed import search
+from antmed_crm.api.antmed import delivery, search
 
 PREFIX = "_QS"  # tiền tố seed riêng test này (dễ dọn, không đụng data khác)
 

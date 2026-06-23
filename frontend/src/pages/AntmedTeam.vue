@@ -1,7 +1,9 @@
 <template>
   <main class="flex h-full flex-col" aria-labelledby="antmed-team-title">
     <!-- Header + breadcrumb: Trang chủ › Đội ngũ -->
-    <header class="flex flex-col gap-2 border-b border-outline-gray-modals px-6 py-4">
+    <header
+      class="flex flex-col gap-2 border-b border-outline-gray-modals px-6 py-4"
+    >
       <nav class="text-p-xs text-ink-gray-5" :aria-label="__('Đường dẫn')">
         <RouterLink
           to="/antmed"
@@ -10,10 +12,15 @@
           {{ __('Trang chủ') }}
         </RouterLink>
         <span class="px-1.5 text-ink-gray-4" aria-hidden="true">›</span>
-        <span class="text-ink-gray-7" aria-current="page">{{ __('Đội ngũ') }}</span>
+        <span class="text-ink-gray-7" aria-current="page">{{
+          __('Đội ngũ')
+        }}</span>
       </nav>
       <div class="flex flex-col gap-1">
-        <h1 id="antmed-team-title" class="text-xl font-semibold text-ink-gray-9">
+        <h1
+          id="antmed-team-title"
+          class="text-xl font-semibold text-ink-gray-9"
+        >
           {{ __('Quản lý Đội ngũ') }}
         </h1>
         <p class="text-p-sm text-ink-gray-6">
@@ -64,9 +71,18 @@
         class="flex flex-col items-center gap-3 py-16 text-center"
         role="alert"
       >
-        <Badge variant="subtle" theme="red" size="lg" :label="__('Không tải được')" />
+        <Badge
+          variant="subtle"
+          theme="red"
+          size="lg"
+          :label="__('Không tải được')"
+        />
         <p class="max-w-md text-p-sm text-ink-gray-6">{{ errorMessage }}</p>
-        <Button variant="outline" :label="__('Thử lại')" @click="roster.reload()" />
+        <Button
+          variant="outline"
+          :label="__('Thử lại')"
+          @click="roster.reload()"
+        />
       </div>
 
       <!-- Empty -->
@@ -83,23 +99,35 @@
       <!-- Data table: 6 cột NV / Tuyến BV / DS tháng / Số deal mở / SLA đúng giờ / Cảnh báo -->
       <table v-else class="w-full border-separate border-spacing-0 text-left">
         <caption class="sr-only">
-          {{ __('Bảng KPI doanh số & SLA của từng NV kinh doanh') }}
+          {{
+            __('Bảng KPI doanh số & SLA của từng NV kinh doanh')
+          }}
         </caption>
         <thead>
           <tr class="text-p-sm text-ink-gray-6">
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('NV') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('Tuyến BV') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('DS tháng') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 text-right font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 text-right font-medium"
+            >
               {{ __('Số deal mở') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 text-right font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 text-right font-medium"
+            >
               {{ __('SLA đúng giờ') }}
             </th>
             <th class="border-b border-outline-gray-modals py-2 font-medium">
@@ -114,7 +142,9 @@
             class="text-p-base text-ink-gray-8"
           >
             <!-- NV: full_name (KHÔNG lộ email/ID thô) — link drill-down sang Hồ sơ NV (B2). -->
-            <td class="border-b border-outline-gray-1 py-3 pr-4 font-medium text-ink-gray-9">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 font-medium text-ink-gray-9"
+            >
               <RouterLink
                 :to="`/antmed/sales/team/${encodeURIComponent(row.deal_owner)}`"
                 class="rounded text-teal-700 hover:text-teal-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-3"
@@ -125,14 +155,20 @@
             </td>
 
             <!-- Tuyến BV (territory) -->
-            <td class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7"
+            >
               {{ row.territory || '—' }}
             </td>
 
             <!-- DS tháng: thanh % (teamBarClass + width sales_pct) + số tiền formatVnMoney -->
-            <td class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-8">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-8"
+            >
               <div class="flex flex-col gap-1">
-                <span class="font-medium tabular-nums">{{ formatVnMoney(row.month_sales) }}</span>
+                <span class="font-medium tabular-nums">{{
+                  formatVnMoney(row.month_sales)
+                }}</span>
                 <div
                   class="h-2 w-full overflow-hidden rounded-full bg-ink-gray-2"
                   role="progressbar"
@@ -140,7 +176,10 @@
                   aria-valuemin="0"
                   aria-valuemax="100"
                   :aria-label="
-                    __('Doanh số {0} đạt {1}% so với mức cao nhất đội', [row.full_name || '', Math.round(row.sales_pct)])
+                    __('Doanh số {0} đạt {1}% so với mức cao nhất đội', [
+                      row.full_name || '',
+                      Math.round(row.sales_pct),
+                    ])
                   "
                 >
                   <div
@@ -153,12 +192,16 @@
             </td>
 
             <!-- Số deal mở -->
-            <td class="border-b border-outline-gray-1 py-3 pr-4 text-right tabular-nums text-ink-gray-8">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 text-right tabular-nums text-ink-gray-8"
+            >
               {{ row.open_deals }}
             </td>
 
             <!-- SLA đúng giờ (%) -->
-            <td class="border-b border-outline-gray-1 py-3 pr-4 text-right tabular-nums text-ink-gray-8">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 text-right tabular-nums text-ink-gray-8"
+            >
               {{ row.sla_ontime_pct }}%
             </td>
 
@@ -171,7 +214,9 @@
               >
                 {{ teamAlertLabel(row.alert) }}
               </span>
-              <span v-else class="text-p-sm text-ink-gray-4" aria-hidden="true">—</span>
+              <span v-else class="text-p-sm text-ink-gray-4" aria-hidden="true"
+                >—</span
+              >
             </td>
           </tr>
         </tbody>
@@ -195,7 +240,12 @@ import { Badge, Button, toast } from 'frappe-ui'
 import LoadingIndicator from '@/components/Icons/LoadingIndicator.vue'
 import AntmedKpiCard from '@/components/Antmed/AntmedKpiCard.vue'
 import { getTeamRoster } from '@/data/antmed'
-import { teamBarClass, teamAlertChipClass, teamAlertLabel, formatVnMoney } from '@/utils/antmedUi'
+import {
+  teamBarClass,
+  teamAlertChipClass,
+  teamAlertLabel,
+  formatVnMoney,
+} from '@/utils/antmedUi'
 
 // Endpoint trả RAW dict THƯỜNG { rows, kpis } → đọc r.data.* TRỰC TIẾP
 // (KHÔNG .data.data — cùng idiom getExpiryAlerts/getDashboardOverview).
@@ -204,7 +254,8 @@ const roster = getTeamRoster({ auto: true })
 // rows BE đã sort desc theo month_sales → FE KHÔNG sort lại.
 const rows = computed(() => roster.data?.rows || [])
 const kpis = computed(
-  () => roster.data?.kpis || { total_reps: 0, total_month_sales: 0, avg_sla: 0 },
+  () =>
+    roster.data?.kpis || { total_reps: 0, total_month_sales: 0, avg_sla: 0 },
 )
 
 // Width thanh DS tháng: clamp 0–100 (BE đã tính sales_pct so đỉnh đội).

@@ -39,10 +39,9 @@ describe('AntMed Login — page behavior', () => {
     )
   })
 
-  it('redirect-to an toàn (chỉ path nội bộ "/") + mặc định /crm/antmed', () => {
+  it('redirect-to an toàn (chỉ path nội bộ "/") + mặc định /antmed', () => {
     expect(loginSrc).toMatch(/redirect-to/)
     expect(loginSrc).toMatch(/startsWith\('\/'\)/)
-    expect(loginSrc).toMatch(/'\/crm'/)
     expect(loginSrc).toMatch(/'\/antmed'/)
   })
 

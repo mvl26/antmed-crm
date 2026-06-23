@@ -20,9 +20,13 @@ class TestAntmedNotes(FrappeTestCase):
 		cls.notes = []
 		cls.tasks = []
 		# Bệnh viện THẬT làm reference (Dynamic Link validate tồn tại).
-		cls.ref_dn = frappe.get_doc(
-			{"doctype": REF_DT, "hospital_code": "_T-NOTE-BV", "hospital_name": "BV Ghi chú Test"}
-		).insert(ignore_permissions=True).name
+		cls.ref_dn = (
+			frappe.get_doc(
+				{"doctype": REF_DT, "hospital_code": "_T-NOTE-BV", "hospital_name": "BV Ghi chú Test"}
+			)
+			.insert(ignore_permissions=True)
+			.name
+		)
 		# 1 ghi chú + 1 công việc cùng gắn bản ghi đó → activity gộp cả 2.
 		n = add_note(REF_DT, cls.ref_dn, content="<p>Đã gọi xác nhận gói thầu</p>", title="_T-NOTE Gọi BV")
 		cls.notes.append(n["name"])
@@ -88,5 +92,5 @@ class TestAntmedNotes(FrappeTestCase):
 		for e in a["events"]:
 			for k in ("time", "text", "sub"):
 				self.assertIn(k, e)
-		task_ev = [e for e in a["events"] if e["type"] == "task"][0]
+		task_ev = next(e for e in a["events"] if e["type"] == "task")
 		self.assertTrue(task_ev.get("highlight"))

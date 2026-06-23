@@ -13,21 +13,33 @@
             {{ __('Trang chủ') }}
           </RouterLink>
           <span class="px-1.5 text-ink-gray-4" aria-hidden="true">›</span>
-          <span class="text-ink-gray-7" aria-current="page">{{ __('Kho ký gửi BV') }}</span>
+          <span class="text-ink-gray-7" aria-current="page">{{
+            __('Kho ký gửi BV')
+          }}</span>
         </nav>
         <div class="flex flex-col gap-1">
-          <h1 id="antmed-consignment-title" class="text-xl font-semibold text-ink-gray-9">
+          <h1
+            id="antmed-consignment-title"
+            class="text-xl font-semibold text-ink-gray-9"
+          >
             {{ __('Kho ký gửi tại Bệnh viện') }}
           </h1>
           <p class="text-p-sm text-ink-gray-6">
-            {{ __('Tồn vật tư ký gửi theo từng Bệnh viện (Lô / HSD / SL hệ thống)') }}
+            {{
+              __(
+                'Tồn vật tư ký gửi theo từng Bệnh viện (Lô / HSD / SL hệ thống)',
+              )
+            }}
           </p>
         </div>
       </div>
 
       <!-- Dropdown chọn Bệnh viện (param phát đi == lựa chọn UI — chống dead-control) -->
       <div class="flex flex-col gap-1 sm:w-72">
-        <label for="cg-filter-hospital" class="text-p-xs font-medium text-ink-gray-6">
+        <label
+          for="cg-filter-hospital"
+          class="text-p-xs font-medium text-ink-gray-6"
+        >
           {{ __('Bệnh viện') }}
         </label>
         <FormControl
@@ -55,7 +67,9 @@
       />
 
       <!-- Tồn ký gửi (GIỮA): giá trị tồn tiền VI gọn + dòng phụ '<SKU> SKU · <lô> lô' -->
-      <article class="flex flex-col gap-1 rounded-xl border border-outline-gray-1 bg-surface-white p-4">
+      <article
+        class="flex flex-col gap-1 rounded-xl border border-outline-gray-1 bg-surface-white p-4"
+      >
         <h3 class="text-p-sm font-medium text-ink-gray-6">
           {{ __('Tồn ký gửi') }}
         </h3>
@@ -66,7 +80,8 @@
         <p class="text-p-xs text-ink-gray-5">
           <template v-if="consignment.loading || consignment.error">—</template>
           <template v-else>
-            {{ kpis.total_sku }} {{ __('SKU') }} · {{ kpis.total_lots }} {{ __('lô') }}
+            {{ kpis.total_sku }} {{ __('SKU') }} · {{ kpis.total_lots }}
+            {{ __('lô') }}
           </template>
         </p>
       </article>
@@ -80,7 +95,10 @@
             : 'border-outline-gray-1 bg-surface-white'
         "
       >
-        <h3 class="text-p-sm font-medium" :class="nearExpiryCount > 0 ? 'text-red-700' : 'text-ink-gray-6'">
+        <h3
+          class="text-p-sm font-medium"
+          :class="nearExpiryCount > 0 ? 'text-red-700' : 'text-ink-gray-6'"
+        >
           {{ __('Cận date (≤90 ngày)') }}
         </h3>
         <p
@@ -90,7 +108,10 @@
           <template v-if="consignment.loading || consignment.error">—</template>
           <template v-else>{{ nearExpiryCount }}</template>
         </p>
-        <p class="text-p-xs" :class="nearExpiryCount > 0 ? 'text-red-600' : 'text-ink-gray-5'">
+        <p
+          class="text-p-xs"
+          :class="nearExpiryCount > 0 ? 'text-red-600' : 'text-ink-gray-5'"
+        >
           {{ __('Số lô tồn cận hạn sử dụng') }}
         </p>
       </article>
@@ -113,9 +134,18 @@
         class="flex flex-col items-center gap-3 py-16 text-center"
         role="alert"
       >
-        <Badge variant="subtle" theme="red" size="lg" :label="__('Không tải được')" />
+        <Badge
+          variant="subtle"
+          theme="red"
+          size="lg"
+          :label="__('Không tải được')"
+        />
         <p class="max-w-md text-p-sm text-ink-gray-6">{{ errorMessage }}</p>
-        <Button variant="outline" :label="__('Thử lại')" @click="consignment.reload()" />
+        <Button
+          variant="outline"
+          :label="__('Thử lại')"
+          @click="consignment.reload()"
+        />
       </div>
 
       <!-- Empty -->
@@ -132,23 +162,35 @@
       <!-- Data table: SKU / Tên VT / Lot / HSD / SL hệ thống / chip HSD -->
       <table v-else class="w-full border-separate border-spacing-0 text-left">
         <caption class="sr-only">
-          {{ __('Bảng tồn vật tư ký gửi tại Bệnh viện') }}
+          {{
+            __('Bảng tồn vật tư ký gửi tại Bệnh viện')
+          }}
         </caption>
         <thead>
           <tr class="text-p-sm text-ink-gray-6">
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('SKU') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('Tên VT') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('Lot') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('HSD') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 text-right font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 text-right font-medium"
+            >
               {{ __('SL hệ thống') }}
             </th>
             <th class="border-b border-outline-gray-modals py-2 font-medium">
@@ -165,27 +207,37 @@
             :class="row.near_expiry ? 'bg-red-50' : ''"
           >
             <!-- SKU (item_code) — mã nhỏ phụ trợ -->
-            <td class="border-b border-outline-gray-1 py-3 pr-4 font-mono text-p-sm text-ink-gray-7">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 font-mono text-p-sm text-ink-gray-7"
+            >
               {{ row.sku || '—' }}
             </td>
 
             <!-- Tên VT: item_name (hiển thị tên, KHÔNG chỉ mã) -->
-            <td class="border-b border-outline-gray-1 py-3 pr-4 font-medium text-ink-gray-9">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 font-medium text-ink-gray-9"
+            >
               {{ row.item_name || row.sku || '—' }}
             </td>
 
             <!-- Lot -->
-            <td class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7"
+            >
               {{ row.lot || '—' }}
             </td>
 
             <!-- HSD: định dạng MM/YYYY -->
-            <td class="border-b border-outline-gray-1 py-3 pr-4 tabular-nums text-ink-gray-7">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 tabular-nums text-ink-gray-7"
+            >
               {{ formatExpiryMonthYear(row.expiry_date) || '—' }}
             </td>
 
             <!-- SL hệ thống -->
-            <td class="border-b border-outline-gray-1 py-3 pr-4 text-right tabular-nums text-ink-gray-8">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 text-right tabular-nums text-ink-gray-8"
+            >
               {{ row.system_qty }}
             </td>
 
@@ -232,7 +284,10 @@ const activeHospital = ref('')
 
 // Endpoint trả RAW dict THƯỜNG { hospital, hospitals, kpis, rows } → đọc r.data.* TRỰC TIẾP
 // (KHÔNG .data.data — cùng idiom getLot/getDashboardOverview). hospital None → BE lấy BV đầu tiên.
-const consignment = getConsignmentStock({ params: { hospital: null }, auto: true })
+const consignment = getConsignmentStock({
+  params: { hospital: null },
+  auto: true,
+})
 
 // rows BE đã sort HSD sớm nhất trước → FE KHÔNG sort lại.
 const rows = computed(() => consignment.data?.rows || [])
@@ -252,7 +307,10 @@ const hospitals = computed(() => consignment.data?.hospitals || [])
 
 // Options dropdown: hiển thị hospital_name (KHÔNG lộ mã); value = name (khớp BE filter).
 const hospitalOptions = computed(() =>
-  hospitals.value.map((h) => ({ value: h.name, label: h.hospital_name || h.name })),
+  hospitals.value.map((h) => ({
+    value: h.name,
+    label: h.hospital_name || h.name,
+  })),
 )
 
 // Đồng bộ activeHospital theo BV BE đã chọn (lần fetch đầu hospital=null → BE trả BV đầu tiên).

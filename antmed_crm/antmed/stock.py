@@ -145,9 +145,7 @@ def get_consignment_balances(hospital: str) -> list[dict]:
 		"HAVING SUM(sl.qty_change) > 0"
 	).format(ledger=LEDGER_DOCTYPE, warehouse=WAREHOUSE_DOCTYPE)
 	rows = frappe.db.sql(query, (CONSIGNMENT_WAREHOUSE_TYPE, hospital), as_dict=True)
-	return [
-		{"item": r["item"], "lot": r["lot"], "system_qty": float(r["system_qty"] or 0)} for r in rows
-	]
+	return [{"item": r["item"], "lot": r["lot"], "system_qty": float(r["system_qty"] or 0)} for r in rows]
 
 
 def get_all_consignment_balances() -> list[dict]:
@@ -357,7 +355,9 @@ def _assert_available(warehouse: str, item: str, lot: str | None, qty: float) ->
 		)
 
 
-def _insert_ledger(warehouse, item, lot, qty_change, posting_datetime, voucher_type, voucher_no, stock_entry=None):
+def _insert_ledger(
+	warehouse, item, lot, qty_change, posting_datetime, voucher_type, voucher_no, stock_entry=None
+):
 	"""Ghi 1 dòng sổ tồn (append-only) + balance_qty chạy sau biến động. voucher_* phân loại nguồn."""
 	new_balance = get_balance(warehouse, item, lot) + float(qty_change)
 	frappe.get_doc(
@@ -379,8 +379,14 @@ def _insert_ledger(warehouse, item, lot, qty_change, posting_datetime, voucher_t
 def _post_ledger(warehouse, item, lot, qty_change, stock_entry, posting_datetime):
 	"""Ghi 1 dòng sổ tồn cho phiếu kho (AntMed Stock Entry). voucher_no == stock_entry."""
 	_insert_ledger(
-		warehouse, item, lot, qty_change, posting_datetime,
-		voucher_type="AntMed Stock Entry", voucher_no=stock_entry, stock_entry=stock_entry,
+		warehouse,
+		item,
+		lot,
+		qty_change,
+		posting_datetime,
+		voucher_type="AntMed Stock Entry",
+		voucher_no=stock_entry,
+		stock_entry=stock_entry,
 	)
 
 
@@ -400,8 +406,13 @@ def post_stock_count(doc) -> None:
 		if not variance:
 			continue
 		_insert_ledger(
-			doc.warehouse, line.item, line.lot, variance, pdt,
-			voucher_type="AntMed Stock Count", voucher_no=doc.name,
+			doc.warehouse,
+			line.item,
+			line.lot,
+			variance,
+			pdt,
+			voucher_type="AntMed Stock Count",
+			voucher_no=doc.name,
 		)
 
 
@@ -414,8 +425,13 @@ def reverse_stock_count(doc) -> None:
 		fields=["warehouse", "item", "lot", "qty_change"],
 	):
 		_insert_ledger(
-			led["warehouse"], led["item"], led.get("lot"), -float(led["qty_change"] or 0), pdt,
-			voucher_type="AntMed Stock Count Reversal", voucher_no=doc.name,
+			led["warehouse"],
+			led["item"],
+			led.get("lot"),
+			-float(led["qty_change"] or 0),
+			pdt,
+			voucher_type="AntMed Stock Count Reversal",
+			voucher_no=doc.name,
 		)
 
 
@@ -450,4 +466,6 @@ def reverse_stock_entry(doc) -> None:
 	):
 		if led.get("voucher_type") == "REVERSAL":
 			continue
-		_post_ledger(led["warehouse"], led["item"], led.get("lot"), -float(led["qty_change"] or 0), doc.name, pdt)
+		_post_ledger(
+			led["warehouse"], led["item"], led.get("lot"), -float(led["qty_change"] or 0), doc.name, pdt
+		)

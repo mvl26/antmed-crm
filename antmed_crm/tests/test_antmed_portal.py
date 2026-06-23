@@ -19,15 +19,22 @@ from antmed_crm.api.antmed import customer
 
 
 def _ensure(doctype, key, val, values):
-	return frappe.db.get_value(doctype, {key: val}, "name") or frappe.get_doc({"doctype": doctype, key: val, **values}).insert(ignore_permissions=True).name
+	return (
+		frappe.db.get_value(doctype, {key: val}, "name")
+		or frappe.get_doc({"doctype": doctype, key: val, **values}).insert(ignore_permissions=True).name
+	)
 
 
 class TestAntMedPortal(FrappeTestCase):
 	@classmethod
 	def setUpClass(cls):
 		super().setUpClass()
-		cls.hosp = _ensure("AntMed Hospital", "hospital_code", "_T-PORTAL-BV", {"hospital_name": "BV Portal Flow"})
-		cls.doctor = _ensure("AntMed Doctor", "doctor_code", "_T-PORTAL-BS", {"full_name": "BS Portal", "hospital": cls.hosp})
+		cls.hosp = _ensure(
+			"AntMed Hospital", "hospital_code", "_T-PORTAL-BV", {"hospital_name": "BV Portal Flow"}
+		)
+		cls.doctor = _ensure(
+			"AntMed Doctor", "doctor_code", "_T-PORTAL-BS", {"full_name": "BS Portal", "hospital": cls.hosp}
+		)
 		cls.item = _ensure("AntMed Item", "item_code", "VTYT-PORTAL", {"item_name": "VT Portal"})
 
 	def _mk_request(self):
@@ -43,7 +50,9 @@ class TestAntMedPortal(FrappeTestCase):
 		mr = self._mk_request()
 		res = customer.receive_material_request(mr)
 		self.assertEqual(res["status"], "NV đã nhận")
-		self.assertEqual(frappe.db.get_value("AntMed Material Request", mr, "assigned_employee"), "Administrator")
+		self.assertEqual(
+			frappe.db.get_value("AntMed Material Request", mr, "assigned_employee"), "Administrator"
+		)
 
 	def test_convert_delivery(self):
 		mr = self._mk_request()
@@ -54,7 +63,9 @@ class TestAntMedPortal(FrappeTestCase):
 		self.assertEqual(frappe.db.get_value("AntMed Material Request", mr, "status"), "Đã tạo phiếu giao")
 		self.assertEqual(frappe.db.get_value("AntMed Material Request", mr, "delivery_ref"), dlv)
 		# items chuyển sang phiếu giao
-		dlv_items = frappe.get_all("AntMed Delivery Item", filters={"parent": dlv}, fields=["item", "requested_qty"])
+		dlv_items = frappe.get_all(
+			"AntMed Delivery Item", filters={"parent": dlv}, fields=["item", "requested_qty"]
+		)
 		self.assertEqual(dlv_items[0]["item"], self.item)
 		self.assertEqual(dlv_items[0]["requested_qty"], 4)
 

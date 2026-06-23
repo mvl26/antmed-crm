@@ -2,8 +2,8 @@
 
 | Mục | Giá trị |
 |---|---|
-| Module folder | `crm/antmed/` (server-side phụ trợ) + **FE layer** `apps/crm/frontend/src` (PWA) |
-| Code path BE | `crm/antmed/doctype/antmed_mobile_*/` + endpoint `crm/api/antmed/mobile_sync.py` (đường gọi `antmed_crm.api.antmed.mobile_sync.<fn>`) |
+| Module folder | `antmed_crm/antmed/` (server-side phụ trợ) + **FE layer** `apps/antmed_crm/frontend/src` (PWA) |
+| Code path BE | `antmed_crm/antmed/doctype/antmed_mobile_*/` + endpoint `antmed_crm/api/antmed/mobile_sync.py` (đường gọi `antmed_crm.api.antmed.mobile_sync.<fn>`) |
 | Code path FE | `frontend/src/pages/AntmedMobile*.vue` · `frontend/src/data/mobileSync.js` · `frontend/src/sw.js` (service worker) · `frontend/src/utils/outbox.js` (IndexedDB) · route `/antmed/m/*` |
 | Wave (PLAN) | **W4 — Tăng trưởng & kiểm soát** (cross-cutting / aggregate, làm sau cùng) |
 | Role chính (VI) | `NV kinh doanh` (giao diện chính ngoài hiện trường) · `Quản lý` (chỉ giám sát sync log) |
@@ -88,7 +88,7 @@ M12 **không thêm BR nghiệp vụ "cứng" mới** — mọi BR thực sự (B
 
 ## 5. API
 
-> File ĐỀ XUẤT: `crm/api/antmed/mobile_sync.py`, đường gọi `antmed_crm.api.antmed.mobile_sync.<fn>`. Mọi hàm `@frappe.whitelist(...)`, **type-annotated** (vì `crm/hooks.py` bật `require_type_annotated_api_methods`), trả **RAW dict/list** (KHÔNG `_ok/_err`/envelope). Lỗi nghiệp vụ = để `frappe.throw` của module nguồn nổi lên (Frappe trả exception JSON).
+> File ĐỀ XUẤT: `antmed_crm/api/antmed/mobile_sync.py`, đường gọi `antmed_crm.api.antmed.mobile_sync.<fn>`. Mọi hàm `@frappe.whitelist(...)`, **type-annotated** (vì `antmed_crm/hooks.py` bật `require_type_annotated_api_methods`), trả **RAW dict/list** (KHÔNG `_ok/_err`/envelope). Lỗi nghiệp vụ = để `frappe.throw` của module nguồn nổi lên (Frappe trả exception JSON).
 
 | Endpoint (ĐỀ XUẤT) | Verb | Mô tả |
 |---|---|---|
@@ -114,7 +114,7 @@ M12 **không thêm BR nghiệp vụ "cứng" mới** — mọi BR thực sự (B
   - **M04**: `apply_outbox` gọi API/controller giao phòng mổ (tạo/ký DO, đính ảnh, GPS) — **lazy-import** module M04, **truyền PK** (name của DO/yêu cầu), KHÔNG import vòng.
   - **M05**: `apply_outbox` gọi API/controller mượn/trả bộ dụng cụ + checklist — lazy-import, truyền PK phiếu mượn.
   - **M03**: `scan_lot` đọc lot/HSD/CO-CQ/tồn kho cá nhân — read-only.
-- **Hướng RA (`doc_events` từ M12):** M12 **không** đăng ký `doc_events` nghiệp vụ mới vào `crm/hooks.py`. Việc ghi `AntMed Mobile Sync Log` xảy ra **bên trong** `apply_outbox` (gọi tường minh), không qua hook chéo module → tránh phình `hooks.py`.
+- **Hướng RA (`doc_events` từ M12):** M12 **không** đăng ký `doc_events` nghiệp vụ mới vào `antmed_crm/hooks.py`. Việc ghi `AntMed Mobile Sync Log` xảy ra **bên trong** `apply_outbox` (gọi tường minh), không qua hook chéo module → tránh phình `hooks.py`.
 - **Lazy-import + truyền PK:** trong `apply_outbox`, import controller M04/M05 **trong thân hàm** (không ở top-level) và chỉ truyền **khóa chính** (doc name) + payload tối thiểu; để controller đó tự `get_doc` và chạy `doc_events`. Đây là cách giữ M12 không phụ thuộc cứng vào nội tại M04/M05.
 - **Compliance gate:** M12 **không** tự gate CO/CQ/ĐKLH/HĐĐT. `scan_lot` chỉ **hiển thị** trạng thái CO/CQ (cảnh báo cho NV); việc **chặn** (gate) khi lot thiếu chứng từ là trách nhiệm controller M03/M04 lúc `apply_outbox` áp thao tác. M12 chỉ surface cảnh báo sớm để NV không quét nhầm.
 - **Push notification:** `AntMed Mobile Device.push_token` + provider push. `[UNVERIFIED]` nhà cung cấp push (scaffold dùng `fcm_token` ám chỉ Firebase Cloud Messaging; dự án có sẵn kênh Zalo/SMS — `[cần khảo sát]` chọn FCM hay Web Push API hay đẩy qua Zalo). Quyết định để [PLANNED] trong slice push (S4).
@@ -152,7 +152,7 @@ M12 **không thêm BR nghiệp vụ "cứng" mới** — mọi BR thực sự (B
 
 > Tiền đề: M01 đã land (slice Customer 360°). **M04 và M05 phải land trước** các slice ghi của M12. Trước đó M12 chỉ làm được phần read-only/khung PWA.
 
-1. **S1 — Khung PWA + bootstrap (read-only):** thêm `manifest.webmanifest` + `sw.js` (precache app shell) + route `/antmed/m` + `AntmedMobileHome.vue`. BE: `crm/api/antmed/mobile_sync.py::bootstrap` (RAW dict, count==rows). Test: route tồn tại, gọi đúng endpoint, build PWA xanh, SW đăng ký.
+1. **S1 — Khung PWA + bootstrap (read-only):** thêm `manifest.webmanifest` + `sw.js` (precache app shell) + route `/antmed/m` + `AntmedMobileHome.vue`. BE: `antmed_crm/api/antmed/mobile_sync.py::bootstrap` (RAW dict, count==rows). Test: route tồn tại, gọi đúng endpoint, build PWA xanh, SW đăng ký.
 2. **S2 — Outbox engine + sync log:** `utils/outbox.js` (IndexedDB), `data/mobileSync.js`, page `/antmed/m/sync`. BE: DocType `AntMed Mobile Sync Log` (+ tùy chọn `AntMed Mobile Offline Queue`) + `pull_changes` + `apply_outbox` (khung idempotency, chưa nối M04/M05 — op test giả). Test: idempotency (push trùng key → 1 lần), count==rows cho `pull_changes`.
 3. **S3 — Giao phòng mổ offline (nối M04):** page `/antmed/m/deliver/:name` 4 bước (quét QR `scan_lot`, ký số canvas, chụp ảnh, GPS). `apply_outbox` lazy-import controller M04. Test: thao tác offline → outbox → áp → DO tạo đúng + BR M04 vẫn enforce; lỗi BR phản ánh vào results.
 4. **S4 — Bộ mượn offline (nối M05) + push:** page `/antmed/m/loans` + modal checklist; `apply_outbox` nối M05; `register_device` + `AntMed Mobile Device`; push provider (`[PLANNED]`). Test: checklist offline → sync; đăng ký thiết bị.
@@ -165,7 +165,7 @@ M12 **không thêm BR nghiệp vụ "cứng" mới** — mọi BR thực sự (B
 ### ADR-M12-01: Phase-1 dùng **PWA (service worker + IndexedDB)** trên SPA Vue/frappe-ui, KHÔNG React Native
 - **Status**: Accepted (chốt theo brief M12)
 - **Date**: 2026-06-17
-- **Context**: NV kinh doanh cần app mobile offline-first. Dự án đã có sẵn SPA Vue 3 + frappe-ui in-place trong `apps/crm/frontend`. Làm React Native là một codebase + pipeline build/release thứ hai, lệch hẳn kiến trúc in-place đã chốt (ADR-M01-01).
+- **Context**: NV kinh doanh cần app mobile offline-first. Dự án đã có sẵn SPA Vue 3 + frappe-ui trong app riêng `apps/antmed_crm/frontend`. Làm React Native là một codebase + pipeline build/release thứ hai, lệch hẳn kiến trúc app-riêng đã chốt (ADR-M01-01; gốc: in-place — THỰC TẾ = app RIÊNG `antmed_crm`).
 - **Decision**: Phase 1 = **PWA** trên SPA hiện có (precache app shell + IndexedDB outbox + sync delta). Native app (React Native) để **backlog Phase 2+** nếu nghiệp vụ camera/BLE/độ ổn định đòi hỏi.
 - **Consequences**: (+) Một codebase, tái dùng route/store/resource đã có; ship nhanh; "Add to Home Screen". (−) Phụ thuộc khả năng PWA của trình duyệt thiết bị; push notification phức tạp hơn native (`[cần khảo sát]` provider). (−) Camera/QR qua Web API có thể kém ổn định hơn native — chấp nhận ở Phase 1.
 
@@ -176,7 +176,7 @@ M12 **không thêm BR nghiệp vụ "cứng" mới** — mọi BR thực sự (B
 - **Decision**: M12 chỉ **xếp hàng** thao tác và **áp** chúng qua controller/`doc_events` của M04/M05 phía server (BR-M12-2). FE chỉ surface **cảnh báo mềm** (vd CO/CQ trong `scan_lot`), không chặn cứng.
 - **Consequences**: (+) Một nguồn sự thật BR; offline không bao giờ "qua mặt" luật. (−) NV có thể xếp hàng thao tác mà server sẽ từ chối khi sync → cần UX hiển thị `Failed`/`Conflict` rõ ràng (slice S2/S5).
 
-> Kế thừa: **ADR-M01-01** (in-place, KHÔNG app riêng) và **ADR-M01-02** (prefix `AntMed `) áp dụng nguyên vẹn cho M12. **DEC-A** (role VI) và **DEC-B** (route/app AntMed riêng cho boot) liên quan: page `/antmed/m/*` phải qua được gate boot của user AntMed thuần (`NV kinh doanh`).
+> Kế thừa: **ADR-M01-01** (gốc: in-place; THỰC TẾ = app RIÊNG `antmed_crm`) và **ADR-M01-02** (prefix `AntMed `) áp dụng nguyên vẹn cho M12. **DEC-A** (role VI) và **DEC-B** (route/app AntMed riêng cho boot) liên quan: page `/antmed/m/*` phải qua được gate boot của user AntMed thuần (`NV kinh doanh`).
 
 ---
 
@@ -185,7 +185,7 @@ M12 **không thêm BR nghiệp vụ "cứng" mới** — mọi BR thực sự (B
 > Theo SPEC §6. "Xong" một slice = BE test xanh + FE vitest xanh + build xanh + (sau USER reload) pixel verify + no-regression.
 
 **BE (Frappe test runner — TDD failing-first):**
-- File ĐỀ XUẤT: `crm/tests/test_antmed_mobile_sync.py`. Lệnh: `bench --site miyano run-tests --module crm.tests.test_antmed_mobile_sync` → **`Ran N tests … OK`**, 0 fail.
+- File ĐỀ XUẤT: `antmed_crm/tests/test_antmed_mobile_sync.py`. Lệnh: `bench --site miyano run-tests --module antmed_crm.tests.test_antmed_mobile_sync` → **`Ran N tests … OK`**, 0 fail.
 - TC tối thiểu: (1) `bootstrap()` trả RAW dict các list, **count == rows**; (2) `pull_changes(since=...)` trả delta đúng + lọc theo permission (count==rows, BR-M12-3); (3) `apply_outbox` **idempotency** — push trùng `idempotency_key` chỉ áp 1 lần (BR-M12-1); (4) `apply_outbox` áp op M04/M05 → bản ghi nghiệp vụ tạo đúng + **BR của module nguồn vẫn enforce** (lỗi BR phản ánh vào `results[].error`, status `Failed`); (5) `scan_lot(code)` trả lot/HSD/CO-CQ đúng, mã sai → `DoesNotExistError`; (6) (nếu có DocType) `AntMed Mobile Sync Log`/`Device` tồn tại sau migrate + naming đúng.
 - **No-regression**: `test_antmed_bootstrap` + `test_antmed_customer` + 4 test gốc CRM (Lead/Task/Organization/Territory) vẫn xanh; KHÔNG đụng route/test gốc.
 

@@ -1,10 +1,10 @@
-# AntMed — Convention naming FE ↔ BE (R1 in-place)
+# AntMed — Convention naming FE ↔ BE (R1)
 
 | Mục | Giá trị |
 |---|---|
-| Phạm vi | Namespace in-place AntMed bên trong app `crm` |
-| Nguồn | Acceptance R1 (M01 Bootstrap) + `crm/hooks.py`, `crm/modules.txt` (verify @ source) |
-| Đích mirror | `crm/antmed/README.md` (BE copy nội dung này, 1 trang) |
+| Phạm vi | Namespace AntMed trong app RIÊNG `antmed_crm` (fork từ Frappe CRM) |
+| Nguồn | Acceptance R1 (M01 Bootstrap) + `antmed_crm/hooks.py`, `antmed_crm/modules.txt` (verify @ source) |
+| Đích mirror | `antmed_crm/antmed/README.md` (BE copy nội dung này, 1 trang) |
 | Cập nhật | 2026-06-17 |
 
 > Tài liệu này là **hợp đồng đặt tên** để R2 (M1 Khách hàng/Bệnh viện) và các round sau theo nhất quán, KHÔNG phải bịa lại mỗi round.
@@ -15,11 +15,11 @@
 
 | Loại | Quy ước | Ví dụ R1 |
 |---|---|---|
-| Module Frappe | `AntMed` (khai trong `crm/modules.txt`) | `AntMed` |
-| Thư mục code module | `crm/antmed/` | `crm/antmed/__init__.py` |
-| Package API | `crm/api/antmed/` (có `__init__.py`) | `crm/api/antmed/health.py` |
+| Module Frappe | `AntMed` (khai trong `antmed_crm/modules.txt`) | `AntMed` |
+| Thư mục code module | `antmed_crm/antmed/` | `antmed_crm/antmed/__init__.py` |
+| Package API | `antmed_crm/api/antmed/` (có `__init__.py`) | `antmed_crm/api/antmed/health.py` |
 | Đường gọi endpoint | `antmed_crm.api.antmed.<module>.<fn>` | `antmed_crm.api.antmed.health.ping` |
-| File api theo module nghiệp vụ (round sau) | `crm/api/antmed/<module>.py` | `crm/api/antmed/hospitals.py` |
+| File api theo module nghiệp vụ (round sau) | `antmed_crm/api/antmed/<module>.py` | `antmed_crm/api/antmed/hospitals.py` |
 
 **Cấm**: `crm.api.*` (namespace cũ — app cài là `antmed_crm`), `assetcore.*`, app khác. (ADR-M01-01)
 
@@ -32,7 +32,7 @@
 | DocType nghiệp vụ AntMed (round sau) | **`AntMed `** | `AntMed Hospital Profile`, `AntMed Contract` |
 | DocType ERPNext/Frappe reuse | KHÔNG prefix | `Delivery Note`, `Customer`, `Item`, `Warehouse`, `Role` |
 
-> ADR-M01-02: bản in-place dùng `AntMed ` (KHÔNG `AM `) cho **DocType nghiệp vụ**. Map sang tài liệu domain skill: `AM Xxx` (skill) ↔ `AntMed Xxx` (bản in-place). Khi tách app sẽ viết ADR Supersede.
+> ADR-M01-02: app riêng `antmed_crm` dùng `AntMed ` (KHÔNG `AM `) cho **DocType nghiệp vụ**. Map sang tài liệu domain skill: `AM Xxx` (skill) ↔ `AntMed Xxx` (app `antmed_crm`). Khi tách app sẽ viết ADR Supersede.
 >
 > ⚠️ Phần **Role** của ADR-M01-02 (tên Role tiếng Anh) đã bị **Supersede** bởi ADR-M14W0-01 (Role → nhãn tiếng Việt). Prefix `AntMed ` vẫn áp cho **DocType**, KHÔNG còn áp cho **Role name**.
 
@@ -59,7 +59,7 @@
 - Endpoint = `@frappe.whitelist(methods=[...])` **tường minh verb** (KHÔNG bare whitelist). GET cho đọc, POST cho ghi.
 - Trả **RAW dict/list** — KHÔNG envelope `_ok`/`_err`, KHÔNG registry `MSG.*`.
 - Lỗi nghiệp vụ = in-handler `frappe.throw(_("BR-XX: <thông điệp tiếng Việt>"))` (Frappe trả exception JSON).
-- Hàm whitelist phải **type-annotate** (param + return) — `crm/hooks.py:28 require_type_annotated_api_methods = True`.
+- Hàm whitelist phải **type-annotate** (param + return) — `antmed_crm/hooks.py:28 require_type_annotated_api_methods = True`.
 - **2 loại 403** phân biệt rõ khi đặc tả:
   - **dispatcher-403**: guest/không session cookie gọi endpoint không `allow_guest`.
   - **in-handler permission-403**: `frappe.throw(..., frappe.PermissionError)` khi thiếu role/data-scope.
@@ -83,14 +83,14 @@
 
 ## 6. Fixtures & hooks
 
-- Fixture file: **`crm/fixtures/<doctype_snake>.json`** (verify @ source — Frappe `import_fixtures` chỉ load từ `apps/crm/crm/fixtures/`; `crm/fcrm/fixtures/` hay `crm/antmed/fixtures/` KHÔNG được `bench migrate` đọc).
-- `crm/hooks.py`: chỉ **THÊM** key `fixtures = [...]` (trước R1 chưa có). KHÔNG đụng `permission_query_conditions` / `doc_events` / `after_migrate` / `before_tests` / `scheduler_events` gốc.
+- Fixture file: **`antmed_crm/fixtures/<doctype_snake>.json`** (verify @ source — Frappe `import_fixtures` chỉ load từ `apps/antmed_crm/antmed_crm/fixtures/`; `antmed_crm/fcrm/fixtures/` hay `antmed_crm/antmed/fixtures/` KHÔNG được `bench migrate` đọc).
+- `antmed_crm/hooks.py`: chỉ **THÊM** key `fixtures = [...]` (trước R1 chưa có). KHÔNG đụng `permission_query_conditions` / `doc_events` / `after_migrate` / `before_tests` / `scheduler_events` gốc.
 
 ---
 
 ## 7. Test
 
-- BE test: `crm/api/antmed/test_<module>.py` hoặc `crm/antmed/tests/test_<module>.py`.
+- BE test: `antmed_crm/api/antmed/test_<module>.py` hoặc `antmed_crm/antmed/tests/test_<module>.py`.
 - Lệnh: `bench --site miyano run-tests --module antmed_crm.api.antmed.test_<module>`.
 - Mỗi feature mới: ≥1 test mới, 0 fail, + chạy lại 4 test gốc (no-regression).
 

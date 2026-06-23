@@ -25,9 +25,9 @@ from antmed_crm.api.antmed import delivery
 def _mk_hospital(code, name):
 	if frappe.db.exists("AntMed Hospital", code):
 		return frappe.get_doc("AntMed Hospital", code)
-	return frappe.get_doc({"doctype": "AntMed Hospital", "hospital_code": code, "hospital_name": name}).insert(
-		ignore_permissions=True
-	)
+	return frappe.get_doc(
+		{"doctype": "AntMed Hospital", "hospital_code": code, "hospital_name": name}
+	).insert(ignore_permissions=True)
 
 
 def _mk_item(code, name):
@@ -99,9 +99,9 @@ class TestAntMedDeliveryFlow(FrappeTestCase):
 		delivery.start_transit(name)
 		email = "_t_drf_noperm@example.com"
 		if not frappe.db.exists("User", email):
-			frappe.get_doc({"doctype": "User", "email": email, "first_name": "NoPermDRF", "send_welcome_email": 0}).insert(
-				ignore_permissions=True
-			)
+			frappe.get_doc(
+				{"doctype": "User", "email": email, "first_name": "NoPermDRF", "send_welcome_email": 0}
+			).insert(ignore_permissions=True)
 		frappe.set_user(email)
 		try:
 			with self.assertRaises(frappe.PermissionError):

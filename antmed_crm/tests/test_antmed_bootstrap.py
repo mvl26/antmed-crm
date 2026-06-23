@@ -90,7 +90,9 @@ class TestAntMedBootstrap(FrappeTestCase):
 		allowed = list(frappe.allowed_http_methods_for_whitelisted_func.get(fn, []))
 		self.assertIn("GET", allowed, msg=f"ping() phải cho phép GET, methods={allowed}")
 		# Bare whitelist mặc định ['GET','POST','PUT','DELETE'] — phải bị siết về chỉ GET:
-		self.assertNotIn("POST", allowed, msg=f"ping() KHÔNG được nhận POST (bare whitelist), methods={allowed}")
+		self.assertNotIn(
+			"POST", allowed, msg=f"ping() KHÔNG được nhận POST (bare whitelist), methods={allowed}"
+		)
 		self.assertEqual(allowed, ["GET"], msg=f"ping() chỉ được phép GET, methods={allowed}")
 
 	# --- TDD-BE-5 -----------------------------------------------------------
@@ -99,6 +101,6 @@ class TestAntMedBootstrap(FrappeTestCase):
 		modules = frappe.get_module_list("antmed_crm")
 		self.assertIn("AntMed", modules, msg="Module 'AntMed' chưa khai trong antmed_crm/modules.txt")
 		# import package không lỗi:
-		import antmed_crm.antmed  # noqa: F401
+		import antmed_crm.antmed
 
 		self.assertTrue(True)

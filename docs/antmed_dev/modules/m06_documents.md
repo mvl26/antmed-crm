@@ -2,9 +2,9 @@
 
 | Mục | Giá trị |
 |---|---|
-| Module folder | `crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) |
-| DocType folder | `crm/antmed/doctype/antmed_document/`, `crm/antmed/doctype/antmed_e_invoice/`, … |
-| Code path BE | `crm/antmed/doctype/<snake>/` + module hooks `doc_events` + `crm/api/antmed/documents.py` (đường gọi `antmed_crm.api.antmed.documents.<fn>`) |
+| Module folder | `antmed_crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) |
+| DocType folder | `antmed_crm/antmed/doctype/antmed_document/`, `antmed_crm/antmed/doctype/antmed_e_invoice/`, … |
+| Code path BE | `antmed_crm/antmed/doctype/<snake>/` + module hooks `doc_events` + `antmed_crm/api/antmed/documents.py` (đường gọi `antmed_crm.api.antmed.documents.<fn>`) |
 | Wave (PLAN) | **W2 — Chuỗi vận hành lõi** (M04 → **M06** → M09, tuần tự bắt buộc) |
 | Role chính (VI) | `NV chứng từ` *(VI role mới — [PLANNED], xem §4/ADR-M06-03)*, `Kế toán` *([PLANNED])*, `Quản lý`; phụ: `NV kinh doanh` (xem trạng thái bộ chứng từ đơn của mình) |
 | Phụ thuộc | **M02** (Contract — pháp nhân/HĐ), **M03** (Lot CO/CQ/ĐKLH), **M04** (Delivery — nguồn sinh bộ chứng từ) |
@@ -15,9 +15,9 @@
 | Cập nhật | 2026-06-17 |
 
 > **Trạng thái: [PLANNED — chưa code]**
-> Toàn bộ schema/API/workflow dưới đây là **DESIGN (đề xuất)**, ground @ scaffold cũ (separate-app) đã ADAPT `AM `→`AntMed `, ERPNext-reuse→native-lite, + `AntMed_CRM_Modules.md §6` + `UI_Design §5`. **Chưa có dòng code nào** trong `crm/antmed/` cho M06. Mọi tham chiếu code = đề xuất sẽ build.
+> Toàn bộ schema/API/workflow dưới đây là **DESIGN (đề xuất)**, ground @ scaffold cũ (separate-app) đã ADAPT `AM `→`AntMed `, ERPNext-reuse→native-lite, + `AntMed_CRM_Modules.md §6` + `UI_Design §5`. **Chưa có dòng code nào** trong `antmed_crm/antmed/` cho M06. Mọi tham chiếu code = đề xuất sẽ build.
 
-> 🔗 **Tiền đề (đã land R1/R2, dùng lại — KHÔNG dựng lại)**: module `AntMed` trong `crm/modules.txt`; package `crm/api/antmed/`; 3 Role fixture (`NV kinh doanh`/`Thủ kho`/`Quản lý`); route `/antmed` + layout SPA. M06 **mở rộng** namespace này.
+> 🔗 **Tiền đề (đã land R1/R2, dùng lại — KHÔNG dựng lại)**: module `AntMed` trong `antmed_crm/modules.txt`; package `antmed_crm/api/antmed/`; 3 Role fixture (`NV kinh doanh`/`Thủ kho`/`Quản lý`); route `/antmed` + layout SPA. M06 **mở rộng** namespace này.
 
 ---
 
@@ -66,7 +66,7 @@ Theo `AntMed_CRM_Modules.md §6` (ground-truth nghiệp vụ):
 
 ## 3. Workflow
 
-M06 có **2 state machine** (Frappe-native Workflow, fixtures `crm/fixtures/workflow.json`, states/transitions tiếng Việt). Trạng thái = field `status` (đề xuất; có thể đổi `workflow_state` khi BE chốt).
+M06 có **2 state machine** (Frappe-native Workflow, fixtures `antmed_crm/fixtures/workflow.json`, states/transitions tiếng Việt). Trạng thái = field `status` (đề xuất; có thể đổi `workflow_state` khi BE chốt).
 
 ### 3.1 Workflow `AntMed Document` (vòng đời bộ chứng từ — `Modules §6` 4 trạng thái + gate thiếu)
 
@@ -99,7 +99,7 @@ M06 có **2 state machine** (Frappe-native Workflow, fixtures `crm/fixtures/work
 
 | BR | Mô tả | Nơi enforce (đề xuất) |
 |---|---|---|
-| **BR-03** | **Không phát hành thiếu CO/CQ**: mọi lot của item `requires_cocq=1` phải có CO **và** CQ đính kèm trước khi phát hành bộ chứng từ / HĐĐT. Thiếu → `frappe.throw(_("BR-03: Phải gắn CO/CQ trước khi phát hành: {chips}"))`. | module hooks `doc_events`: `AntMed Document` (hoặc `AntMed E-Invoice`) `before_submit`/`validate` — `crm/antmed/m06/doc_events.py::enforce_cocq_attached` (ADAPT từ scaffold `enforce_cocq_attached`). |
+| **BR-03** | **Không phát hành thiếu CO/CQ**: mọi lot của item `requires_cocq=1` phải có CO **và** CQ đính kèm trước khi phát hành bộ chứng từ / HĐĐT. Thiếu → `frappe.throw(_("BR-03: Phải gắn CO/CQ trước khi phát hành: {chips}"))`. | module hooks `doc_events`: `AntMed Document` (hoặc `AntMed E-Invoice`) `before_submit`/`validate` — `antmed_crm/antmed/m06/doc_events.py::enforce_cocq_attached` (ADAPT từ scaffold `enforce_cocq_attached`). |
 | **BR-04** | **HĐĐT immutable sau phát hành**: sau khi `AntMed E-Invoice` submit (đã đẩy provider/có `ma_cqt`), **cấm sửa/hủy** nội dung (số HĐ, tiền, lot). Chỉ điều chỉnh qua HĐĐT điều chỉnh/thay thế mới. | `AntMed E-Invoice` submittable (`docstatus=1` khóa field) + controller `on_update_after_submit`/`on_cancel` → `frappe.throw(_("BR-04: HĐĐT đã phát hành không thể sửa/hủy"))`. |
 | **BR-07** | **Không xóa phiếu giao đã ký**: chặn xóa `AntMed Delivery` khi đã có Handover Confirmation/bộ chứng từ đã phát hành. | doc_events `AntMed Delivery.on_trash` (do M04 owner; M06 cung cấp check "có bundle đã phát hành"). Liên-module — xem §6. |
 | **BR-10** | **Audit hash chain**: mỗi lần upload/sửa file chứng từ, phát hành HĐĐT, ghi nhận ký nhận → ghi log có `hash_sha256` (lưu trữ có hiệu lực kiểm toán — `Modules §6` "hash, dấu thời gian, log truy cập"). | lazy-import `antmed_crm.api.antmed.audit.write_log` (M14) từ doc_events M06. `hash_sha256` trên `AntMed Document`/`AntMed Handover Confirmation`. |
@@ -112,7 +112,7 @@ M06 có **2 state machine** (Frappe-native Workflow, fixtures `crm/fixtures/work
 
 ## 5. API
 
-> File đề xuất: `crm/api/antmed/documents.py`. Mọi hàm `@frappe.whitelist(methods=["GET"|"POST"])`, **type-annotated** (`crm/hooks.py:28 require_type_annotated_api_methods=True`), trả **RAW dict/list** (KHÔNG `_ok`/`_err`/envelope). Lỗi nghiệp vụ = `frappe.throw(_("BR-XX: …"))`. List giữ bất biến **count == rows** (`get_list(pluck=…, limit_page_length=0)`).
+> File đề xuất: `antmed_crm/api/antmed/documents.py`. Mọi hàm `@frappe.whitelist(methods=["GET"|"POST"])`, **type-annotated** (`antmed_crm/hooks.py:28 require_type_annotated_api_methods=True`), trả **RAW dict/list** (KHÔNG `_ok`/`_err`/envelope). Lỗi nghiệp vụ = `frappe.throw(_("BR-XX: …"))`. List giữ bất biến **count == rows** (`get_list(pluck=…, limit_page_length=0)`).
 
 | Endpoint (đề xuất) | Verb | Mô tả |
 |---|---|---|
@@ -146,7 +146,7 @@ M06 có **2 state machine** (Frappe-native Workflow, fixtures `crm/fixtures/work
 
 **Compliance gate (cốt lõi):** BR-03 chặn `issue_einvoice`/submit bundle khi thiếu CO/CQ → đảm bảo "không giao/không phát hành thiếu giấy". Đây là gate domain M06.
 
-> doc_events thực tế wiring trong **`crm/hooks.py`** (chỉ THÊM key `doc_events`, KHÔNG sửa key gốc) trỏ tới module hooks M06; business rules nằm trong module hooks, KHÔNG nhồi controller chung.
+> doc_events thực tế wiring trong **`antmed_crm/hooks.py`** (chỉ THÊM key `doc_events`, KHÔNG sửa key gốc) trỏ tới module hooks M06; business rules nằm trong module hooks, KHÔNG nhồi controller chung.
 
 ---
 
@@ -203,16 +203,16 @@ M06 có **2 state machine** (Frappe-native Workflow, fixtures `crm/fixtures/work
 ### ADR-M06-03: Thêm role tiếng Việt `NV chứng từ` (+ `Kế toán`) — tuân DEC-A
 - **Status**: Proposed
 - **Context**: Scaffold cũ `AM Document Officer`/`AM Accountant`. DEC-A chốt role name tiếng Việt.
-- **Decision**: Thêm role fixture **`NV chứng từ`** (E1 phát hành chứng từ + HĐĐT) và **`Kế toán`** [PLANNED] vào `crm/fixtures/role.json`; gắn DocPerm 5 DocType M06.
+- **Decision**: Thêm role fixture **`NV chứng từ`** (E1 phát hành chứng từ + HĐĐT) và **`Kế toán`** [PLANNED] vào `antmed_crm/fixtures/role.json`; gắn DocPerm 5 DocType M06.
 - **Consequences**: (+) khớp persona UI_Design §5/§6; (−) mở rộng bộ 3 role hiện có → cập nhật `m14_rbac_w0_role_naming.md`.
 
-> Kế thừa **ADR-M01-01** (in-place), **ADR-M01-02** (prefix `AntMed `), **DEC-A** (role VI), **DEC-B** (route AntMed riêng) — không Supersede.
+> Kế thừa **ADR-M01-01** (app RIÊNG `antmed_crm`; gốc: in-place; THỰC TẾ = app RIÊNG `antmed_crm`), **ADR-M01-02** (prefix `AntMed `), **DEC-A** (role VI), **DEC-B** (route AntMed riêng) — không Supersede.
 
 ---
 
 ## 10. Acceptance / DoD (theo SPEC §6)
 
-**BE (TDD — xanh THẬT):** file `crm/tests/test_antmed_documents.py`; lệnh `bench --site miyano run-tests --module crm.tests.test_antmed_documents` → **`Ran N tests … OK`**, 0 fail. TC tối thiểu:
+**BE (TDD — xanh THẬT):** file `antmed_crm/tests/test_antmed_documents.py`; lệnh `bench --site miyano run-tests --module antmed_crm.tests.test_antmed_documents` → **`Ran N tests … OK`**, 0 fail. TC tối thiểu:
 1. 5 DocType M06 tồn tại sau migrate + field tối thiểu (`frappe.get_meta`); naming `AM-DOC-BUNDLE-`/`AM-HD-`/`AM-HC-` (KHÔNG `AM-DR`, KHÔNG đụng `AM-DOC-` của Doctor).
 2. Delivery submit → sinh `AntMed Document Release Queue` (`status=Chờ phát hành`).
 3. `list_release_queue()` trả `{data, total_count}`; **`len(data)==total_count`** khi không phân trang (count==rows).

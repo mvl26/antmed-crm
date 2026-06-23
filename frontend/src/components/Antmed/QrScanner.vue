@@ -3,13 +3,17 @@
        Lỗi quyền/không camera → thông báo VI + KHÔNG vỡ trang (parent vẫn cho nhập tay). -->
   <div class="flex flex-col gap-2">
     <div class="flex items-center justify-between gap-2">
-      <span class="text-p-sm font-medium text-ink-gray-7">{{ __('Quét mã bằng camera') }}</span>
+      <span class="text-p-sm font-medium text-ink-gray-7">{{
+        __('Quét mã bằng camera')
+      }}</span>
       <Button
         size="sm"
         :variant="running ? 'outline' : 'solid'"
         :label="running ? __('Tắt camera') : __('Bật camera')"
         :loading="starting"
-        :aria-label="running ? __('Tắt camera quét mã') : __('Bật camera quét mã')"
+        :aria-label="
+          running ? __('Tắt camera quét mã') : __('Bật camera quét mã')
+        "
         @click="toggle"
       />
     </div>
@@ -91,7 +95,7 @@ async function start() {
       () => {},
     )
     running.value = true
-  } catch (err) {
+  } catch {
     // Quyền bị chặn / không có camera / import lỗi → nhắc nhập tay, KHÔNG vỡ trang.
     cameraError.value = __('Không truy cập được camera — nhập mã thủ công.')
     await stop()
@@ -105,12 +109,12 @@ async function stop() {
   if (!html5Qrcode) return
   try {
     await html5Qrcode.stop()
-  } catch (e) {
+  } catch {
     // Đã dừng / chưa start → bỏ qua.
   }
   try {
     html5Qrcode.clear()
-  } catch (e) {
+  } catch {
     // Bỏ qua lỗi clear (tránh leak camera nhưng không vỡ).
   }
   html5Qrcode = null

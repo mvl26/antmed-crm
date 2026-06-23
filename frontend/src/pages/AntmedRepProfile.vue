@@ -1,7 +1,9 @@
 <template>
   <main class="flex h-full flex-col" aria-labelledby="antmed-rep-title">
     <!-- Header + breadcrumb: Trang chủ › Đội ngũ › Hồ sơ NV -->
-    <header class="flex flex-col gap-2 border-b border-outline-gray-modals px-6 py-4">
+    <header
+      class="flex flex-col gap-2 border-b border-outline-gray-modals px-6 py-4"
+    >
       <nav class="text-p-xs text-ink-gray-5" :aria-label="__('Đường dẫn')">
         <RouterLink
           to="/antmed"
@@ -17,7 +19,9 @@
           {{ __('Đội ngũ') }}
         </RouterLink>
         <span class="px-1.5 text-ink-gray-4" aria-hidden="true">›</span>
-        <span class="text-ink-gray-7" aria-current="page">{{ __('Hồ sơ NV') }}</span>
+        <span class="text-ink-gray-7" aria-current="page">{{
+          __('Hồ sơ NV')
+        }}</span>
       </nav>
       <div class="flex items-center justify-between gap-2">
         <h1 id="antmed-rep-title" class="text-xl font-semibold text-ink-gray-9">
@@ -49,9 +53,18 @@
         class="flex flex-col items-center gap-3 py-16 text-center"
         role="alert"
       >
-        <Badge variant="subtle" theme="red" size="lg" :label="__('Lỗi tải hồ sơ')" />
+        <Badge
+          variant="subtle"
+          theme="red"
+          size="lg"
+          :label="__('Lỗi tải hồ sơ')"
+        />
         <p class="max-w-md text-p-sm text-ink-gray-6">{{ errorMessage }}</p>
-        <Button variant="outline" :label="__('Thử lại')" @click="rep.reload()" />
+        <Button
+          variant="outline"
+          :label="__('Thử lại')"
+          @click="rep.reload()"
+        />
       </div>
 
       <!-- Data -->
@@ -72,17 +85,24 @@
               </h2>
               <p class="text-p-sm text-ink-gray-6">
                 {{ __('Ngày vào làm') }}:
-                <span class="font-medium text-ink-gray-8">{{ formatJoinDate(profile.joined_on) }}</span>
+                <span class="font-medium text-ink-gray-8">{{
+                  formatJoinDate(profile.joined_on)
+                }}</span>
               </p>
             </div>
           </div>
 
           <!-- Cấp/vai trò (roles nghiệp vụ). KHÔNG có nguồn → empty-state, KHÔNG bịa. -->
           <div class="flex flex-col gap-1.5">
-            <h3 class="text-p-xs font-medium uppercase tracking-wide text-ink-gray-5">
+            <h3
+              class="text-p-xs font-medium uppercase tracking-wide text-ink-gray-5"
+            >
               {{ __('Cấp / Vai trò') }}
             </h3>
-            <div v-if="profile.roles && profile.roles.length" class="flex flex-wrap gap-1.5">
+            <div
+              v-if="profile.roles && profile.roles.length"
+              class="flex flex-wrap gap-1.5"
+            >
               <Badge
                 v-for="role in profile.roles"
                 :key="role"
@@ -107,10 +127,7 @@
             :label="__('DS tháng')"
             :value="formatVnMoney(kpi.month_sales)"
           />
-          <AntmedKpiCard
-            :label="__('Đơn mở')"
-            :value="kpi.open_deals"
-          />
+          <AntmedKpiCard :label="__('Đơn mở')" :value="kpi.open_deals" />
           <AntmedKpiCard
             :label="__('SLA đúng giờ')"
             :value="`${kpi.sla_ontime_pct}%`"
@@ -130,27 +147,42 @@
           >
             <p class="text-p-base">{{ __('Chưa có deal phụ trách') }}</p>
             <p class="text-p-sm">
-              {{ __('NV này chưa có khách hàng/deal nào trong phạm vi của bạn.') }}
+              {{
+                __('NV này chưa có khách hàng/deal nào trong phạm vi của bạn.')
+              }}
             </p>
           </div>
 
           <!-- Table deals: Khách hàng (organization) / Tuyến BV / Giá trị / Trạng thái -->
-          <table v-else class="w-full border-separate border-spacing-0 text-left">
+          <table
+            v-else
+            class="w-full border-separate border-spacing-0 text-left"
+          >
             <caption class="sr-only">
-              {{ __('Bảng khách hàng/deal phụ trách của NV kinh doanh') }}
+              {{
+                __('Bảng khách hàng/deal phụ trách của NV kinh doanh')
+              }}
             </caption>
             <thead>
               <tr class="text-p-sm text-ink-gray-6">
-                <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+                <th
+                  class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+                >
                   {{ __('Khách hàng') }}
                 </th>
-                <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+                <th
+                  class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+                >
                   {{ __('Tuyến BV') }}
                 </th>
-                <th class="border-b border-outline-gray-modals py-2 pr-4 text-right font-medium">
+                <th
+                  class="border-b border-outline-gray-modals py-2 pr-4 text-right font-medium"
+                >
                   {{ __('Giá trị deal') }}
                 </th>
-                <th class="border-b border-outline-gray-modals py-2 font-medium">
+                <th
+                  class="border-b border-outline-gray-modals py-2 font-medium"
+                >
                   {{ __('Trạng thái') }}
                 </th>
               </tr>
@@ -162,17 +194,23 @@
                 class="text-p-base text-ink-gray-8"
               >
                 <!-- Khách hàng (organization) -->
-                <td class="border-b border-outline-gray-1 py-3 pr-4 font-medium text-ink-gray-9">
+                <td
+                  class="border-b border-outline-gray-1 py-3 pr-4 font-medium text-ink-gray-9"
+                >
                   {{ row.organization || '— Chưa có tổ chức —' }}
                 </td>
 
                 <!-- Tuyến BV (territory) -->
-                <td class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7">
+                <td
+                  class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7"
+                >
                   {{ row.territory || '—' }}
                 </td>
 
                 <!-- Giá trị deal (formatVnMoney) -->
-                <td class="border-b border-outline-gray-1 py-3 pr-4 text-right font-medium tabular-nums text-ink-gray-8">
+                <td
+                  class="border-b border-outline-gray-1 py-3 pr-4 text-right font-medium tabular-nums text-ink-gray-8"
+                >
                   {{ formatVnMoney(row.deal_value) }}
                 </td>
 
@@ -189,10 +227,7 @@
             </tbody>
           </table>
 
-          <p
-            v-if="deals.length"
-            class="pt-1 text-p-sm text-ink-gray-5"
-          >
+          <p v-if="deals.length" class="pt-1 text-p-sm text-ink-gray-5">
             {{ __('Tổng cộng') }}: {{ deals.length }} {{ __('deal') }}
           </p>
         </section>
@@ -208,7 +243,11 @@ import { Avatar, Badge, Button, toast } from 'frappe-ui'
 import LoadingIndicator from '@/components/Icons/LoadingIndicator.vue'
 import AntmedKpiCard from '@/components/Antmed/AntmedKpiCard.vue'
 import { getRepProfile } from '@/data/antmed'
-import { formatVnMoney, formatJoinDate, repStatusChipClass } from '@/utils/antmedUi'
+import {
+  formatVnMoney,
+  formatJoinDate,
+  repStatusChipClass,
+} from '@/utils/antmedUi'
 
 const props = defineProps({
   // owner = deal_owner (email) từ route param :owner — KHÔNG render email thô (chỉ dùng fetch + key).
@@ -235,15 +274,29 @@ watch(
 
 // BE đã tính/sort sẵn — FE KHÔNG sort/reduce/aggregate (đọc thẳng deals/kpi/profile).
 const profile = computed(
-  () => rep.data?.profile || { deal_owner: '', full_name: '', joined_on: null, roles: [] },
+  () =>
+    rep.data?.profile || {
+      deal_owner: '',
+      full_name: '',
+      joined_on: null,
+      roles: [],
+    },
 )
 const kpi = computed(
-  () => rep.data?.kpi || { month_sales: 0, open_deals: 0, total_deals: 0, sla_ontime_pct: 0 },
+  () =>
+    rep.data?.kpi || {
+      month_sales: 0,
+      open_deals: 0,
+      total_deals: 0,
+      sla_ontime_pct: 0,
+    },
 )
 const deals = computed(() => rep.data?.deals || [])
 
 const errorMessage = computed(
   () =>
-    rep.error?.messages?.[0] || rep.error?.message || __('Không tải được hồ sơ NV'),
+    rep.error?.messages?.[0] ||
+    rep.error?.message ||
+    __('Không tải được hồ sơ NV'),
 )
 </script>

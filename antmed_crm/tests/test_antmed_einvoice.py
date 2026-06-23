@@ -23,7 +23,9 @@ from antmed_crm.api.antmed import documents
 
 def _ensure(doctype, key, val, values):
 	name = frappe.db.get_value(doctype, {key: val}, "name")
-	return name or frappe.get_doc({"doctype": doctype, key: val, **values}).insert(ignore_permissions=True).name
+	return (
+		name or frappe.get_doc({"doctype": doctype, key: val, **values}).insert(ignore_permissions=True).name
+	)
 
 
 class TestAntMedEInvoice(FrappeTestCase):
@@ -31,15 +33,35 @@ class TestAntMedEInvoice(FrappeTestCase):
 	def setUpClass(cls):
 		super().setUpClass()
 		cls.hosp = _ensure("AntMed Hospital", "hospital_code", "_T-EINV-BV", {"hospital_name": "BV EInvoice"})
-		cls.item = _ensure("AntMed Item", "item_code", "_T-EINV-STENT", {"item_name": "Stent EInvoice", "requires_cocq": 1})
+		cls.item = _ensure(
+			"AntMed Item", "item_code", "_T-EINV-STENT", {"item_name": "Stent EInvoice", "requires_cocq": 1}
+		)
 
 	def _delivery_with_certs(self, suffix, attach=True):
-		lot = frappe.get_doc(
-			{"doctype": "AntMed Lot", "lot_no": f"_T-EINV-LOT-{suffix}", "item": self.item, "expiry_date": "2027-12-31"}
-		).insert(ignore_permissions=True).name
-		dlv = frappe.get_doc(
-			{"doctype": "AntMed Delivery", "hospital": self.hosp, "surgery_datetime": "2026-08-01 08:00:00", "items": [{"item": self.item, "lot": lot, "requested_qty": 1}]}
-		).insert(ignore_permissions=True).name
+		lot = (
+			frappe.get_doc(
+				{
+					"doctype": "AntMed Lot",
+					"lot_no": f"_T-EINV-LOT-{suffix}",
+					"item": self.item,
+					"expiry_date": "2027-12-31",
+				}
+			)
+			.insert(ignore_permissions=True)
+			.name
+		)
+		dlv = (
+			frappe.get_doc(
+				{
+					"doctype": "AntMed Delivery",
+					"hospital": self.hosp,
+					"surgery_datetime": "2026-08-01 08:00:00",
+					"items": [{"item": self.item, "lot": lot, "requested_qty": 1}],
+				}
+			)
+			.insert(ignore_permissions=True)
+			.name
+		)
 		if attach:
 			documents.attach_cocq(lot=lot, cert_type="CO", cert_no=f"CO-EINV-{suffix}")
 			documents.attach_cocq(lot=lot, cert_type="CQ", cert_no=f"CQ-EINV-{suffix}")

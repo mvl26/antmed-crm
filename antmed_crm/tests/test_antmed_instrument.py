@@ -20,14 +20,26 @@ from frappe.tests.utils import FrappeTestCase
 
 from antmed_crm.api.antmed import instrument_loan
 
-SET_MIN_FIELDS = {"set_code", "surgery_type", "asset_value", "max_loans", "lifetime_loans", "current_status", "current_holder", "current_warehouse", "components"}
+SET_MIN_FIELDS = {
+	"set_code",
+	"surgery_type",
+	"asset_value",
+	"max_loans",
+	"lifetime_loans",
+	"current_status",
+	"current_holder",
+	"current_warehouse",
+	"components",
+}
 COMP_FIELDS = {"component_name", "qty", "criticality"}
 LIST_KEYS = {"name", "set_code", "surgery_type", "current_status", "current_holder", "lifetime_loans"}
 
 
 def _mk_set(set_code, **kw):
 	comps = kw.pop("components", [{"component_name": "Kẹp phẫu thuật", "qty": 2, "criticality": "Critical"}])
-	doc = frappe.get_doc({"doctype": "AntMed Instrument Set", "set_code": set_code, "components": comps, **kw})
+	doc = frappe.get_doc(
+		{"doctype": "AntMed Instrument Set", "set_code": set_code, "components": comps, **kw}
+	)
 	doc.insert(ignore_permissions=True)
 	return doc
 
@@ -50,8 +62,12 @@ class TestAntMedInstrumentSet(FrappeTestCase):
 		self.assertEqual(self.s1, "_T-SET-TIM")  # autoname field:set_code
 
 	def test_set_code_unique(self):
-		with self.assertRaises((frappe.UniqueValidationError, frappe.DuplicateEntryError, frappe.ValidationError)):
-			frappe.get_doc({"doctype": "AntMed Instrument Set", "set_code": "_T-SET-TIM"}).insert(ignore_permissions=True)
+		with self.assertRaises(
+			(frappe.UniqueValidationError, frappe.DuplicateEntryError, frappe.ValidationError)
+		):
+			frappe.get_doc({"doctype": "AntMed Instrument Set", "set_code": "_T-SET-TIM"}).insert(
+				ignore_permissions=True
+			)
 
 	def test_defaults(self):
 		self.assertEqual(frappe.db.get_value("AntMed Instrument Set", self.s1, "current_status"), "Sẵn sàng")
@@ -78,9 +94,9 @@ class TestAntMedInstrumentSet(FrappeTestCase):
 		self.assertIn("loans", res)
 		email = "_t_set_noperm@example.com"
 		if not frappe.db.exists("User", email):
-			frappe.get_doc({"doctype": "User", "email": email, "first_name": "NoPermSet", "send_welcome_email": 0}).insert(
-				ignore_permissions=True
-			)
+			frappe.get_doc(
+				{"doctype": "User", "email": email, "first_name": "NoPermSet", "send_welcome_email": 0}
+			).insert(ignore_permissions=True)
 		frappe.set_user(email)
 		try:
 			with self.assertRaises(frappe.PermissionError):

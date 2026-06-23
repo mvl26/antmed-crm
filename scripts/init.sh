@@ -42,5 +42,5 @@ bench new-site dev.localhost \
 bench --site dev.localhost set-config developer_mode 1
 bench --site dev.localhost clear-cache
 bench use dev.localhost
-bench get-app crm
-bench --site dev.localhost install-app crm
+bench get-app antmed_crm
+bench --site dev.localhost install-app antmed_crm

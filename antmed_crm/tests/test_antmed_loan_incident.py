@@ -24,15 +24,27 @@ INC_NAME_RE = re.compile(r"^AntMed-INC-\d{4}-\d+")
 
 
 def _mk_hospital(code, name):
-	return frappe.db.get_value("AntMed Hospital", code, "name") or frappe.get_doc(
-		{"doctype": "AntMed Hospital", "hospital_code": code, "hospital_name": name}
-	).insert(ignore_permissions=True).name
+	return (
+		frappe.db.get_value("AntMed Hospital", code, "name")
+		or frappe.get_doc({"doctype": "AntMed Hospital", "hospital_code": code, "hospital_name": name})
+		.insert(ignore_permissions=True)
+		.name
+	)
 
 
 def _mk_set(set_code):
-	return frappe.db.get_value("AntMed Instrument Set", set_code, "name") or frappe.get_doc(
-		{"doctype": "AntMed Instrument Set", "set_code": set_code, "components": [{"component_name": "Kẹp", "qty": 1}]}
-	).insert(ignore_permissions=True).name
+	return (
+		frappe.db.get_value("AntMed Instrument Set", set_code, "name")
+		or frappe.get_doc(
+			{
+				"doctype": "AntMed Instrument Set",
+				"set_code": set_code,
+				"components": [{"component_name": "Kẹp", "qty": 1}],
+			}
+		)
+		.insert(ignore_permissions=True)
+		.name
+	)
 
 
 class TestAntMedLoanIncident(FrappeTestCase):
@@ -70,7 +82,9 @@ class TestAntMedLoanIncident(FrappeTestCase):
 	def test_check_overdue_loans(self):
 		loan, s = self._active_loan("OVD")
 		# đẩy due_return_at về quá khứ → quá hạn
-		frappe.db.set_value("AntMed Instrument Loan", loan, "due_return_at", add_to_date(now_datetime(), hours=-2))
+		frappe.db.set_value(
+			"AntMed Instrument Loan", loan, "due_return_at", add_to_date(now_datetime(), hours=-2)
+		)
 		res = instrument_loan.check_overdue_loans()
 		self.assertIn("overdue", res)
 		self.assertIn(loan, res["overdue"])

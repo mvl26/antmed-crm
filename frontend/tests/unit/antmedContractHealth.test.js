@@ -79,7 +79,9 @@ describe('M02-2 data layer — getContractHealth url get_contract_health', () =>
   })
 
   it('dùng createResource (đọc dict bọc), KHÔNG createListResource', () => {
-    expect(dataSrc).toMatch(/import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/)
+    expect(dataSrc).toMatch(
+      /import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/,
+    )
     expect(dataSrc).not.toMatch(/import[^\n]*createListResource/)
   })
 })
@@ -106,7 +108,9 @@ describe('M02-2 nav — entry Sức khỏe Hợp đồng enabled tới /antmed/c
   it('isNavActive: active ở /antmed/contract-health, KHÔNG active ở /antmed (dashboard)', () => {
     const item = { to: '/antmed/contract-health' }
     expect(isNavActive(item, '/antmed/contract-health')).toBe(true)
-    expect(isNavActive({ to: '/antmed' }, '/antmed/contract-health')).toBe(false)
+    expect(isNavActive({ to: '/antmed' }, '/antmed/contract-health')).toBe(
+      false,
+    )
   })
 })
 
@@ -121,7 +125,8 @@ describe('M02-2 route — /antmed/contract-health đăng ký + guard', () => {
   })
 
   it('name AntmedContractHealth là DUY NHẤT', () => {
-    const matches = routerSrc.match(/name:\s*['"]AntmedContractHealth['"]/g) || []
+    const matches =
+      routerSrc.match(/name:\s*['"]AntmedContractHealth['"]/g) || []
     expect(matches).toHaveLength(1)
     // Phase 2: mock /ceo/contract-health (AntmedCeoContractHealthMock) ĐÃ GỠ.
   })
@@ -196,7 +201,9 @@ describe('AntmedContractHealth.vue — đọc r.data.data + tri-branch + cột A
     expect(pageSrc).toMatch(/clampPct\(row\.quota_used_pct\)/)
     // import helper thuần (3 nhánh màu green/orange/red sống ở antmedUi).
     expect(pageSrc).toMatch(/healthBarClass/)
-    expect(pageSrc).toMatch(/import[^\n]*expiryLabel[^\n]*from\s*'@\/utils\/antmedUi'/)
+    expect(pageSrc).toMatch(
+      /import\s*\{[^}]*expiryLabel[^}]*\}\s*from\s*'@\/utils\/antmedUi'/,
+    )
   })
 
   it("chip cảnh báo: expiryLabel(row.days_to_expiry) (đỏ) — 'Sắp hết hạn N ngày' / 'Đã hết hạn'", () => {
@@ -205,8 +212,14 @@ describe('AntmedContractHealth.vue — đọc r.data.data + tri-branch + cột A
     expect(pageSrc).toMatch(/bg-red-100/)
   })
 
-  it('Hết hạn định dạng dd/MM/yyyy (padStart ngày/tháng)', () => {
-    expect(pageSrc).toMatch(/\$\{dd\}\/\$\{mm\}\/\$\{yyyy\}/)
+  it('Hết hạn định dạng dd/MM/yyyy qua canon fmtDate (alias formatDate, gom hết inline)', () => {
+    // Vòng 2 CONSOLIDATE: formatDate inline → import canon fmtDate (dd/MM/yyyy) từ antmedUi.
+    expect(pageSrc).toMatch(
+      /import\s*\{[^}]*fmtDate as formatDate[^}]*\}\s*from\s*'@\/utils\/antmedUi'/,
+    )
+    expect(pageSrc).toMatch(/formatDate\(row\.valid_to\)/)
+    // KHÔNG còn tự định nghĩa formatDate inline trong page.
+    expect(pageSrc).not.toMatch(/function formatDate\(/)
   })
 
   it('status chip qua theme map (KHÔNG raw màu) + label chữ (WCAG: không chỉ màu)', () => {

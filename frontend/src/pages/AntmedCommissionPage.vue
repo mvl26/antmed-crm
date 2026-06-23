@@ -1,7 +1,9 @@
 <template>
   <main class="flex h-full flex-col" aria-labelledby="antmed-commission-title">
     <!-- Header + breadcrumb 'Trang chủ › Hoa hồng NV' -->
-    <header class="flex flex-col gap-2 border-b border-outline-gray-modals px-6 py-4">
+    <header
+      class="flex flex-col gap-2 border-b border-outline-gray-modals px-6 py-4"
+    >
       <nav class="text-p-xs text-ink-gray-5" :aria-label="__('Đường dẫn')">
         <RouterLink
           to="/antmed"
@@ -13,11 +15,18 @@
         <span class="text-ink-gray-7">{{ __('Hoa hồng NV') }}</span>
       </nav>
       <div class="flex flex-col gap-1">
-        <h1 id="antmed-commission-title" class="text-xl font-semibold text-ink-gray-9">
+        <h1
+          id="antmed-commission-title"
+          class="text-xl font-semibold text-ink-gray-9"
+        >
           {{ __('Hoa hồng Nhân viên') }}
         </h1>
         <p class="text-p-sm text-ink-gray-6">
-          {{ __('Tổng hoa hồng kỳ và quy tắc tính theo doanh thu Won đóng trong kỳ') }}
+          {{
+            __(
+              'Tổng hoa hồng kỳ và quy tắc tính theo doanh thu Won đóng trong kỳ',
+            )
+          }}
         </p>
       </div>
     </header>
@@ -44,7 +53,12 @@
           </div>
 
           <div v-else-if="commission.error" class="py-3" role="alert">
-            <Badge variant="subtle" theme="red" size="lg" :label="__('Lỗi tải hoa hồng')" />
+            <Badge
+              variant="subtle"
+              theme="red"
+              size="lg"
+              :label="__('Lỗi tải hoa hồng')"
+            />
           </div>
 
           <template v-else>
@@ -53,7 +67,8 @@
               {{ formatVnMoney(totalCommission) }} ₫
             </p>
             <p class="text-p-xs text-ink-gray-5">
-              {{ repCount }} {{ __('NV') }} · {{ groupCount }} {{ __('nhóm vật tư') }}
+              {{ repCount }} {{ __('NV') }} · {{ groupCount }}
+              {{ __('nhóm vật tư') }}
             </p>
           </template>
         </article>
@@ -77,11 +92,20 @@
           </div>
 
           <div v-else-if="commission.error" class="py-3" role="alert">
-            <Badge variant="subtle" theme="red" size="lg" :label="__('Lỗi tải hoa hồng')" />
+            <Badge
+              variant="subtle"
+              theme="red"
+              size="lg"
+              :label="__('Lỗi tải hoa hồng')"
+            />
           </div>
 
           <!-- Data — danh sách quy tắc kỳ render TỪ data THẬT (KHÔNG hardcode JSX) -->
-          <ul v-else class="flex flex-col gap-1.5" :aria-label="__('Quy tắc tính hoa hồng kỳ')">
+          <ul
+            v-else
+            class="flex flex-col gap-1.5"
+            :aria-label="__('Quy tắc tính hoa hồng kỳ')"
+          >
             <li
               v-for="(rule, i) in rules"
               :key="rule.label + '-' + i"
@@ -123,7 +147,6 @@ const commission = getCommissionSummary({
 // total_commission=0 → '0 ₫' (số thật); chưa load (null/undefined) → 0 (card vẫn ở nhánh loading
 // trước đó). FE KHÔNG tính lại (BR rollup ở BE) — chỉ đọc thẳng + format VND.
 const totalCommission = computed(() => commission.data?.total_commission ?? 0)
-const totalRevenue = computed(() => commission.data?.total_revenue ?? 0)
 const repCount = computed(() => commission.data?.rep_count ?? 0)
 const groupCount = computed(() => commission.data?.group_count ?? 0)
 const periodLabel = computed(() => commission.data?.period_label || '')

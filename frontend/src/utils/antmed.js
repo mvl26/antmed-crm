@@ -1,7 +1,7 @@
 // AntMed RBAC — FE helper (W0-2 / DEC-B, ADR-M14W0-04).
 //
-// Đọc cờ AntMed từ BOOT (single-source ở BE: crm/api/antmed/rbac.py).
-// BE `get_boot()` (crm/www/crm.py) expose `is_antmed_user` (boolean) + `antmed_roles`
+// Đọc cờ AntMed từ BOOT (single-source ở BE: antmed_crm/api/antmed/rbac.py).
+// BE `get_boot()` (antmed_crm/www/crm.py) expose `is_antmed_user` (boolean) + `antmed_roles`
 // → crm.html inject `window.is_antmed_user` / `window.antmed_roles`.
 //
 // ⚠️ KHÔNG hardcode danh sách Role AntMed (`NV kinh doanh`/`Thủ kho`/`Quản lý`) lần 2 ở FE.

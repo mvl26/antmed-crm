@@ -21,7 +21,9 @@ from antmed_crm.api.antmed import delivery
 
 def _ensure(doctype, key, val, values):
 	name = frappe.db.get_value(doctype, {key: val}, "name")
-	return name or frappe.get_doc({"doctype": doctype, key: val, **values}).insert(ignore_permissions=True).name
+	return (
+		name or frappe.get_doc({"doctype": doctype, key: val, **values}).insert(ignore_permissions=True).name
+	)
 
 
 def _mk_contract(contract_no, hospital, item, quota_qty, used_qty, lock=1):
@@ -34,7 +36,18 @@ def _mk_contract(contract_no, hospital, item, quota_qty, used_qty, lock=1):
 			"signed_date": "2026-01-05",
 			"status": "Hiệu lực",
 			"valid_to": "2026-12-31",
-			"items": [{"item": item, "item_name": item, "uom": "Cái", "unit_price": 1000000, "quota_qty": quota_qty, "used_qty": used_qty, "remaining_pct": rem, "lock_at_100": lock}],
+			"items": [
+				{
+					"item": item,
+					"item_name": item,
+					"uom": "Cái",
+					"unit_price": 1000000,
+					"quota_qty": quota_qty,
+					"used_qty": used_qty,
+					"remaining_pct": rem,
+					"lock_at_100": lock,
+				}
+			],
 		}
 	)
 	doc.insert(ignore_permissions=True)
@@ -50,13 +63,25 @@ class TestAntMedDeliveryQuota(FrappeTestCase):
 	@classmethod
 	def setUpClass(cls):
 		super().setUpClass()
-		cls.hosp = _ensure("AntMed Hospital", "hospital_code", "_T-DRQ-BV", {"hospital_name": "BV Quota Giao"})
+		cls.hosp = _ensure(
+			"AntMed Hospital", "hospital_code", "_T-DRQ-BV", {"hospital_name": "BV Quota Giao"}
+		)
 		cls.item = _ensure("AntMed Item", "item_code", "VTYT-DRQ", {"item_name": "Stent quota giao"})
 
 	def _delivery(self, contract, qty):
-		dlv = frappe.get_doc(
-			{"doctype": "AntMed Delivery", "hospital": self.hosp, "contract": contract, "surgery_datetime": str(add_to_date(now_datetime(), hours=4)), "items": [{"item": self.item, "requested_qty": qty}]}
-		).insert(ignore_permissions=True).name
+		dlv = (
+			frappe.get_doc(
+				{
+					"doctype": "AntMed Delivery",
+					"hospital": self.hosp,
+					"contract": contract,
+					"surgery_datetime": str(add_to_date(now_datetime(), hours=4)),
+					"items": [{"item": self.item, "requested_qty": qty}],
+				}
+			)
+			.insert(ignore_permissions=True)
+			.name
+		)
 		delivery.assign(dlv, "Administrator")
 		delivery.start_transit(dlv)
 		return dlv
@@ -78,9 +103,13 @@ class TestAntMedDeliveryQuota(FrappeTestCase):
 	def test_handover_captures_gps(self):
 		c = _mk_contract("_T-DRQ-C3", self.hosp, self.item, quota_qty=100, used_qty=0)
 		dlv = self._delivery(c, 2)
-		delivery.handover(dlv, gps_lat="10.776", gps_lng="106.700", signed_by="BS Nguyễn", signature_method="Touch")
+		delivery.handover(
+			dlv, gps_lat="10.776", gps_lng="106.700", signed_by="BS Nguyễn", signature_method="Touch"
+		)
 		self.assertEqual(frappe.db.get_value("AntMed Delivery", dlv, "signed_by"), "BS Nguyễn")
-		self.assertAlmostEqual(float(frappe.db.get_value("AntMed Delivery", dlv, "gps_lat")), 10.776, places=3)
+		self.assertAlmostEqual(
+			float(frappe.db.get_value("AntMed Delivery", dlv, "gps_lat")), 10.776, places=3
+		)
 
 	def test_br07_block_delete_signed(self):
 		c = _mk_contract("_T-DRQ-C4", self.hosp, self.item, quota_qty=100, used_qty=0)

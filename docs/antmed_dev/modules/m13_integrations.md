@@ -2,9 +2,9 @@
 
 | Mục | Giá trị |
 |---|---|
-| Module folder | `crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) |
-| DocType folder | `crm/antmed/doctype/antmed_integration_setting/`, `crm/antmed/doctype/antmed_integration_log/` |
-| Code path BE | `crm/api/antmed/integrations.py` (đường gọi `antmed_crm.api.antmed.integrations.<fn>`) + connector helpers trong `crm/antmed/integrations/` (zalo, sms, bank, muasamcong, accounting, his) + module hooks `crm/antmed/integrations/hooks.py` (scheduler/retry) |
+| Module folder | `antmed_crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) |
+| DocType folder | `antmed_crm/antmed/doctype/antmed_integration_setting/`, `antmed_crm/antmed/doctype/antmed_integration_log/` |
+| Code path BE | `antmed_crm/api/antmed/integrations.py` (đường gọi `antmed_crm.api.antmed.integrations.<fn>`) + connector helpers trong `antmed_crm/antmed/integrations/` (zalo, sms, bank, muasamcong, accounting, his) + module hooks `antmed_crm/antmed/integrations/hooks.py` (scheduler/retry) |
 | FE pages | `frontend/src/pages/AntmedIntegrationSetting.vue`, `frontend/src/pages/AntmedIntegrationLog.vue` + route `/antmed/admin/integrations`, `/antmed/admin/integration-logs` |
 | Wave (PLAN) | **W4 — Tăng trưởng & kiểm soát** |
 | Role chính (VI) | `Quản lý` (admin tích hợp). Đề xuất role chuyên trách `Quản trị hệ thống` *(VI — [PLANNED], thay cho `AM System Admin` scaffold)* |
@@ -15,7 +15,7 @@
 
 > **Trạng thái: [PLANNED — chưa code]**
 >
-> Toàn bộ DocType / API / connector dưới đây là **DESIGN (đề xuất)** — chưa hiện diện trong `crm/antmed/`. Scaffold tham chiếu (`docs/antmed_crm/antmed_crm/m13_integrations/`) là bản app-riêng cũ (`AM …`, module `M13 Integrations`, dùng ERPNext `Sales Invoice`) → **ADAPT** sang in-place: `AM `→`AntMed `, `M13 Integrations`→`AntMed`, ERPNext-reuse→native-lite. **Phần lớn connector thực = `[ROADMAP]`/stub** (cần DPA + sandbox credential — xem HANDOVER §"dev cần TỰ làm tiếp"); M13 chốt **khung** (Setting tập trung + Log + dispatcher + retry) chứ không gọi API thật ở slice đầu.
+> Toàn bộ DocType / API / connector dưới đây là **DESIGN (đề xuất)** — chưa hiện diện trong `antmed_crm/antmed/`. Scaffold tham chiếu (`docs/antmed_crm/antmed_crm/m13_integrations/`) là bản app-riêng cũ (`AM …`, module `M13 Integrations`, dùng ERPNext `Sales Invoice`) → **ADAPT** sang app riêng `antmed_crm` (fork Frappe CRM): `AM `→`AntMed `, `M13 Integrations`→`AntMed`, ERPNext-reuse→native-lite. **Phần lớn connector thực = `[ROADMAP]`/stub** (cần DPA + sandbox credential — xem HANDOVER §"dev cần TỰ làm tiếp"); M13 chốt **khung** (Setting tập trung + Log + dispatcher + retry) chứ không gọi API thật ở slice đầu.
 
 ---
 
@@ -79,7 +79,7 @@ Vị trí trong 14 module: M13 nằm cuối DAG (W4), **phụ thuộc M06 + M09*
 
 ## 4. Business Rules
 
-> M13 **không** thực thi BR nghiệp vụ VTYT lõi (quota/lot/CO-CQ). Các quy tắc dưới đây là **ràng buộc kỹ thuật/bảo mật của lớp tích hợp**, enforce trong **module hooks** (`crm/antmed/integrations/hooks.py`) hoặc controller `validate`/helper connector. Đánh số nội bộ BR-INT-xx để khỏi đụng BR-01..15.
+> M13 **không** thực thi BR nghiệp vụ VTYT lõi (quota/lot/CO-CQ). Các quy tắc dưới đây là **ràng buộc kỹ thuật/bảo mật của lớp tích hợp**, enforce trong **module hooks** (`antmed_crm/antmed/integrations/hooks.py`) hoặc controller `validate`/helper connector. Đánh số nội bộ BR-INT-xx để khỏi đụng BR-01..15.
 
 | BR | Mô tả | Trạng thái | Nơi enforce |
 |---|---|---|---|
@@ -95,7 +95,7 @@ Vị trí trong 14 module: M13 nằm cuối DAG (W4), **phụ thuộc M06 + M09*
 
 ## 5. API
 
-> File: `crm/api/antmed/integrations.py`. Mọi hàm `@frappe.whitelist(methods=[...])`, **type-annotated** (`crm/hooks.py:28`), trả **RAW dict/list** (KHÔNG `_ok/_err` envelope). Lỗi nghiệp vụ/bảo mật = `frappe.throw(_("BR-INT-xx: …tiếng Việt"))`. Webhook vào dùng `allow_guest=True` + verify chữ ký (KHÔNG dựa session).
+> File: `antmed_crm/api/antmed/integrations.py`. Mọi hàm `@frappe.whitelist(methods=[...])`, **type-annotated** (`antmed_crm/hooks.py:28`), trả **RAW dict/list** (KHÔNG `_ok/_err` envelope). Lỗi nghiệp vụ/bảo mật = `frappe.throw(_("BR-INT-xx: …tiếng Việt"))`. Webhook vào dùng `allow_guest=True` + verify chữ ký (KHÔNG dựa session).
 
 | Endpoint (`antmed_crm.api.antmed.integrations.*`) | Verb | Mô tả |
 |---|---|---|
@@ -114,7 +114,7 @@ Vị trí trong 14 module: M13 nằm cuối DAG (W4), **phụ thuộc M06 + M09*
 
 ## 6. Integration
 
-**doc_events vào/ra (theo DAG — `crm/antmed/integrations/hooks.py`, lazy-import + truyền PK, KHÔNG truyền doc nặng):**
+**doc_events vào/ra (theo DAG — `antmed_crm/antmed/integrations/hooks.py`, lazy-import + truyền PK, KHÔNG truyền doc nặng):**
 - `AntMed E-Invoice` / `AntMed E-Invoice Sync` (M06) `on_submit`/`after_insert` → enqueue `dispatcher.dispatch(einvoice_name)` (gửi HĐĐT). *Lazy-import connector trong handler; chỉ truyền `name`.*
 - `AntMed Order` (M09) `on_submit` → (tuỳ chọn) `sms.send`/`zalo.send_message` thông báo BV. `[ROADMAP]`.
 - `AntMed AR Entry` (M09) ← `bank_webhook` cập nhật đối soát thu (chiều vào).
@@ -129,7 +129,7 @@ Vị trí trong 14 module: M13 nằm cuối DAG (W4), **phụ thuộc M06 + M09*
 - **Gate HĐĐT (BR-12)**: dispatcher chỉ gửi sau khi M06 xác nhận đã qua 2FA/cổng phát hành — M13 không tự ý phát hành.
 - **Webhook**: verify HMAC/chữ ký (BR-INT-04) trước khi tạo dữ liệu nghiệp vụ; idempotency chống replay.
 
-> **Nguyên tắc additive:** M13 chỉ THÊM doc_events/scheduler/route prefix AntMed vào `crm/hooks.py`; KHÔNG sửa key gốc CRM. Connector dùng `requests` với `timeout` rõ; ở `developer_mode` trả **mock** (như scaffold `zalo_oa.py`) để test không gọi mạng thật.
+> **Nguyên tắc additive:** M13 chỉ THÊM doc_events/scheduler/route prefix AntMed vào `antmed_crm/hooks.py`; KHÔNG sửa key gốc CRM. Connector dùng `requests` với `timeout` rõ; ở `developer_mode` trả **mock** (như scaffold `zalo_oa.py`) để test không gọi mạng thật.
 
 ---
 
@@ -163,7 +163,7 @@ Vị trí trong 14 module: M13 nằm cuối DAG (W4), **phụ thuộc M06 + M09*
 ## 9. ADRs
 
 **Chưa có ADR riêng cho M13** (sẽ ghi khi land W4). Kế thừa + tham chiếu:
-- **ADR-M01-01** (in-place app `crm`) + **ADR-M01-02** (prefix `AntMed `) — áp dụng: connector/Setting/Log đều prefix `AntMed `, path `antmed_crm.api.antmed.integrations.*`.
+- **ADR-M01-01** (gốc: in-place; THỰC TẾ = app RIÊNG `antmed_crm`) + **ADR-M01-02** (prefix `AntMed `) — áp dụng: connector/Setting/Log đều prefix `AntMed `, path `antmed_crm.api.antmed.integrations.*`.
 - **DEC-2026-06-17-A** (role tiếng Việt) — role admin tích hợp = `Quản lý` (mở rộng `Quản trị hệ thống` [PLANNED]).
 - **D1 native-lite** — dispatcher/worker thao tác trên DocType **native M06/M09** (`AntMed E-Invoice`, `AntMed Order`, `AntMed AR Entry`), KHÔNG dùng ERPNext `Sales Invoice` (scaffold cũ tham chiếu `Sales Invoice` → ADAPT bỏ).
 
@@ -175,7 +175,7 @@ Vị trí trong 14 module: M13 nằm cuối DAG (W4), **phụ thuộc M06 + M09*
 ## 10. Acceptance / DoD
 
 Theo SPEC §6 — một slice "xong" khi:
-1. **BE**: `bench --site miyano run-tests --module crm.tests.test_antmed_integrations` → **`Ran N OK`**, 0 fail. TC tối thiểu (slice 13.1): 2 DocType tồn tại sau migrate + field tối thiểu; `get_settings` **không** trả secret thô (BR-INT-01); `list_integration_logs` trả `{data,total_count}` với **`len(data)==total_count`** khi không phân trang (count==rows); thiếu read-perm → `frappe.PermissionError`; `_log()` ghi đúng `status/direction`.
+1. **BE**: `bench --site miyano run-tests --module antmed_crm.tests.test_antmed_integrations` → **`Ran N OK`**, 0 fail. TC tối thiểu (slice 13.1): 2 DocType tồn tại sau migrate + field tối thiểu; `get_settings` **không** trả secret thô (BR-INT-01); `list_integration_logs` trả `{data,total_count}` với **`len(data)==total_count`** khi không phân trang (count==rows); thiếu read-perm → `frappe.PermissionError`; `_log()` ghi đúng `status/direction`.
 2. **FE**: `yarn vitest run` xanh — 2 route admin tồn tại (path/name/lazy), gọi đúng `antmed_crm.api.antmed.integrations.*`, KHÔNG `antmed_crm.api`/axios/tanstack, không render secret thô.
 3. **Build**: `yarn build` xanh, chunk `Antmed*` không vỡ.
 4. **Pixel** (sau USER reload): `http://miyano/crm/antmed/admin/integrations` render form + mask secret; `/antmed/admin/integration-logs` render bảng + filter + drawer detail; 0 console error; API 200.

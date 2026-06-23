@@ -6,4 +6,4 @@
 # Quy ước (Frappe-standard): @frappe.whitelist(methods=[...]) tường minh verb,
 # trả RAW dict/list (KHÔNG envelope _ok/_err, KHÔNG MSG.*); lỗi nghiệp vụ =
 # frappe.throw(_("BR-XX: <thông điệp tiếng Việt>")). Hàm phải type-annotate
-# (crm/hooks.py: require_type_annotated_api_methods = True).
+# (antmed_crm/hooks.py: require_type_annotated_api_methods = True).

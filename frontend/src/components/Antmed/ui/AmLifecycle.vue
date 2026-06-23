@@ -6,7 +6,16 @@
       :key="i"
       class="flex-1 px-1 py-1 text-center"
       :class="stageClass(s.status)"
-      style="clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 50%, calc(100% - 7px) 100%, 0 100%, 7px 50%)"
+      style="
+        clip-path: polygon(
+          0 0,
+          calc(100% - 7px) 0,
+          100% 50%,
+          calc(100% - 7px) 100%,
+          0 100%,
+          7px 50%
+        );
+      "
     >
       {{ s.label }}
     </div>

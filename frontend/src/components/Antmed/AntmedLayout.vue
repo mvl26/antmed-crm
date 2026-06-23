@@ -25,14 +25,18 @@
         class="flex items-center gap-1.5 text-sm font-bold focus-visible:rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
       >
         <span aria-hidden="true">⚕</span>
-        <span class="truncate">{{ isPortal ? __('AntMed Portal') : __('AntMed CRM') }}</span>
+        <span class="truncate">{{
+          isPortal ? __('AntMed Portal') : __('AntMed CRM')
+        }}</span>
       </RouterLink>
 
       <span
         v-if="!isPortal"
         class="hidden items-center gap-1 rounded-full bg-white/[0.14] px-2.5 py-0.5 text-[11px] md:inline-flex"
       >
-        <FeatherIcon name="calendar" class="h-3 w-3" aria-hidden="true" />{{ periodLabel }}
+        <FeatherIcon name="calendar" class="h-3 w-3" aria-hidden="true" />{{
+          periodLabel
+        }}
       </span>
 
       <button
@@ -42,9 +46,18 @@
         :aria-label="__('Tìm kiếm nhanh')"
         @click="searchOpen = true"
       >
-        <FeatherIcon name="search" class="h-3.5 w-3.5 shrink-0 text-white/80" aria-hidden="true" />
-        <span class="flex-1 truncate text-left">{{ __('Tìm chức năng, bệnh viện, hợp đồng...') }}</span>
-        <span class="shrink-0 rounded bg-white/20 px-1 py-0.5 text-[9px] font-medium leading-none">⌘K</span>
+        <FeatherIcon
+          name="search"
+          class="h-3.5 w-3.5 shrink-0 text-white/80"
+          aria-hidden="true"
+        />
+        <span class="flex-1 truncate text-left">{{
+          __('Tìm chức năng, bệnh viện, hợp đồng...')
+        }}</span>
+        <span
+          class="shrink-0 rounded bg-white/20 px-1 py-0.5 text-[9px] font-medium leading-none"
+          >⌘K</span
+        >
       </button>
 
       <!-- Nhóm phải: tìm (mobile icon) + chuông + avatar -->
@@ -67,7 +80,9 @@
               id="notifications-btn"
               type="button"
               class="relative flex h-6 w-6 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
-              :class="isPortal ? 'hover:bg-surface-gray-2' : 'hover:bg-white/15'"
+              :class="
+                isPortal ? 'hover:bg-surface-gray-2' : 'hover:bg-white/15'
+              "
               :aria-label="
                 unreadNotificationsCount
                   ? unreadNotificationsCount + ' ' + __('thông báo chưa đọc')
@@ -80,7 +95,9 @@
                 v-if="unreadNotificationsCount"
                 class="absolute -right-1 -top-1 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-red-500 px-0.5 text-[9px] font-semibold leading-none text-white"
               >
-                {{ unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount }}
+                {{
+                  unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount
+                }}
               </span>
             </button>
           </template>
@@ -88,8 +105,12 @@
             <div
               class="mt-2 w-[92vw] max-w-[360px] overflow-hidden rounded-xl border border-outline-gray-2 bg-surface-white text-ink-gray-9 shadow-2xl"
             >
-              <div class="flex items-center justify-between border-b border-outline-gray-modals px-4 py-2.5">
-                <span class="text-p-base font-semibold">{{ __('Thông báo') }}</span>
+              <div
+                class="flex items-center justify-between border-b border-outline-gray-modals px-4 py-2.5"
+              >
+                <span class="text-p-base font-semibold">{{
+                  __('Thông báo')
+                }}</span>
                 <button
                   v-if="unreadNotificationsCount"
                   type="button"
@@ -100,7 +121,9 @@
                 </button>
               </div>
               <div class="max-h-[60vh] overflow-auto">
-                <template v-if="notifications.data && notifications.data.length">
+                <template
+                  v-if="notifications.data && notifications.data.length"
+                >
                   <button
                     v-for="n in notifications.data"
                     :key="n.comment || n.creation"
@@ -108,20 +131,41 @@
                     class="flex w-full items-start gap-2.5 border-b border-outline-gray-1 px-4 py-3 text-left hover:bg-surface-gray-2 focus-visible:bg-surface-gray-2 focus-visible:outline-none"
                     @click="openNotification(n, close)"
                   >
-                    <span class="mt-1.5 size-2 shrink-0 rounded-full" :class="n.read ? 'bg-transparent' : 'bg-teal-600'" />
+                    <span
+                      class="mt-1.5 size-2 shrink-0 rounded-full"
+                      :class="n.read ? 'bg-transparent' : 'bg-teal-600'"
+                    />
                     <div class="min-w-0 flex-1">
                       <!-- eslint-disable-next-line vue/no-v-html -->
-                      <div v-if="n.notification_text" class="text-p-sm text-ink-gray-8" v-html="sanitizeHTML(n.notification_text)" />
+                      <div
+                        v-if="n.notification_text"
+                        class="text-p-sm text-ink-gray-8"
+                        v-html="sanitizeHTML(n.notification_text)"
+                      />
                       <div v-else class="text-p-sm text-ink-gray-8">
-                        {{ n.subject || n.from_user?.full_name || __('Thông báo mới') }}
+                        {{
+                          n.subject ||
+                          n.from_user?.full_name ||
+                          __('Thông báo mới')
+                        }}
                       </div>
-                      <div class="mt-0.5 text-p-xs text-ink-gray-5">{{ timeAgo(n.creation) }}</div>
+                      <div class="mt-0.5 text-p-xs text-ink-gray-5">
+                        {{ timeAgo(n.creation) }}
+                      </div>
                     </div>
                   </button>
                 </template>
-                <div v-else class="flex flex-col items-center gap-2 px-4 py-10 text-center text-ink-gray-5">
-                  <NotificationsIcon class="h-7 w-7 text-ink-gray-4" aria-hidden="true" />
-                  <span class="text-p-sm">{{ __('Chưa có thông báo nào') }}</span>
+                <div
+                  v-else
+                  class="flex flex-col items-center gap-2 px-4 py-10 text-center text-ink-gray-5"
+                >
+                  <NotificationsIcon
+                    class="h-7 w-7 text-ink-gray-4"
+                    aria-hidden="true"
+                  />
+                  <span class="text-p-sm">{{
+                    __('Chưa có thông báo nào')
+                  }}</span>
                 </div>
               </div>
             </div>
@@ -135,7 +179,12 @@
           :aria-label="__('Trang cá nhân của tôi')"
           :title="userFullName || __('Trang cá nhân')"
         >
-          <img v-if="userImage" :src="userImage" :alt="userFullName" class="h-7 w-7 rounded-full object-cover" />
+          <img
+            v-if="userImage"
+            :src="userImage"
+            :alt="userFullName"
+            class="h-7 w-7 rounded-full object-cover"
+          />
           <span
             v-else
             class="flex h-7 w-7 select-none items-center justify-center rounded-full bg-white text-[12px] font-bold uppercase text-teal-900"
@@ -159,8 +208,10 @@
       <nav
         class="absolute inset-y-0 left-0 z-40 flex w-64 flex-col overflow-hidden border-r border-outline-gray-1 bg-surface-gray-1 transition-all duration-200 ease-out lg:static lg:z-auto lg:translate-x-0"
         :class="[
-          mobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0',
-          collapsed ? 'lg:w-[60px]' : 'lg:w-[200px]',
+          mobileOpen
+            ? 'translate-x-0 shadow-2xl'
+            : '-translate-x-full lg:translate-x-0',
+          collapsed ? 'lg:w-[60px]' : 'lg:w-[240px]',
         ]"
         :aria-label="__('Điều hướng AntMed')"
       >
@@ -173,7 +224,11 @@
               {{ __(sec.title) }}
             </div>
             <!-- Khi thu gọn (desktop): 1 đường kẻ ngăn nhóm thay tiêu đề -->
-            <div v-if="collapsed" class="mx-2 my-1 hidden border-t border-outline-gray-2 lg:block" aria-hidden="true" />
+            <div
+              v-if="collapsed"
+              class="mx-2 my-1 hidden border-t border-outline-gray-2 lg:block"
+              aria-hidden="true"
+            />
 
             <template v-for="item in sec.items" :key="item.key">
               <RouterLink
@@ -186,12 +241,20 @@
                     : 'text-ink-gray-7 hover:bg-surface-gray-3',
                   collapsed ? 'px-2.5 lg:justify-center lg:px-0' : 'px-2.5',
                 ]"
-                :aria-current="isNavActive(item, route.path) ? 'page' : undefined"
+                :aria-current="
+                  isNavActive(item, route.path) ? 'page' : undefined
+                "
                 :title="collapsed ? __(item.label) : undefined"
                 @click="mobileOpen = false"
               >
-                <component :is="iconFor(item.icon)" class="h-4 w-4 shrink-0" aria-hidden="true" />
-                <span :class="collapsed ? 'lg:hidden' : ''">{{ __(item.label) }}</span>
+                <component
+                  :is="iconFor(item.icon)"
+                  class="h-4 w-4 shrink-0"
+                  aria-hidden="true"
+                />
+                <span :class="collapsed ? 'lg:hidden' : ''">{{
+                  __(item.label)
+                }}</span>
               </RouterLink>
 
               <div
@@ -201,8 +264,14 @@
                 aria-disabled="true"
                 :title="__('Sắp có')"
               >
-                <component :is="iconFor(item.icon)" class="h-4 w-4 shrink-0" aria-hidden="true" />
-                <span class="flex-1" :class="collapsed ? 'lg:hidden' : ''">{{ __(item.label) }}</span>
+                <component
+                  :is="iconFor(item.icon)"
+                  class="h-4 w-4 shrink-0"
+                  aria-hidden="true"
+                />
+                <span class="flex-1" :class="collapsed ? 'lg:hidden' : ''">{{
+                  __(item.label)
+                }}</span>
                 <span
                   class="rounded bg-ink-gray-2 px-1 py-0.5 text-[10px] font-medium text-ink-gray-5"
                   :class="collapsed ? 'lg:hidden' : ''"
@@ -222,7 +291,11 @@
           :aria-label="collapsed ? __('Mở rộng menu') : __('Thu gọn menu')"
           @click="toggleCollapsed"
         >
-          <FeatherIcon :name="collapsed ? 'chevrons-right' : 'chevrons-left'" class="h-4 w-4 shrink-0" aria-hidden="true" />
+          <FeatherIcon
+            :name="collapsed ? 'chevrons-right' : 'chevrons-left'"
+            class="h-4 w-4 shrink-0"
+            aria-hidden="true"
+          />
           <span :class="collapsed ? 'lg:hidden' : ''">{{ __('Thu gọn') }}</span>
         </button>
         <!-- Đóng drawer (mobile) -->
@@ -231,7 +304,9 @@
           class="flex items-center justify-center gap-2 border-t border-outline-gray-1 px-3 py-3 text-p-sm font-medium text-ink-gray-7 hover:bg-surface-gray-3 lg:hidden"
           @click="mobileOpen = false"
         >
-          <FeatherIcon name="x" class="h-4 w-4" aria-hidden="true" />{{ __('Đóng') }}
+          <FeatherIcon name="x" class="h-4 w-4" aria-hidden="true" />{{
+            __('Đóng')
+          }}
         </button>
       </nav>
 
@@ -329,14 +404,20 @@ try {
 function toggleCollapsed() {
   collapsed.value = !collapsed.value
   try {
-    localStorage.setItem('antmed-sidebar-collapsed', collapsed.value ? '1' : '0')
+    localStorage.setItem(
+      'antmed-sidebar-collapsed',
+      collapsed.value ? '1' : '0',
+    )
   } catch {
     /* noop */
   }
 }
 const mobileOpen = ref(false)
 // Đổi route → đóng drawer mobile (tránh che nội dung).
-watch(() => route.path, () => (mobileOpen.value = false))
+watch(
+  () => route.path,
+  () => (mobileOpen.value = false),
+)
 
 // ── Quick-search command palette (⌘/Ctrl+K) ──
 const searchOpen = ref(false)
@@ -361,7 +442,9 @@ function markAllRead() {
 }
 function notificationRoute(n) {
   const params =
-    n.route_name === 'Deal' ? { dealId: n.reference_name } : { leadId: n.reference_name }
+    n.route_name === 'Deal'
+      ? { dealId: n.reference_name }
+      : { leadId: n.reference_name }
   return { name: n.route_name, params, hash: n.hash }
 }
 function openNotification(n, close) {
@@ -373,7 +456,7 @@ function openNotification(n, close) {
   if (n.route_name) {
     try {
       router.push(notificationRoute(n))
-    } catch (e) {
+    } catch {
       /* thông báo không có route khớp → bỏ điều hướng */
     }
   }
@@ -386,7 +469,10 @@ const userFullName = computed(
 const userImage = computed(() => getUser(currentUser.value)?.user_image || '')
 const userInitials = computed(() => {
   const parts = (userFullName.value || '?').trim().split(/\s+/).filter(Boolean)
-  const ini = parts.slice(0, 2).map((w) => w[0]).join('')
+  const ini = parts
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
   return (ini || '?').toUpperCase()
 })
 
@@ -401,7 +487,9 @@ const displaySections = computed(() => {
   }
   return ANTMED_SECTIONS
 })
-const currentRole = computed(() => ANTMED_ROLES.find((r) => r.key === effectiveRole.value))
+const currentRole = computed(() =>
+  ANTMED_ROLES.find((r) => r.key === effectiveRole.value),
+)
 const isPortal = computed(() => currentRole.value?.variant === 'portal')
 
 const periodLabel = computed(() => {

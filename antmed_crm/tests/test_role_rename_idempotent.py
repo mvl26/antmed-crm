@@ -39,7 +39,8 @@ class TestRoleRenameIdempotent(FrappeTestCase):
 		# đúng 3 Role VI, không trùng
 		rows = frappe.get_all("Role", filters={"name": ["in", ROLES_VI]}, pluck="name")
 		self.assertEqual(
-			sorted(rows), sorted(ROLES_VI),
+			sorted(rows),
+			sorted(ROLES_VI),
 			msg=f"Sau execute() x2 phải đúng 3 Role VI, thực tế: {sorted(rows)}",
 		)
 		# không còn Role EN

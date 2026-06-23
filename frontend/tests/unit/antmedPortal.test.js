@@ -16,7 +16,10 @@ import {
 const srcDir = path.resolve(__dirname, '../../src')
 const dataSrc = readFileSync(path.join(srcDir, 'data/antmed.js'), 'utf8')
 const uiSrc = readFileSync(path.join(srcDir, 'utils/antmedUi.js'), 'utf8')
-const pageSrc = readFileSync(path.join(srcDir, 'pages/AntmedPortalHome.vue'), 'utf8')
+const pageSrc = readFileSync(
+  path.join(srcDir, 'pages/AntmedPortalHome.vue'),
+  'utf8',
+)
 const routerSrc = readFileSync(path.join(srcDir, 'router.js'), 'utf8')
 const navSrc = readFileSync(path.join(srcDir, 'data/antmedNav.js'), 'utf8')
 
@@ -64,7 +67,9 @@ describe('M07-1 util formatNotifTime — relative VI', () => {
   })
 
   it('nhận Date object (không chỉ string)', () => {
-    expect(formatNotifTime(new Date('2026-06-18T07:08:00'), NOW)).toBe('hôm nay 07:08')
+    expect(formatNotifTime(new Date('2026-06-18T07:08:00'), NOW)).toBe(
+      'hôm nay 07:08',
+    )
   })
 })
 
@@ -102,18 +107,26 @@ describe('M07-1 data layer — getPortalNotifications url portal_notifications +
   })
 
   it('url == antmed_crm.api.antmed.customer.portal_notifications (naming contract)', () => {
-    expect(dataSrc).toMatch(/antmed_crm\.api\.antmed\.customer\.portal_notifications/)
-    expect(dataSrc).not.toMatch(/['"]crm\.api\.antmed\.customer\.portal_notifications/)
+    expect(dataSrc).toMatch(
+      /antmed_crm\.api\.antmed\.customer\.portal_notifications/,
+    )
+    expect(dataSrc).not.toMatch(
+      /['"]crm\.api\.antmed\.customer\.portal_notifications/,
+    )
   })
 
   it("resource có method === 'GET' + truyền params {hospital}", () => {
-    const block = dataSrc.slice(dataSrc.indexOf('export function getPortalNotifications'))
+    const block = dataSrc.slice(
+      dataSrc.indexOf('export function getPortalNotifications'),
+    )
     expect(block).toMatch(/method:\s*'GET'/)
     expect(block).toMatch(/params/)
   })
 
   it('dùng createResource (KHÔNG import createListResource — dict bọc qua createResource)', () => {
-    expect(dataSrc).toMatch(/import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/)
+    expect(dataSrc).toMatch(
+      /import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/,
+    )
     // createListResource chỉ được nhắc trong COMMENT (KHÔNG import/dùng thật) → assert không import.
     expect(dataSrc).not.toMatch(/import[^\n]*createListResource/)
   })
@@ -148,7 +161,7 @@ describe('M07-1 AntmedPortalHome — binding + tri-branch', () => {
     expect(pageSrc).toMatch(/v-for=/)
   })
 
-  it("3 quick-action render v-for từ PORTAL_QUICK_ACTIONS (KHÔNG hardcode JSX rời rạc)", () => {
+  it('3 quick-action render v-for từ PORTAL_QUICK_ACTIONS (KHÔNG hardcode JSX rời rạc)', () => {
     expect(pageSrc).toMatch(/v-for="qa in quickActions"/)
   })
 
@@ -218,7 +231,12 @@ describe('M07-1 SSR render-verify — AntmedPortalHome render HTML thật', () =
       loading = false,
       error = null,
       hospital = '_T-BV',
-      catalogData = { hospital: '_T-BV', hospital_name: 'BV Test', contract: null, items: [] },
+      catalogData = {
+        hospital: '_T-BV',
+        hospital_name: 'BV Test',
+        contract: null,
+        items: [],
+      },
       catalogLoading = false,
       catalogError = null,
     } = {},
@@ -229,7 +247,10 @@ describe('M07-1 SSR render-verify — AntmedPortalHome render HTML thật', () =
     const { renderToString } = await import('@vue/server-renderer')
     const ui = await import('../../src/utils/antmedUi')
 
-    const raw = readFileSync(path.join(srcDir, 'pages/AntmedPortalHome.vue'), 'utf8')
+    const raw = readFileSync(
+      path.join(srcDir, 'pages/AntmedPortalHome.vue'),
+      'utf8',
+    )
     const { descriptor } = parse(raw, { filename: 'AntmedPortalHome.vue' })
     const { code } = compile(descriptor.template.content, {
       mode: 'function',
@@ -242,13 +263,39 @@ describe('M07-1 SSR render-verify — AntmedPortalHome render HTML thật', () =
     const i18n = (s) => s
     const comp = {
       components: {
-        Badge: { props: ['label'], render() { return vue.h('span', {}, this.label) } },
-        Button: { props: ['label'], emits: ['click'], render() { return vue.h('button', {}, this.label) } },
-        RouterLink: { props: ['to'], render() { return vue.h('a', {}, this.$slots.default?.()) } },
-        LoadingIndicator: { render() { return vue.h('span', {}, '...') } },
+        Badge: {
+          props: ['label'],
+          render() {
+            return vue.h('span', {}, this.label)
+          },
+        },
+        Button: {
+          props: ['label'],
+          emits: ['click'],
+          render() {
+            return vue.h('button', {}, this.label)
+          },
+        },
+        RouterLink: {
+          props: ['to'],
+          render() {
+            return vue.h('a', {}, this.$slots.default?.())
+          },
+        },
+        LoadingIndicator: {
+          render() {
+            return vue.h('span', {}, '...')
+          },
+        },
       },
       setup() {
-        const notif = { data: resourceData, loading, error, reload() {}, fetch() {} }
+        const notif = {
+          data: resourceData,
+          loading,
+          error,
+          reload() {},
+          fetch() {},
+        }
         const catalog = {
           data: catalogData,
           loading: catalogLoading,
@@ -261,7 +308,9 @@ describe('M07-1 SSR render-verify — AntmedPortalHome render HTML thật', () =
         const events = vue.computed(() => notif.data?.data || [])
         const hospitalName = vue.computed(() => notif.data?.hospital_name || '')
         const catalogItems = vue.computed(() => catalog.data?.items || [])
-        const catalogHospitalName = vue.computed(() => catalog.data?.hospital_name || '')
+        const catalogHospitalName = vue.computed(
+          () => catalog.data?.hospital_name || '',
+        )
         return {
           __: i18n,
           notif,
@@ -294,7 +343,11 @@ describe('M07-1 SSR render-verify — AntmedPortalHome render HTML thật', () =
   }
 
   it('render 3 quick-action card tĩnh đúng nhãn G1', async () => {
-    const html = await renderTemplate({ data: [], hospital: '_T-BV', hospital_name: 'BV Test' })
+    const html = await renderTemplate({
+      data: [],
+      hospital: '_T-BV',
+      hospital_name: 'BV Test',
+    })
     expect(html).toContain('Gọi vật tư cho ca mổ')
     expect(html).toContain('Trong danh mục trúng thầu')
     expect(html).toContain('Mượn bộ dụng cụ')
@@ -309,8 +362,18 @@ describe('M07-1 SSR render-verify — AntmedPortalHome render HTML thật', () =
       hospital: '_T-BV',
       hospital_name: 'BV Bạch Mai',
       data: [
-        { kind: 'delivery', ts: todayAt(10, 30), title: 'Phiếu giao AM-SE-2026-00012 đã xuất cho NV', ref: 'AM-SE-2026-00012' },
-        { kind: 'quota', ts: '2026-05-25 09:00:00', title: 'Quota Chỉ Vicryl còn 12%', ref: 'VT-0231' },
+        {
+          kind: 'delivery',
+          ts: todayAt(10, 30),
+          title: 'Phiếu giao AM-SE-2026-00012 đã xuất cho NV',
+          ref: 'AM-SE-2026-00012',
+        },
+        {
+          kind: 'quota',
+          ts: '2026-05-25 09:00:00',
+          title: 'Quota Chỉ Vicryl còn 12%',
+          ref: 'VT-0231',
+        },
       ],
     }
     const html = await renderTemplate(data)
@@ -327,7 +390,11 @@ describe('M07-1 SSR render-verify — AntmedPortalHome render HTML thật', () =
   })
 
   it("render empty (data=[]) → 'Chưa có thông báo' (KHÔNG bịa)", async () => {
-    const html = await renderTemplate({ data: [], hospital: '_T-BV', hospital_name: 'BV Rỗng' })
+    const html = await renderTemplate({
+      data: [],
+      hospital: '_T-BV',
+      hospital_name: 'BV Rỗng',
+    })
     expect(html).toContain('Chưa có thông báo')
     const visible = html.replace(/<!--[\s\S]*?-->/g, '')
     expect(visible).not.toContain('Sắp có')
@@ -354,7 +421,7 @@ describe('M07-1 SSR render-verify — AntmedPortalHome render HTML thật', () =
 
 // ── M07-2 util — tenderQuotaChip THẬT (đọc quota_chip BE, KHÔNG tự tính ngưỡng) ────────────────
 describe('M07-2 util tenderQuotaChip — chip quota khớp quota_chip BE', () => {
-  it("class: ok→green / warn→amber / danger→red (tái dùng PILL_THEME)", () => {
+  it('class: ok→green / warn→amber / danger→red (tái dùng PILL_THEME)', () => {
     expect(tenderQuotaChipClass('ok')).toBe(PILL_THEME.ok)
     expect(tenderQuotaChipClass('warn')).toBe(PILL_THEME.warn)
     expect(tenderQuotaChipClass('danger')).toBe(PILL_THEME.danger)
@@ -394,11 +461,15 @@ describe('M07-2 data layer — getTenderCatalog url tender_catalog + GET', () =>
 
   it('url == antmed_crm.api.antmed.customer.tender_catalog (naming contract)', () => {
     expect(dataSrc).toMatch(/antmed_crm\.api\.antmed\.customer\.tender_catalog/)
-    expect(dataSrc).not.toMatch(/['"]crm\.api\.antmed\.customer\.tender_catalog/)
+    expect(dataSrc).not.toMatch(
+      /['"]crm\.api\.antmed\.customer\.tender_catalog/,
+    )
   })
 
   it("resource có method === 'GET' + truyền params {hospital} + onError", () => {
-    const block = dataSrc.slice(dataSrc.indexOf('export function getTenderCatalog'))
+    const block = dataSrc.slice(
+      dataSrc.indexOf('export function getTenderCatalog'),
+    )
     expect(block).toMatch(/method:\s*'GET'/)
     expect(block).toMatch(/params/)
     expect(block).toMatch(/onError/)
@@ -461,7 +532,10 @@ describe('M07-2 SSR render-verify — catalog render HTML thật', () => {
     const { renderToString } = await import('@vue/server-renderer')
     const ui = await import('../../src/utils/antmedUi')
 
-    const raw = readFileSync(path.join(srcDir, 'pages/AntmedPortalHome.vue'), 'utf8')
+    const raw = readFileSync(
+      path.join(srcDir, 'pages/AntmedPortalHome.vue'),
+      'utf8',
+    )
     const { descriptor } = parse(raw, { filename: 'AntmedPortalHome.vue' })
     const { code } = compile(descriptor.template.content, {
       mode: 'function',
@@ -473,10 +547,30 @@ describe('M07-2 SSR render-verify — catalog render HTML thật', () => {
     const i18n = (s) => s
     const comp = {
       components: {
-        Badge: { props: ['label'], render() { return vue.h('span', {}, this.label) } },
-        Button: { props: ['label'], emits: ['click'], render() { return vue.h('button', {}, this.label) } },
-        RouterLink: { props: ['to'], render() { return vue.h('a', {}, this.$slots.default?.()) } },
-        LoadingIndicator: { render() { return vue.h('span', {}, '...') } },
+        Badge: {
+          props: ['label'],
+          render() {
+            return vue.h('span', {}, this.label)
+          },
+        },
+        Button: {
+          props: ['label'],
+          emits: ['click'],
+          render() {
+            return vue.h('button', {}, this.label)
+          },
+        },
+        RouterLink: {
+          props: ['to'],
+          render() {
+            return vue.h('a', {}, this.$slots.default?.())
+          },
+        },
+        LoadingIndicator: {
+          render() {
+            return vue.h('span', {}, '...')
+          },
+        },
       },
       setup() {
         const notif = {
@@ -502,7 +596,9 @@ describe('M07-2 SSR render-verify — catalog render HTML thật', () => {
           events: vue.computed(() => notif.data?.data || []),
           hospitalName: vue.computed(() => notif.data?.hospital_name || ''),
           catalogItems: vue.computed(() => catalog.data?.items || []),
-          catalogHospitalName: vue.computed(() => catalog.data?.hospital_name || ''),
+          catalogHospitalName: vue.computed(
+            () => catalog.data?.hospital_name || '',
+          ),
           formatNotifTime: ui.formatNotifTime,
           fmtQty: ui.fmtQty,
           tenderQuotaChipClass: ui.tenderQuotaChipClass,
@@ -522,9 +618,36 @@ describe('M07-2 SSR render-verify — catalog render HTML thật', () => {
       hospital_name: 'BV Bạch Mai',
       contract: 'AM-HD-2026-00001',
       items: [
-        { item: 'VT-001', item_name: 'Chỉ Vicryl 3-0', uom: 'Hộp', remaining_qty: 50, quota_qty: 100, used_qty: 50, remaining_pct: 50, quota_chip: 'ok' },
-        { item: 'VT-002', item_name: 'Stent mạch vành', uom: 'Cái', remaining_qty: 8, quota_qty: 100, used_qty: 92, remaining_pct: 8, quota_chip: 'warn' },
-        { item: 'VT-003', item_name: 'Bóng nong', uom: 'Cái', remaining_qty: 0, quota_qty: 100, used_qty: 100, remaining_pct: 0, quota_chip: 'danger' },
+        {
+          item: 'VT-001',
+          item_name: 'Chỉ Vicryl 3-0',
+          uom: 'Hộp',
+          remaining_qty: 50,
+          quota_qty: 100,
+          used_qty: 50,
+          remaining_pct: 50,
+          quota_chip: 'ok',
+        },
+        {
+          item: 'VT-002',
+          item_name: 'Stent mạch vành',
+          uom: 'Cái',
+          remaining_qty: 8,
+          quota_qty: 100,
+          used_qty: 92,
+          remaining_pct: 8,
+          quota_chip: 'warn',
+        },
+        {
+          item: 'VT-003',
+          item_name: 'Bóng nong',
+          uom: 'Cái',
+          remaining_qty: 0,
+          quota_qty: 100,
+          used_qty: 100,
+          remaining_pct: 0,
+          quota_chip: 'danger',
+        },
       ],
     }
     const html = await renderCatalog(catalogData)
@@ -548,7 +671,12 @@ describe('M07-2 SSR render-verify — catalog render HTML thật', () => {
   })
 
   it("render empty (items=[]) → 'BV chưa có hợp đồng trúng thầu hiệu lực'", async () => {
-    const html = await renderCatalog({ hospital: '_T-BV', hospital_name: 'BV Rỗng', contract: null, items: [] })
+    const html = await renderCatalog({
+      hospital: '_T-BV',
+      hospital_name: 'BV Rỗng',
+      contract: null,
+      items: [],
+    })
     expect(html).toContain('BV chưa có hợp đồng trúng thầu hiệu lực')
   })
 
@@ -558,14 +686,18 @@ describe('M07-2 SSR render-verify — catalog render HTML thật', () => {
   })
 
   it("render catalog error → 'Lỗi tải danh mục' + nút Thử lại", async () => {
-    const html = await renderCatalog(null, { catalogError: { messages: ['x'] } })
+    const html = await renderCatalog(null, {
+      catalogError: { messages: ['x'] },
+    })
     expect(html).toContain('Lỗi tải danh mục')
     expect(html).toContain('Thử lại')
   })
 
   it("KHÔNG hospital → card catalog hiện note 'Chưa xác định bệnh viện' (KHÔNG render bảng)", async () => {
     const html = await renderCatalog(null, { hospital: '' })
-    expect(html).toContain('Chưa xác định bệnh viện. Mở Portal kèm mã bệnh viện để xem danh mục.')
+    expect(html).toContain(
+      'Chưa xác định bệnh viện. Mở Portal kèm mã bệnh viện để xem danh mục.',
+    )
     // KHÔNG render bảng catalog (header cột) khi chưa có BV.
     expect(html).not.toContain('Trạng thái quota')
   })

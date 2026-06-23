@@ -180,27 +180,27 @@
         <div class="bg-surface-modal px-4 pb-6 pt-5 sm:px-6">
           <div class="flex flex-col gap-4">
             <FormControl
+              v-model="cForm.am_hospital"
               type="select"
               :label="__('Bệnh viện (khách hàng)')"
-              v-model="cForm.am_hospital"
               :options="hospitalOptions"
             />
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormControl
+                v-model="cForm.deal_value"
                 type="number"
                 :label="__('Giá trị (₫)')"
-                v-model="cForm.deal_value"
               />
               <FormControl
-                :label="__('Số gói thầu (nếu có)')"
                 v-model="cForm.am_tender_no"
+                :label="__('Số gói thầu (nếu có)')"
                 placeholder="TND-2026-…"
               />
             </div>
             <FormControl
+              v-model="cForm.status"
               type="select"
               :label="__('Giai đoạn')"
-              v-model="cForm.status"
               :options="
                 stages.map((s) => ({
                   label: stageLabel(s.name),

@@ -31,7 +31,10 @@
 
     <!-- Data: KPI value THẬT từ endpoint -->
     <template v-else>
-      <p class="text-2xl font-bold tabular-nums tracking-tight" :class="toneCfg.value">
+      <p
+        class="text-2xl font-bold tabular-nums tracking-tight"
+        :class="toneCfg.value"
+      >
         {{ displayValue }}
       </p>
       <p v-if="sub" class="text-p-xs text-ink-gray-5">
@@ -63,12 +66,36 @@ const props = defineProps({
 
 // Class literal đầy đủ để Tailwind JIT quét được (KHÔNG ghép chuỗi động).
 const TONES = {
-  teal: { accent: 'border-l-teal-500', value: 'text-teal-700', icon: 'bg-teal-50 text-teal-600' },
-  green: { accent: 'border-l-green-500', value: 'text-green-700', icon: 'bg-green-50 text-green-600' },
-  red: { accent: 'border-l-red-500', value: 'text-red-700', icon: 'bg-red-50 text-red-600' },
-  blue: { accent: 'border-l-blue-500', value: 'text-blue-700', icon: 'bg-blue-50 text-blue-600' },
-  orange: { accent: 'border-l-orange-500', value: 'text-orange-700', icon: 'bg-orange-50 text-orange-600' },
-  gray: { accent: 'border-l-outline-gray-2', value: 'text-ink-gray-9', icon: 'bg-surface-gray-2 text-ink-gray-6' },
+  teal: {
+    accent: 'border-l-teal-500',
+    value: 'text-teal-700',
+    icon: 'bg-teal-50 text-teal-600',
+  },
+  green: {
+    accent: 'border-l-green-500',
+    value: 'text-green-700',
+    icon: 'bg-green-50 text-green-600',
+  },
+  red: {
+    accent: 'border-l-red-500',
+    value: 'text-red-700',
+    icon: 'bg-red-50 text-red-600',
+  },
+  blue: {
+    accent: 'border-l-blue-500',
+    value: 'text-blue-700',
+    icon: 'bg-blue-50 text-blue-600',
+  },
+  orange: {
+    accent: 'border-l-orange-500',
+    value: 'text-orange-700',
+    icon: 'bg-orange-50 text-orange-600',
+  },
+  gray: {
+    accent: 'border-l-outline-gray-2',
+    value: 'text-ink-gray-9',
+    icon: 'bg-surface-gray-2 text-ink-gray-6',
+  },
 }
 const toneCfg = computed(() => TONES[props.tone] || TONES.gray)
 

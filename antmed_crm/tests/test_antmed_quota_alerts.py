@@ -82,7 +82,9 @@ class TestAntMedQuotaAlerts(FrappeTestCase):
 		cls.ct70 = _mk_contract("_T-QA-70", cls.hosp, [_item("VTYT-70", 100, 70)], far).name  # 70%
 		cls.ct90 = _mk_contract("_T-QA-90", cls.hosp, [_item("VTYT-90", 100, 95)], far).name  # 95% → band 90
 		cls.ct100 = _mk_contract("_T-QA-100", cls.hosp, [_item("VTYT-100", 100, 100)], far).name  # 100%
-		cls.ct_below = _mk_contract("_T-QA-LOW", cls.hosp, [_item("VTYT-LOW", 100, 50)], far).name  # 50% → no alert
+		cls.ct_below = _mk_contract(
+			"_T-QA-LOW", cls.hosp, [_item("VTYT-LOW", 100, 50)], far
+		).name  # 50% → no alert
 		cls.ct_exp = _mk_contract(
 			"_T-QA-EXP", cls.hosp, [_item("VTYT-EXP", 100, 0)], add_days(nowdate(), 10)
 		).name  # 0% nhưng còn 10 ngày → expiry alert

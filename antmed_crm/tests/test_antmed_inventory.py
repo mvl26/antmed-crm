@@ -41,9 +41,7 @@ LIST_ITEM_KEYS = {"name", "item_code", "item_name", "classification", "requires_
 def _mk_item(item_code, item_name, **kw):
 	if frappe.db.exists("AntMed Item", item_code):
 		return frappe.get_doc("AntMed Item", item_code)
-	doc = frappe.get_doc(
-		{"doctype": "AntMed Item", "item_code": item_code, "item_name": item_name, **kw}
-	)
+	doc = frappe.get_doc({"doctype": "AntMed Item", "item_code": item_code, "item_name": item_name, **kw})
 	doc.insert(ignore_permissions=True)
 	return doc
 
@@ -201,7 +199,9 @@ class TestAntMedStockEntryList(FrappeTestCase):
 		# Nhập 100 (Nhập NCC) để có tồn → xuất cho NV được.
 		lot = _mk_se_lot("_T-SEL-LOT", cls.item).name
 		inventory.create_stock_entry(
-			entry_type="Nhập NCC", to_warehouse=cls.wh_tong, items=[{"item": cls.item, "lot": lot, "qty": 100}]
+			entry_type="Nhập NCC",
+			to_warehouse=cls.wh_tong,
+			items=[{"item": cls.item, "lot": lot, "qty": 100}],
 		)
 		# Phiếu "Xuất cho NV": 10 × đơn giá 190.000 = 1.900.000 (total_value).
 		cls.issue = inventory.create_stock_entry(
@@ -439,10 +439,20 @@ class TestAntMedGetLot(FrappeTestCase):
 		self.assertIsNone(res["co_file_url"])
 		self.assertIsNone(res["cq_file_url"])
 		# Gắn CO có file_url → co_file_url resolve đúng.
-		cert = frappe.get_doc(
-			{"doctype": "AntMed Certificate", "cert_no": "_T-LT-CO-FILE", "cert_type": "CO",
-			 "item": self.item, "lot": self.lot, "file_url": "/files/co_test.pdf"}
-		).insert(ignore_permissions=True).name
+		cert = (
+			frappe.get_doc(
+				{
+					"doctype": "AntMed Certificate",
+					"cert_no": "_T-LT-CO-FILE",
+					"cert_type": "CO",
+					"item": self.item,
+					"lot": self.lot,
+					"file_url": "/files/co_test.pdf",
+				}
+			)
+			.insert(ignore_permissions=True)
+			.name
+		)
 		frappe.db.set_value("AntMed Lot", self.lot, "co_cert", cert)
 		res2 = inventory.get_lot(self.lot)
 		self.assertEqual(res2["co_file_url"], "/files/co_test.pdf")
@@ -495,9 +505,9 @@ CONSIGNMENT_KPI_KEYS_5 = {
 def _mk_cg_item(code, name, **kw):
 	if frappe.db.exists("AntMed Item", code):
 		return frappe.get_doc("AntMed Item", code)
-	return frappe.get_doc(
-		{"doctype": "AntMed Item", "item_code": code, "item_name": name, **kw}
-	).insert(ignore_permissions=True)
+	return frappe.get_doc({"doctype": "AntMed Item", "item_code": code, "item_name": name, **kw}).insert(
+		ignore_permissions=True
+	)
 
 
 def _mk_cg_hospital(code, name):
@@ -718,7 +728,9 @@ class TestAntMedConsignmentStockTransfer(FrappeTestCase):
 		self.assertEqual(res["kpis"]["total_lots"], len(all_balances))
 		# Seed của test PHẢI được đếm: 3 SKU (item_a/b/c) + 4 dòng (bv1 near/far/noprice + bv2 empty).
 		seed_items = {self.item_a, self.item_b, self.item_c}
-		self.assertTrue(seed_items.issubset(distinct_items), msg=f"thiếu seed item: {seed_items - distinct_items}")
+		self.assertTrue(
+			seed_items.issubset(distinct_items), msg=f"thiếu seed item: {seed_items - distinct_items}"
+		)
 		seed_lots = {self.lot_near, self.lot_far, self.lot_noprice, self.lot_empty}
 		all_lots = {b["lot"] for b in all_balances if b.get("lot")}
 		self.assertTrue(seed_lots.issubset(all_lots), msg=f"thiếu seed lot: {seed_lots - all_lots}")
@@ -789,9 +801,9 @@ class TestAntMedConsignmentStockTransfer(FrappeTestCase):
 # SL hệ thống = SUM(qty_change) theo (kho ký gửi BV × item × lot), chỉ dòng >0; lọc theo BV;
 # near_expiry ≤90 ngày → True + đếm kpi; KPI distinct BV có tồn; fail-closed noperm; param-bind %s (KHÔNG N+1).
 
-import datetime  # noqa: E402
+import datetime
 
-from frappe.utils import add_days, getdate, nowdate  # noqa: E402
+from frappe.utils import nowdate
 
 CONSIGNMENT_ROW_KEYS = {"sku", "item_name", "lot", "expiry_date", "system_qty", "near_expiry"}
 # M03-5: kpis ổn định ĐỦ 5 key (hàng KPI 3 thẻ mockup D2).
@@ -987,7 +999,9 @@ class TestAntMedConsignmentStock(FrappeTestCase):
 		self.assertIn("%s", src)
 		self.assertNotIn('f"""', src.replace("\n", " "))  # KHÔNG f-string SQL block
 		# Đếm số lần gọi frappe.db.sql trong helper = ĐÚNG 1 (1 query gộp GROUP BY, KHÔNG N+1).
-		self.assertEqual(src.count("frappe.db.sql"), 1, msg="get_consignment_balances phải dùng ĐÚNG 1 query gộp")
+		self.assertEqual(
+			src.count("frappe.db.sql"), 1, msg="get_consignment_balances phải dùng ĐÚNG 1 query gộp"
+		)
 
 	def test_consignment_balances_helper_filter(self):
 		"""get_consignment_balances(bv1) chỉ trả lô tồn>0 của kho ký gửi BV1; bv2 (tồn=0) → []."""
@@ -1344,7 +1358,9 @@ class TestAntMedLotTrace(FrappeTestCase):
 		cls.lot_empty = _mk_tr_lot("_T-TRC-LOT-EMPTY", cls.item).name
 		# Nhập NCC 100 (01/01) → Xuất NV 30 (01/02) → Chuyển ký gửi BV 20 (01/03) — 3 ngày khác nhau.
 		se_in = inventory.create_stock_entry(
-			entry_type="Nhập NCC", to_warehouse=cls.wh_tong, items=[{"item": cls.item, "lot": cls.lot, "qty": 100}]
+			entry_type="Nhập NCC",
+			to_warehouse=cls.wh_tong,
+			items=[{"item": cls.item, "lot": cls.lot, "qty": 100}],
 		)["name"]
 		frappe.db.set_value("AntMed Stock Entry", se_in, "posting_datetime", "2026-01-01 08:00:00")
 		frappe.db.sql(
@@ -1552,13 +1568,13 @@ class TestAntMedInitiateRecall(FrappeTestCase):
 		self.assertEqual(res["recall_reason"], "Phát hiện lỗi tiệt khuẩn")
 		# DB thực sự đổi.
 		self.assertEqual(frappe.db.get_value("AntMed Lot", lot, "recall_status"), "Đã thu hồi")
-		self.assertEqual(
-			frappe.db.get_value("AntMed Lot", lot, "recall_reason"), "Phát hiện lỗi tiệt khuẩn"
-		)
+		self.assertEqual(frappe.db.get_value("AntMed Lot", lot, "recall_reason"), "Phát hiện lỗi tiệt khuẩn")
 		# Tự sinh AntMed Recall Notification cho lô (BV ảnh hưởng = 0 vì lô test không có giao/ký gửi).
 		self.assertIsNotNone(res["recall_notification"])
 		self.assertTrue(frappe.db.exists("AntMed Recall Notification", res["recall_notification"]))
-		self.assertEqual(frappe.db.get_value("AntMed Recall Notification", res["recall_notification"], "lot"), lot)
+		self.assertEqual(
+			frappe.db.get_value("AntMed Recall Notification", res["recall_notification"], "lot"), lot
+		)
 
 	def test_initiate_recall_theo_doi(self):
 		"""status='Theo dõi' → recall_status='Theo dõi' (KHÔNG phải 'Đã thu hồi')."""
@@ -1669,7 +1685,6 @@ class TestAntMedInitiateRecall(FrappeTestCase):
 		self.assertNotRegex(src, r"ignore_permissions\s*=\s*True")
 
 
-
 # ── M03-8 (mockup C2 Wizard bước 3 / drill-down "Phiếu xuất gần đây") — get_stock_entry ──
 # TDD viết TRƯỚC: endpoint MỚI antmed_crm.api.antmed.inventory.get_stock_entry(name).
 #   Chi tiết 1 phiếu xuất + dòng vật tư đã chuẩn bị (SKU/Tên/Lot/HSD/SL/ĐVT/chip CO-CQ).
@@ -1710,9 +1725,9 @@ STOCK_ENTRY_DETAIL_ITEM_KEYS = {
 def _mk_sed_item(code, name, **kw):
 	if frappe.db.exists("AntMed Item", code):
 		return frappe.get_doc("AntMed Item", code)
-	return frappe.get_doc(
-		{"doctype": "AntMed Item", "item_code": code, "item_name": name, **kw}
-	).insert(ignore_permissions=True)
+	return frappe.get_doc({"doctype": "AntMed Item", "item_code": code, "item_name": name, **kw}).insert(
+		ignore_permissions=True
+	)
 
 
 def _mk_sed_lot(lot_no, item, expiry):
@@ -1746,9 +1761,7 @@ class TestAntMedGetStockEntry(FrappeTestCase):
 	def setUpClass(cls):
 		super().setUpClass()
 		# item_a có uom 'Sợi'; dòng item_b KHÔNG set uom → endpoint fallback AntMed Item.uom ('Gói').
-		cls.item = _mk_sed_item(
-			"_T-SED-ITEM", "Chỉ Vicryl 2-0", uom="Sợi", default_unit_price=190000
-		).name
+		cls.item = _mk_sed_item("_T-SED-ITEM", "Chỉ Vicryl 2-0", uom="Sợi", default_unit_price=190000).name
 		cls.item2 = _mk_sed_item("_T-SED-ITEM2", "Gạc cầm máu", uom="Gói").name
 		cls.hospital = _mk_sed_hospital("_T-SED-BV", "BV K Trung Ương").name
 		cls.wh_tong = _mk_sed_wh("_T-SED-WH-TONG", "Tổng").name
@@ -1756,12 +1769,32 @@ class TestAntMedGetStockEntry(FrappeTestCase):
 		cls.lot2 = _mk_sed_lot("_T-SED-LOT2", cls.item2, "2029-04-30").name
 		# cocq_ok do controller TỰ TÍNH (BR-03, derived read-only): lô cls.lot gắn đủ CO+CQ → cocq_ok=1;
 		# lô cls.lot2 KHÔNG có chứng từ (item requires_cocq default 1) → cocq_ok=0. (Pass-through True/False.)
-		co = frappe.get_doc(
-			{"doctype": "AntMed Certificate", "cert_no": "_T-SED-CO", "cert_type": "CO", "item": cls.item, "lot": cls.lot}
-		).insert(ignore_permissions=True).name
-		cq = frappe.get_doc(
-			{"doctype": "AntMed Certificate", "cert_no": "_T-SED-CQ", "cert_type": "CQ", "item": cls.item, "lot": cls.lot}
-		).insert(ignore_permissions=True).name
+		co = (
+			frappe.get_doc(
+				{
+					"doctype": "AntMed Certificate",
+					"cert_no": "_T-SED-CO",
+					"cert_type": "CO",
+					"item": cls.item,
+					"lot": cls.lot,
+				}
+			)
+			.insert(ignore_permissions=True)
+			.name
+		)
+		cq = (
+			frappe.get_doc(
+				{
+					"doctype": "AntMed Certificate",
+					"cert_no": "_T-SED-CQ",
+					"cert_type": "CQ",
+					"item": cls.item,
+					"lot": cls.lot,
+				}
+			)
+			.insert(ignore_permissions=True)
+			.name
+		)
 		frappe.db.set_value("AntMed Lot", cls.lot, "co_cert", co)
 		frappe.db.set_value("AntMed Lot", cls.lot, "cq_cert", cq)
 		# Nhập tồn đủ để xuất.
@@ -1850,9 +1883,7 @@ class TestAntMedGetStockEntry(FrappeTestCase):
 		# Dòng b KHÔNG set uom → fallback AntMed Item.uom ('Gói').
 		self.assertEqual(by_item[self.item2]["uom"], "Gói")
 		# Header *_name: nv_employee_name (User.full_name), hospital_name (AntMed Hospital).
-		self.assertEqual(
-			res["nv_employee_name"], frappe.db.get_value("User", "Administrator", "full_name")
-		)
+		self.assertEqual(res["nv_employee_name"], frappe.db.get_value("User", "Administrator", "full_name"))
 		self.assertEqual(res["hospital_name"], "BV K Trung Ương")
 
 	def test_get_stock_entry_total_value(self):

@@ -57,9 +57,7 @@ class TestAntmedTasks(FrappeTestCase):
 		for k in ("title", "status", "priority", "assigned_to_name", "is_open"):
 			self.assertIn(k, t)
 		# resolve full_name (KHÔNG lộ email)
-		self.assertEqual(
-			t["assigned_to_name"], frappe.db.get_value("User", "Administrator", "full_name")
-		)
+		self.assertEqual(t["assigned_to_name"], frappe.db.get_value("User", "Administrator", "full_name"))
 
 	def test_status_filter(self):
 		r = list_tasks(status="Done")

@@ -25,7 +25,9 @@ HC_NAME_RE = re.compile(r"^AM-HC-\d{4}-\d+")
 
 def _ensure(doctype, key, val, values):
 	name = frappe.db.get_value(doctype, {key: val}, "name")
-	return name or frappe.get_doc({"doctype": doctype, key: val, **values}).insert(ignore_permissions=True).name
+	return (
+		name or frappe.get_doc({"doctype": doctype, key: val, **values}).insert(ignore_permissions=True).name
+	)
 
 
 class TestAntMedHandover(FrappeTestCase):
@@ -33,12 +35,23 @@ class TestAntMedHandover(FrappeTestCase):
 	def setUpClass(cls):
 		super().setUpClass()
 		cls.hosp = _ensure("AntMed Hospital", "hospital_code", "_T-HC-BV", {"hospital_name": "BV Ký Nhận"})
-		cls.item = _ensure("AntMed Item", "item_code", "_T-HC-GAC", {"item_name": "Gạc ký nhận", "requires_cocq": 0})
+		cls.item = _ensure(
+			"AntMed Item", "item_code", "_T-HC-GAC", {"item_name": "Gạc ký nhận", "requires_cocq": 0}
+		)
 
 	def _delivery_bundle(self, suffix):
-		dlv = frappe.get_doc(
-			{"doctype": "AntMed Delivery", "hospital": self.hosp, "surgery_datetime": "2026-08-01 08:00:00", "items": [{"item": self.item, "requested_qty": 1}]}
-		).insert(ignore_permissions=True).name
+		dlv = (
+			frappe.get_doc(
+				{
+					"doctype": "AntMed Delivery",
+					"hospital": self.hosp,
+					"surgery_datetime": "2026-08-01 08:00:00",
+					"items": [{"item": self.item, "requested_qty": 1}],
+				}
+			)
+			.insert(ignore_permissions=True)
+			.name
+		)
 		documents.create_bundle(dlv)
 		return dlv
 
@@ -74,9 +87,9 @@ class TestAntMedHandover(FrappeTestCase):
 		dlv = self._delivery_bundle("PERM")
 		email = "_t_hc_noperm@example.com"
 		if not frappe.db.exists("User", email):
-			frappe.get_doc({"doctype": "User", "email": email, "first_name": "NoPermHC", "send_welcome_email": 0}).insert(
-				ignore_permissions=True
-			)
+			frappe.get_doc(
+				{"doctype": "User", "email": email, "first_name": "NoPermHC", "send_welcome_email": 0}
+			).insert(ignore_permissions=True)
 		frappe.set_user(email)
 		try:
 			with self.assertRaises(frappe.PermissionError):

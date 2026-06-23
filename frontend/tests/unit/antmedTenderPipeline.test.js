@@ -12,7 +12,10 @@ const read = (rel) => readFileSync(path.join(srcDir, rel), 'utf8')
 
 const dataSrc = read('data/antmed.js')
 const homeSrc = read('pages/AntmedHome.vue')
-const cardPath = path.join(srcDir, 'components/Antmed/AntmedTenderFunnelCard.vue')
+const cardPath = path.join(
+  srcDir,
+  'components/Antmed/AntmedTenderFunnelCard.vue',
+)
 const cardSrc = read('components/Antmed/AntmedTenderFunnelCard.vue')
 
 // ── (1) helper thuần funnelBarWidth — tỉ lệ count/max + min-floor (PURE) ─────────────────────
@@ -156,7 +159,9 @@ describe('AntmedHome — wire tender_pipeline thay placeholder Hàng 3', () => {
     // dấu vân tay placeholder cũ Hàng 3: hint 'Sắp có (cần module Pipeline gói thầu)'.
     expect(homeSrc).not.toMatch(/Sắp có \(cần module Pipeline gói thầu\)/)
     // title 'Pipeline gói thầu' KHÔNG còn truyền vào PlaceholderPanel.
-    expect(homeSrc).not.toMatch(/PlaceholderPanel\s+:title="__\('Pipeline gói thầu'\)"/)
+    expect(homeSrc).not.toMatch(
+      /PlaceholderPanel\s+:title="__\('Pipeline gói thầu'\)"/,
+    )
   })
 
   it('KHÔNG mock / createListResource trong AntmedHome cho pipeline', () => {

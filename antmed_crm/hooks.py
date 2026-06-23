@@ -6,7 +6,7 @@ app_email = "info@miyano.com.vn"
 app_license = "AGPLv3"
 app_icon_url = "/assets/antmed_crm/images/logo.svg"
 app_icon_title = "AntMed CRM"
-app_icon_route = "/crm"
+app_icon_route = "/antmed"
 
 # Apps
 # ------------------
@@ -17,7 +17,7 @@ add_to_apps_screen = [
 		"name": "antmed_crm",
 		"logo": "/assets/antmed_crm/images/logo.svg",
 		"title": "AntMed CRM",
-		"route": "/crm",
+		"route": "/antmed",
 		"has_permission": "antmed_crm.api.check_app_permission",
 	}
 ]
@@ -82,7 +82,7 @@ fixtures = [
 # }
 
 website_route_rules = [
-	{"from_route": "/crm/<path:app_path>", "to_route": "crm"},
+	{"from_route": "/antmed/<path:app_path>", "to_route": "antmed"},
 ]
 
 # Generators

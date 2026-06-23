@@ -26,7 +26,7 @@ from antmed_crm.api.antmed.rbac import (
 	is_crm_or_antmed_user,
 )
 from antmed_crm.api.session import CRM_ALLOWED_ROLES, get_session_role_flags
-from antmed_crm.www.crm import get_boot
+from antmed_crm.www.antmed import get_boot
 
 # User fixtures (tạo trong setUp, xoá trong tearDown).
 ANTMED_USER = "_antmed_boot@example.com"  # chỉ Role 'NV kinh doanh'

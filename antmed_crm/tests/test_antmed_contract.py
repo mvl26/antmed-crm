@@ -80,9 +80,7 @@ NAME_RE = re.compile(r"^AM-HD-\d{4}-\d+")
 def _mk_hospital(code, name, **kw):
 	if frappe.db.exists("AntMed Hospital", code):
 		return frappe.get_doc("AntMed Hospital", code)
-	doc = frappe.get_doc(
-		{"doctype": "AntMed Hospital", "hospital_code": code, "hospital_name": name, **kw}
-	)
+	doc = frappe.get_doc({"doctype": "AntMed Hospital", "hospital_code": code, "hospital_name": name, **kw})
 	doc.insert(ignore_permissions=True)
 	return doc
 
@@ -730,12 +728,8 @@ class TestAntMedTopQuotaItems(FrappeTestCase):
 		import inspect
 
 		src = inspect.getsource(contract.top_quota_items)
-		self.assertNotIn(
-			"frappe.db.sql", src, msg="top_quota_items KHÔNG được dùng raw SQL (bỏ qua BR-13)"
-		)
-		self.assertIn(
-			"get_list", src, msg="top_quota_items phải dùng frappe.get_list (tôn trọng permission)"
-		)
+		self.assertNotIn("frappe.db.sql", src, msg="top_quota_items KHÔNG được dùng raw SQL (bỏ qua BR-13)")
+		self.assertIn("get_list", src, msg="top_quota_items phải dùng frappe.get_list (tôn trọng permission)")
 
 	# --- regression cleanup: chỉ còn 1 def top_hospitals --------------------
 	def test_no_duplicate_top_hospitals_def(self):
@@ -922,9 +916,7 @@ class TestAntMedContractConsumptionByMonth(FrappeTestCase):
 		self.assertNotIn(
 			"frappe.db.sql", src, msg="contract_consumption_by_month KHÔNG được dùng raw SQL (bỏ qua BR-13)"
 		)
-		self.assertIn(
-			"get_all", src, msg="endpoint phải dùng frappe.get_all (tôn trọng permission)"
-		)
+		self.assertIn("get_all", src, msg="endpoint phải dùng frappe.get_all (tôn trọng permission)")
 		# Endpoint resolve đúng path FE gọi.
 		fn = frappe.get_attr("antmed_crm.api.antmed.contract.contract_consumption_by_month")
 		self.assertTrue(callable(fn))
@@ -937,7 +929,6 @@ class TestAntMedContractConsumptionByMonth(FrappeTestCase):
 		self.assertIn(
 			"has_permission", src, msg="endpoint phải dùng frappe.has_permission (fail-closed BR-13)"
 		)
-
 
 
 # Shape mỗi dòng cơ cấu doanh thu (Hyrum — 4 key, FROZEN §1sext.shape; đổi = breaking FE bind card).
@@ -1239,9 +1230,7 @@ class TestAntMedRevenueMix(FrappeTestCase):
 		import inspect
 
 		src = inspect.getsource(contract.revenue_mix)
-		self.assertNotIn(
-			"frappe.db.sql", src, msg="revenue_mix KHÔNG được dùng raw SQL (bỏ qua BR-13)"
-		)
+		self.assertNotIn("frappe.db.sql", src, msg="revenue_mix KHÔNG được dùng raw SQL (bỏ qua BR-13)")
 		self.assertIn("get_list", src, msg="revenue_mix phải dùng frappe.get_list (tôn trọng perm)")
 		fn = frappe.get_attr("antmed_crm.api.antmed.contract.revenue_mix")
 		self.assertTrue(callable(fn))
@@ -1362,9 +1351,7 @@ class TestAntMedMonthlyRevenue(FrappeTestCase):
 		# NV scoped CHỈ thấy _T-MR-HOSP → monthly_revenue() chỉ gộp cls.ct (cô lập assertion giá trị
 		# khỏi HĐ test khác / lần chạy trước mà Administrator thấy hết). Test giá trị set_user(NV) này.
 		cls.scoped_email = "_t_mr_isolated@example.com"
-		_ensure_scoped_user(
-			cls.scoped_email, "NV kinh doanh", "AntMed Hospital", cls.hosp.name
-		)
+		_ensure_scoped_user(cls.scoped_email, "NV kinh doanh", "AntMed Hospital", cls.hosp.name)
 
 	# (1) shape — dict đúng keys + currency=='VND' + month_label khớp regex ---------------------
 	def test_monthly_revenue_shape(self):
@@ -1516,7 +1503,9 @@ class TestAntMedMonthlyRevenue(FrappeTestCase):
 
 		with mock.patch.object(frappe, "get_all", side_effect=counting):
 			contract.monthly_revenue()
-		self.assertLessEqual(calls["n"], 2, msg=f"N+1: get_all gọi {calls['n']} lần (phải ≤2: log + quota item)")
+		self.assertLessEqual(
+			calls["n"], 2, msg=f"N+1: get_all gọi {calls['n']} lần (phải ≤2: log + quota item)"
+		)
 
 	# (11) data-scope BR-13: doanh thu HĐ ngoài scope NV KHÔNG cộng vào ------------------------
 	def test_monthly_revenue_respects_data_scope(self):
@@ -1769,7 +1758,9 @@ class TestAntMedRevenueByGroup(FrappeTestCase):
 	def test_totals(self):
 		res = self._scoped()
 		for g in res["groups"]:
-			self.assertEqual(g["total"], sum(g["monthly"]), msg=f"total≠SUM(monthly) cho {g['classification']}")
+			self.assertEqual(
+				g["total"], sum(g["monthly"]), msg=f"total≠SUM(monthly) cho {g['classification']}"
+			)
 		self.assertEqual(res["grand_total"], sum(g["total"] for g in res["groups"]))
 		# Tổng kỳ vọng (scoped): A=28tr + B=20tr + C=18tr + D=0 + Khác=13tr = 79tr.
 		self.assertEqual(res["grand_total"], 79_000_000.0)

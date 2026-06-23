@@ -1,14 +1,26 @@
 <template>
   <!-- KPI tile prototype (mockup .kpi). value tĩnh từ dữ liệu mẫu; delta up/down có màu. -->
   <article class="rounded-lg border border-outline-gray-1 bg-surface-white p-3">
-    <div class="text-[10px] font-medium uppercase tracking-wide text-ink-gray-5">
+    <div
+      class="text-[10px] font-medium uppercase tracking-wide text-ink-gray-5"
+    >
       {{ label }}
     </div>
-    <div class="my-1 text-xl font-bold tabular-nums" :class="valueClass || 'text-ink-gray-9'">
+    <div
+      class="my-1 text-xl font-bold tabular-nums"
+      :class="valueClass || 'text-ink-gray-9'"
+    >
       <slot name="value">{{ value }}</slot>
     </div>
     <div v-if="sub || delta" class="text-[10px] text-ink-gray-5">
-      <span v-if="delta" :class="delta.dir === 'down' ? 'font-semibold text-red-600' : 'font-semibold text-green-600'">
+      <span
+        v-if="delta"
+        :class="
+          delta.dir === 'down'
+            ? 'font-semibold text-red-600'
+            : 'font-semibold text-green-600'
+        "
+      >
         {{ delta.dir === 'down' ? '▼' : '▲' }} {{ delta.text }}
       </span>
       {{ sub }}

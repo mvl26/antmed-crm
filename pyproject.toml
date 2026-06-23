@@ -1,9 +1,9 @@
 [project]
 name = "antmed_crm"
 authors = [
-    { name = "Frappe Technologies Pvt. Ltd.", email = "shariq@frappe.io"}
+    { name = "AntMed", email = "info@miyano.com.vn"}
 ]
-description = "Kick-ass Open Source CRM"
+description = "AntMed CRM — quản lý kinh doanh thiết bị và vật tư y tế"
 requires-python = ">=3.10"
 readme = "README.md"
 dynamic = ["version"]
@@ -26,7 +26,7 @@ frappe = ">=15.0.0,<17.0.0"
 [tool.bench.assets]
 build_dir = "./frontend"
 out_dir = "../antmed_crm/public/frontend"
-index_html_path = "../antmed_crm/www/crm.html"
+index_html_path = "../antmed_crm/www/antmed.html"
 
 [tool.ruff]
 line-length = 110
@@ -60,6 +60,8 @@ ignore = [
     "F722", # syntax error in forward type annotation
     "W191", # indentation contains tabs
     "RUF001", # string contains ambiguous unicode character
+    "RUF002", # docstring contains ambiguous unicode character (Vietnamese text)
+    "RUF003", # comment contains ambiguous unicode character (Vietnamese text)
     "UP030", # Use implicit references for positional format fields (translations)
     "UP031", # Use format specifiers instead of percent format
     "UP032", # Use f-string instead of `format` call (translations)
@@ -72,6 +74,6 @@ indent-style = "tab"
 docstring-code-format = true
 
 [project.urls]
-Homepage = "https://frappe.io/crm"
-Repository = "https://github.com/frappe/crm.git"
-"Bug Reports" = "https://github.com/frappe/crm/issues"
+Homepage = "https://github.com/mvl26/antmed_crm"
+Repository = "https://github.com/mvl26/antmed_crm.git"
+"Bug Reports" = "https://github.com/mvl26/antmed_crm/issues"

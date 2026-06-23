@@ -2,9 +2,9 @@
 
 | Mục | Giá trị |
 |---|---|
-| Module folder | `crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) |
-| DocType folder | `crm/antmed/doctype/antmed_kpi_definition/`, `…/antmed_kpi_score/`, `…/antmed_commission/`, `…/antmed_sales_employee/`, `…/antmed_employee_route/` |
-| API package | `crm/api/antmed/hr_kpi.py` (đường gọi `antmed_crm.api.antmed.hr_kpi.<fn>`) |
+| Module folder | `antmed_crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) |
+| DocType folder | `antmed_crm/antmed/doctype/antmed_kpi_definition/`, `…/antmed_kpi_score/`, `…/antmed_commission/`, `…/antmed_sales_employee/`, `…/antmed_employee_route/` |
+| API package | `antmed_crm/api/antmed/hr_kpi.py` (đường gọi `antmed_crm.api.antmed.hr_kpi.<fn>`) |
 | FE pages | `frontend/src/pages/AntmedTeam.vue`, `AntmedSalesEmployeeDetail.vue`, `AntmedKpiBoard.vue`, `AntmedCommission.vue` + route `/antmed/team`, `/antmed/team/:name`, `/antmed/kpi`, `/antmed/commission` |
 | Wave (PLAN) | **W4 — Tăng trưởng & kiểm soát** |
 | Role chính (VI) | `Quản lý` (xem KPI đội + khóa kỳ hoa hồng); `NV kinh doanh` (xem KPI/hoa hồng của chính mình) — DEC-A. Có thể cần `Kế toán` [PLANNED] cho khóa kỳ + đẩy lương |
@@ -15,7 +15,7 @@
 | Cập nhật | 2026-06-17 |
 
 > **Trạng thái: [PLANNED — chưa code]**
-> Toàn bộ DocType / API / Workflow / BR dưới đây là **DESIGN (đề xuất)**, ground @ scaffold cũ `m10_hr_kpi/` (separate-app `AM …`, reuse ERPNext `Employee`/`Item Group`/`Warehouse`) đã được **ADAPT** sang in-place `AntMed `, native-lite (KHÔNG ERPNext), Frappe-standard BE. Chưa có DocType nào tồn tại trên site `miyano`. Mọi chỗ chưa source được đánh `[UNVERIFIED]` / `[cần khảo sát]`.
+> Toàn bộ DocType / API / Workflow / BR dưới đây là **DESIGN (đề xuất)**, ground @ scaffold cũ `m10_hr_kpi/` (separate-app `AM …`, reuse ERPNext `Employee`/`Item Group`/`Warehouse`) đã được **ADAPT** sang app riêng `antmed_crm` (fork Frappe CRM) prefix `AntMed `, native-lite (KHÔNG ERPNext), Frappe-standard BE. Chưa có DocType nào tồn tại trên site `miyano`. Mọi chỗ chưa source được đánh `[UNVERIFIED]` / `[cần khảo sát]`.
 
 ---
 
@@ -66,7 +66,7 @@ Theo `AntMed_CRM_Modules.md §10` (mô tả nghiệp vụ ground-truth):
 
 > **Adapt note 1 — actor:** scaffold cũ Link → ERPNext `Employee`. Native-lite KHÔNG có ERPNext ⇒ thay bằng DocType native **`AntMed Sales Employee`** (hồ sơ NV) + Link `user`→`User` core. Mọi Link "NV" trong M10 trỏ `AntMed Sales Employee`.
 > **Adapt note 2 — nhóm vật tư:** scaffold cũ `Item Group` (ERPNext). Native-lite ⇒ **`AntMed Item Group`** (master nhóm VTYT của M03). Nếu M03 chưa khai nhóm dưới dạng DocType riêng → [cần khảo sát] dùng field Select trên `AntMed Item`.
-> **Adapt note 3 — `AntMed Hospital` thay `Customer`:** scaffold `AM Employee Route.hospital` Link→`Customer`; in-place đã có `AntMed Hospital` (M01) ⇒ trỏ về đó.
+> **Adapt note 3 — `AntMed Hospital` thay `Customer`:** scaffold `AM Employee Route.hospital` Link→`Customer`; app `antmed_crm` đã có `AntMed Hospital` (M01) ⇒ trỏ về đó.
 > **Adapt note 4 — tier_table:** scaffold cũ là `Long Text` chứa JSON `[{qty_from,qty_to,pct}]`. ĐỀ XUẤT nâng thành **child table `AntMed Commission Tier`** (validate được, tránh parse JSON thủ công). Nếu factory muốn giữ MVP nhanh → tạm Long Text JSON, đánh dấu nợ kỹ thuật.
 > **Adapt note 5 — `formula` Python expr:** scaffold `AM KPI Definition.formula` là `Long Text` chứa `SELECT …` eval qua `frappe.db.sql`. **CẢNH BÁO BẢO MẬT [UNVERIFIED]:** eval SQL/Python expr từ field do người dùng nhập = SQL injection. ĐỀ XUẤT bỏ `formula` tự do; thay bằng **`dimension` + `source_module` enum** rồi map sang hàm aggregate Python **cố định trong code** (xem §5 `compute_kpi`). Đây là khác biệt thiết kế chính so với scaffold.
 
@@ -84,7 +84,7 @@ DocType M10 **không submit** (`is_submittable: 0`) → không dùng `docstatus`
 
 ## 4. Business Rules
 
-> Module hooks tại `crm/antmed/hr_kpi/hooks.py` (hoặc gộp `crm/antmed/doctype/<dt>/<dt>.py` controller `validate`), wire qua `doc_events` trong `crm/hooks.py` (chỉ THÊM key). BR liên-module (BR-01..15) M10 **đọc đầu ra**, không enforce; BR riêng module đánh số `BR-M10-xx`.
+> Module hooks tại `antmed_crm/antmed/hr_kpi/hooks.py` (hoặc gộp `antmed_crm/antmed/doctype/<dt>/<dt>.py` controller `validate`), wire qua `doc_events` trong `antmed_crm/hooks.py` (chỉ THÊM key). BR liên-module (BR-01..15) M10 **đọc đầu ra**, không enforce; BR riêng module đánh số `BR-M10-xx`.
 
 | BR | Mô tả | Nơi enforce |
 |---|---|---|
@@ -101,7 +101,7 @@ DocType M10 **không submit** (`is_submittable: 0`) → không dùng `docstatus`
 
 ## 5. API
 
-> File `crm/api/antmed/hr_kpi.py`. Mọi hàm `@frappe.whitelist(methods=["GET"|"POST"])`, **type-annotated** (`crm/hooks.py` `require_type_annotated_api_methods`), trả **RAW dict/list**. Lỗi nghiệp vụ = `frappe.throw(_("BR-M10-xx: …"))`. Aggregate nguồn dùng **lazy-import** module M04/M05/M09 (xem §6).
+> File `antmed_crm/api/antmed/hr_kpi.py`. Mọi hàm `@frappe.whitelist(methods=["GET"|"POST"])`, **type-annotated** (`antmed_crm/hooks.py` `require_type_annotated_api_methods`), trả **RAW dict/list**. Lỗi nghiệp vụ = `frappe.throw(_("BR-M10-xx: …"))`. Aggregate nguồn dùng **lazy-import** module M04/M05/M09 (xem §6).
 
 | Endpoint (`antmed_crm.api.antmed.hr_kpi.…`) | Verb | Mô tả |
 |---|---|---|
@@ -137,8 +137,8 @@ M10 là **consumer cuối DAG** (PLAN §2): `M04, M05, M09 → M10 → M11`. M10
 
 > Truyền **PK (name)** giữa module, KHÔNG truyền doc object. Nếu module nguồn **chưa land** (W4 chạy trước W2/W3 hoàn tất ở một số nhánh) → hàm aggregate trả 0 + `frappe.log_error` (không crash KPI). Đây là **compliance gate mềm**: KPI chỉ "đủ" khi tất cả nguồn đã land.
 
-**Scheduler** (`crm/hooks.py` `scheduler_events`, THÊM key):
-- `cron`/`daily`: `crm.antmed.hr_kpi.scheduler.compute_kpi` — tính KPI kỳ hiện tại (idempotent). Adapt từ scaffold `m10_hr_kpi/scheduler.py::compute_kpi` nhưng **bỏ eval SQL tự do** (BR-M10-02).
+**Scheduler** (`antmed_crm/hooks.py` `scheduler_events`, THÊM key):
+- `cron`/`daily`: `antmed_crm.antmed.hr_kpi.scheduler.compute_kpi` — tính KPI kỳ hiện tại (idempotent). Adapt từ scaffold `m10_hr_kpi/scheduler.py::compute_kpi` nhưng **bỏ eval SQL tự do** (BR-M10-02).
 - `monthly`: `…compute_commission` cho kỳ tháng trước (gợi ý). `[cần khảo sát]` lịch chốt.
 
 **Auto-tạo hồ sơ NV:** scaffold cũ `ensure_sales_employee` hook trên `Employee.after_insert`. Native-lite KHÔNG có ERPNext `Employee` ⇒ ĐỀ XUẤT bỏ auto-hook, tạo `AntMed Sales Employee` thủ công / qua M14 khi cấp role `NV kinh doanh`. `[cần khảo sát]` có gắn `User.on_update` để auto-tạo khi user nhận role `NV kinh doanh` không.
@@ -197,7 +197,7 @@ Màn hình ground @ `AntMed_CRM_UI_Design.md`:
 - **Decision**: Dùng cờ `is_locked` + `locked_by`/`locked_at`, chặn sửa trong controller `validate` (BR-M10-03), set qua `lock_period`. Không tạo Workflow (D2) cho M10 trừ khi nghiệp vụ yêu cầu quy trình duyệt khóa nhiều bước (khi đó cân nhắc `AntMed Commission Period` [PLANNED]).
 - **Consequences**: (+) Đơn giản, idempotent; (−) không có lịch sử chuyển trạng thái chuẩn workflow — bù bằng `track_changes` + audit (BR-10).
 
-> Kế thừa: ADR-M01-01 (in-place), ADR-M01-02 (prefix `AntMed `), ADR-M01-05 (data-scope hoãn ở M01 → **M10 Slice A/D gỡ nợ**); DEC-A (role VI), D1 (native-lite), D2 (Frappe Workflow).
+> Kế thừa: ADR-M01-01 (gốc: in-place; THỰC TẾ = app RIÊNG `antmed_crm`), ADR-M01-02 (prefix `AntMed `), ADR-M01-05 (data-scope hoãn ở M01 → **M10 Slice A/D gỡ nợ**); DEC-A (role VI), D1 (native-lite), D2 (Frappe Workflow).
 
 ---
 
@@ -205,7 +205,7 @@ Màn hình ground @ `AntMed_CRM_UI_Design.md`:
 
 Theo SPEC §6 — một slice "xong" khi: **BE run-tests `Ran N OK`** + **FE vitest xanh** + **`yarn build` xanh** + (sau USER reload) **pixel verify** + **no-regression**.
 
-**BE test** (`crm/tests/test_antmed_hr_kpi.py`, chạy chung `before_tests`):
+**BE test** (`antmed_crm/tests/test_antmed_hr_kpi.py`, chạy chung `before_tests`):
 - DocType tồn tại sau migrate + đủ field tối thiểu (`frappe.get_meta`): `AntMed Sales Employee`, `AntMed Employee Route`, `AntMed KPI Definition`, `AntMed KPI Score`, `AntMed Commission`, `AntMed Commission Rule` (+child `AntMed Commission Tier`).
 - `AntMed Sales Employee.user` unique; KHÔNG Link tới `Employee` (assert meta options = `User`).
 - BR-M10-01: `compute_kpi(period)` chạy 2 lần → đúng 1 `AntMed KPI Score`/bộ ba (idempotent).

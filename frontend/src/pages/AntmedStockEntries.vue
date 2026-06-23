@@ -1,5 +1,8 @@
 <template>
-  <main class="flex h-full flex-col" aria-labelledby="antmed-stock-entries-title">
+  <main
+    class="flex h-full flex-col"
+    aria-labelledby="antmed-stock-entries-title"
+  >
     <!-- Header + breadcrumb: Trang chủ › Tồn kho › Phiếu xuất -->
     <header
       class="flex flex-col gap-3 border-b border-outline-gray-modals px-6 py-4 sm:flex-row sm:items-end sm:justify-between"
@@ -15,10 +18,15 @@
           <span class="px-1.5 text-ink-gray-4" aria-hidden="true">›</span>
           <span class="text-ink-gray-6">{{ __('Tồn kho') }}</span>
           <span class="px-1.5 text-ink-gray-4" aria-hidden="true">›</span>
-          <span class="text-ink-gray-7" aria-current="page">{{ __('Phiếu xuất') }}</span>
+          <span class="text-ink-gray-7" aria-current="page">{{
+            __('Phiếu xuất')
+          }}</span>
         </nav>
         <div class="flex flex-col gap-1">
-          <h1 id="antmed-stock-entries-title" class="text-xl font-semibold text-ink-gray-9">
+          <h1
+            id="antmed-stock-entries-title"
+            class="text-xl font-semibold text-ink-gray-9"
+          >
             {{ __('Phiếu xuất gần đây') }}
           </h1>
           <p class="text-p-sm text-ink-gray-6">
@@ -29,7 +37,10 @@
 
       <!-- Bộ lọc loại phiếu (param phát đi == lựa chọn UI — chống dead-control) -->
       <div class="flex flex-col gap-1 sm:w-56">
-        <label for="se-filter-entry-type" class="text-p-xs font-medium text-ink-gray-6">
+        <label
+          for="se-filter-entry-type"
+          class="text-p-xs font-medium text-ink-gray-6"
+        >
           {{ __('Loại phiếu') }}
         </label>
         <FormControl
@@ -60,9 +71,18 @@
         class="flex flex-col items-center gap-3 py-16 text-center"
         role="alert"
       >
-        <Badge variant="subtle" theme="red" size="lg" :label="__('Không tải được')" />
+        <Badge
+          variant="subtle"
+          theme="red"
+          size="lg"
+          :label="__('Không tải được')"
+        />
         <p class="max-w-md text-p-sm text-ink-gray-6">{{ errorMessage }}</p>
-        <Button variant="outline" :label="__('Thử lại')" @click="entries.reload()" />
+        <Button
+          variant="outline"
+          :label="__('Thử lại')"
+          @click="entries.reload()"
+        />
       </div>
 
       <!-- Empty -->
@@ -72,30 +92,46 @@
       >
         <p class="text-p-base">{{ __('Chưa có phiếu xuất') }}</p>
         <p class="text-p-sm">
-          {{ __('Phiếu xuất kho cho NV sẽ hiển thị ở đây sau khi Thủ kho lập phiếu.') }}
+          {{
+            __(
+              'Phiếu xuất kho cho NV sẽ hiển thị ở đây sau khi Thủ kho lập phiếu.',
+            )
+          }}
         </p>
       </div>
 
       <!-- Data table (widget "Phiếu xuất gần đây"): Số phiếu / NV / Loại / Giá trị / Lúc -->
       <table v-else class="w-full border-separate border-spacing-0 text-left">
         <caption class="sr-only">
-          {{ __('Bảng phiếu xuất kho gần đây') }}
+          {{
+            __('Bảng phiếu xuất kho gần đây')
+          }}
         </caption>
         <thead>
           <tr class="text-p-sm text-ink-gray-6">
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('Số phiếu') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('NV') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('Loại phiếu') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 text-right font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 text-right font-medium"
+            >
               {{ __('Giá trị') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 text-right font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 text-right font-medium"
+            >
               {{ __('Lúc') }}
             </th>
           </tr>
@@ -109,7 +145,10 @@
             <!-- Số phiếu (name = naming series AM-SE) — drill-down chi tiết phiếu (mockup C2) -->
             <td class="border-b border-outline-gray-1 py-3 pr-4 font-medium">
               <RouterLink
-                :to="{ name: 'AntmedStockEntryDetail', params: { name: row.name } }"
+                :to="{
+                  name: 'AntmedStockEntryDetail',
+                  params: { name: row.name },
+                }"
                 class="rounded text-teal-700 hover:text-teal-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-3"
                 :aria-label="__('Xem chi tiết phiếu') + ' ' + row.name"
               >
@@ -118,7 +157,9 @@
             </td>
 
             <!-- NV: tên user (nv_employee_name), KHÔNG lộ email/ID -->
-            <td class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7"
+            >
               {{ row.nv_employee_name || row.nv_employee || '—' }}
             </td>
 
@@ -135,12 +176,16 @@
             </td>
 
             <!-- Giá trị (total_value, format VI 'X,Y tr / X,Y tỷ') -->
-            <td class="border-b border-outline-gray-1 py-3 pr-4 text-right tabular-nums text-ink-gray-8">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 text-right tabular-nums text-ink-gray-8"
+            >
               {{ formatVnMoney(row.total_value) }}
             </td>
 
             <!-- Lúc (posting_datetime, HH:mm dd/MM/yyyy) -->
-            <td class="border-b border-outline-gray-1 py-3 text-right tabular-nums text-ink-gray-7">
+            <td
+              class="border-b border-outline-gray-1 py-3 text-right tabular-nums text-ink-gray-7"
+            >
               {{ formatStockTime(row.posting_datetime) }}
             </td>
           </tr>
@@ -164,7 +209,11 @@ import { RouterLink } from 'vue-router'
 import { Badge, Button, FormControl, toast } from 'frappe-ui'
 import LoadingIndicator from '@/components/Icons/LoadingIndicator.vue'
 import { listStockEntries } from '@/data/antmed'
-import { formatVnMoney, formatStockTime, entryTypeChipTheme } from '@/utils/antmedUi'
+import {
+  formatVnMoney,
+  formatStockTime,
+  entryTypeChipTheme,
+} from '@/utils/antmedUi'
 
 // Options loại phiếu — value khớp EXACT options DocType `AntMed Stock Entry.entry_type`
 // (VI có dấu, KHÔNG chuỗi EN). 'Xuất cho NV' đặt đầu (mặc định widget Thủ kho); '' = Tất cả.
@@ -188,7 +237,9 @@ const entries = listStockEntries({
 })
 
 const rows = computed(() => entries.data?.data || [])
-const totalCount = computed(() => entries.data?.total_count ?? rows.value.length)
+const totalCount = computed(
+  () => entries.data?.total_count ?? rows.value.length,
+)
 
 const errorMessage = computed(
   () =>

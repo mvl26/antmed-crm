@@ -38,7 +38,9 @@ const outsider = () => ({ isCrmUser: () => false, isAntmedUser: () => false })
 describe('M03-8 data layer — getStockEntry url get_stock_entry + GET', () => {
   it("getStockEntry → createResource url 'antmed_crm.api.antmed.inventory.get_stock_entry'", () => {
     expect(dataSrc).toMatch(/export function getStockEntry/)
-    expect(dataSrc).toMatch(/antmed_crm\.api\.antmed\.inventory\.get_stock_entry/)
+    expect(dataSrc).toMatch(
+      /antmed_crm\.api\.antmed\.inventory\.get_stock_entry/,
+    )
   })
   it("method: 'GET' (RAW dict THƯỜNG, đọc r.data trực tiếp)", () => {
     const block = dataSrc.slice(
@@ -49,7 +51,9 @@ describe('M03-8 data layer — getStockEntry url get_stock_entry + GET', () => {
     expect(block).toMatch(/auto\s*=\s*false/)
   })
   it('dùng createResource (đọc dict THƯỜNG r.data), KHÔNG createListResource', () => {
-    expect(dataSrc).toMatch(/import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/)
+    expect(dataSrc).toMatch(
+      /import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/,
+    )
     expect(dataSrc).not.toMatch(/import[^\n]*createListResource/)
   })
 })
@@ -88,7 +92,16 @@ describe('AntmedStockEntryDetail.vue — header keys + cột bảng mockup C2', 
     expect(pageSrc).toMatch(/row\.cocq_ok/)
   })
   it('header cột bảng đủ VI: SKU / Tên / Lot / HSD / SL / ĐVT / CO-CQ + card title "Vật tư đã chuẩn bị"', () => {
-    for (const label of ['SKU', 'Tên', 'Lot', 'HSD', 'SL', 'ĐVT', 'CO-CQ', 'Vật tư đã chuẩn bị']) {
+    for (const label of [
+      'SKU',
+      'Tên',
+      'Lot',
+      'HSD',
+      'SL',
+      'ĐVT',
+      'CO-CQ',
+      'Vật tư đã chuẩn bị',
+    ]) {
       expect(pageSrc).toContain(label)
     }
   })
@@ -166,14 +179,19 @@ describe('M03-8 route — AntmedStockEntryDetail /antmed/warehouse/stock-entries
       /path:\s*['"]\/antmed\/warehouse\/stock-entries\/:name['"]/,
     )
     expect(routerSrc).toMatch(/name:\s*['"]AntmedStockEntryDetail['"]/)
-    expect(routerSrc).toMatch(/import\(['"]@\/pages\/AntmedStockEntryDetail\.vue['"]\)/)
+    expect(routerSrc).toMatch(
+      /import\(['"]@\/pages\/AntmedStockEntryDetail\.vue['"]\)/,
+    )
   })
   it('name AntmedStockEntryDetail DUY NHẤT', () => {
-    const matches = routerSrc.match(/name:\s*['"]AntmedStockEntryDetail['"]/g) || []
+    const matches =
+      routerSrc.match(/name:\s*['"]AntmedStockEntryDetail['"]/g) || []
     expect(matches).toHaveLength(1)
   })
   it('no-regression: route list /antmed/warehouse/stock-entries (name AntmedStockEntries) GIỮ nguyên', () => {
-    expect(routerSrc).toMatch(/path:\s*['"]\/antmed\/warehouse\/stock-entries['"]/)
+    expect(routerSrc).toMatch(
+      /path:\s*['"]\/antmed\/warehouse\/stock-entries['"]/,
+    )
     expect(routerSrc).toMatch(/name:\s*['"]AntmedStockEntries['"]/)
   })
   it('meta.role=warehouse ⇒ sidebar kho', () => {
@@ -230,15 +248,23 @@ describe('AntmedStockEntryDetail.vue — no-mock / no-aggregate (BE đã trả s
 // MIRROR <script setup> AntmedStockEntryDetail.vue: expose data/items (đọc thẳng resourceData) +
 // helper THẬT (fmtDate/fmtQty/formatVnMoney/cocqChip*/entryTypeChipTheme/formatStockTime/routeName).
 describe('M03-8 SSR render-verify — AntmedStockEntryDetail render HTML thật', () => {
-  async function renderTemplate(resourceData, { loading = false, error = null } = {}) {
+  async function renderTemplate(
+    resourceData,
+    { loading = false, error = null } = {},
+  ) {
     const { parse } = await import('@vue/compiler-sfc')
     const { compile } = await import('@vue/compiler-dom')
     const vue = await import('vue')
     const { renderToString } = await import('@vue/server-renderer')
     const ui = await import('../../src/utils/antmedUi')
 
-    const raw = readFileSync(path.join(srcDir, 'pages/AntmedStockEntryDetail.vue'), 'utf8')
-    const { descriptor } = parse(raw, { filename: 'AntmedStockEntryDetail.vue' })
+    const raw = readFileSync(
+      path.join(srcDir, 'pages/AntmedStockEntryDetail.vue'),
+      'utf8',
+    )
+    const { descriptor } = parse(raw, {
+      filename: 'AntmedStockEntryDetail.vue',
+    })
     const { code } = compile(descriptor.template.content, {
       mode: 'function',
       hoistStatic: false,
@@ -250,13 +276,38 @@ describe('M03-8 SSR render-verify — AntmedStockEntryDetail render HTML thật'
     const i18n = (s) => s
     const comp = {
       components: {
-        Badge: { props: ['label', 'theme'], render() { return vue.h('span', {}, this.label) } },
-        Button: { props: ['label'], emits: ['click'], render() { return vue.h('button', {}, this.label) } },
-        RouterLink: { render() { return vue.h('a', {}, this.$slots.default?.()) } },
-        LoadingIndicator: { render() { return vue.h('span', {}, '...') } },
+        Badge: {
+          props: ['label', 'theme'],
+          render() {
+            return vue.h('span', {}, this.label)
+          },
+        },
+        Button: {
+          props: ['label'],
+          emits: ['click'],
+          render() {
+            return vue.h('button', {}, this.label)
+          },
+        },
+        RouterLink: {
+          render() {
+            return vue.h('a', {}, this.$slots.default?.())
+          },
+        },
+        LoadingIndicator: {
+          render() {
+            return vue.h('span', {}, '...')
+          },
+        },
       },
       setup() {
-        const entry = { data: resourceData, loading, error, reload() {}, submit() {} }
+        const entry = {
+          data: resourceData,
+          loading,
+          error,
+          reload() {},
+          submit() {},
+        }
         const routeName = vue.computed(() => 'AM-SE-2026-00007')
         const data = vue.computed(() => entry.data || null)
         const items = vue.computed(() => entry.data?.items || [])
@@ -373,7 +424,9 @@ describe('M03-8 SSR render-verify — AntmedStockEntryDetail render HTML thật'
   })
 
   it("render not-found (DoesNotExistError) → 'Không tìm thấy phiếu'", async () => {
-    const html = await renderTemplate(null, { error: { exc_type: 'DoesNotExistError' } })
+    const html = await renderTemplate(null, {
+      error: { exc_type: 'DoesNotExistError' },
+    })
     expect(html).toContain('Không tìm thấy phiếu')
   })
 

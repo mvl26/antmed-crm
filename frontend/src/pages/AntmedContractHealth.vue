@@ -1,7 +1,12 @@
 <template>
-  <main class="flex h-full flex-col" aria-labelledby="antmed-contract-health-title">
+  <main
+    class="flex h-full flex-col"
+    aria-labelledby="antmed-contract-health-title"
+  >
     <!-- Header + breadcrumb -->
-    <header class="flex flex-col gap-2 border-b border-outline-gray-modals px-6 py-4">
+    <header
+      class="flex flex-col gap-2 border-b border-outline-gray-modals px-6 py-4"
+    >
       <nav class="text-p-xs text-ink-gray-5" :aria-label="__('Đường dẫn')">
         <RouterLink
           to="/antmed"
@@ -13,11 +18,18 @@
         <span class="text-ink-gray-7">{{ __('Hợp đồng & Gói thầu') }}</span>
       </nav>
       <div class="flex flex-col gap-1">
-        <h1 id="antmed-contract-health-title" class="text-xl font-semibold text-ink-gray-9">
+        <h1
+          id="antmed-contract-health-title"
+          class="text-xl font-semibold text-ink-gray-9"
+        >
           {{ __('Sức khỏe Hợp đồng') }}
         </h1>
         <p class="text-p-sm text-ink-gray-6">
-          {{ __('Theo dõi quota đã dùng và hạn hiệu lực của từng hợp đồng / gói thầu') }}
+          {{
+            __(
+              'Theo dõi quota đã dùng và hạn hiệu lực của từng hợp đồng / gói thầu',
+            )
+          }}
         </p>
       </div>
     </header>
@@ -39,9 +51,18 @@
         class="flex flex-col items-center gap-3 py-16 text-center"
         role="alert"
       >
-        <Badge variant="subtle" theme="red" size="lg" :label="__('Không tải được')" />
+        <Badge
+          variant="subtle"
+          theme="red"
+          size="lg"
+          :label="__('Không tải được')"
+        />
         <p class="max-w-md text-p-sm text-ink-gray-6">{{ errorMessage }}</p>
-        <Button variant="outline" :label="__('Thử lại')" @click="health.reload()" />
+        <Button
+          variant="outline"
+          :label="__('Thử lại')"
+          @click="health.reload()"
+        />
       </div>
 
       <!-- Empty -->
@@ -51,36 +72,56 @@
       >
         <p class="text-p-base">{{ __('Chưa có hợp đồng.') }}</p>
         <p class="text-p-sm">
-          {{ __('Hợp đồng được tạo bởi Quản lý trong Frappe Desk (AntMed Contract) rồi tải lại.') }}
+          {{
+            __(
+              'Hợp đồng được tạo bởi Quản lý trong Frappe Desk (AntMed Contract) rồi tải lại.',
+            )
+          }}
         </p>
       </div>
 
       <!-- Data table A2 -->
       <table v-else class="w-full border-separate border-spacing-0 text-left">
         <caption class="sr-only">
-          {{ __('Bảng sức khỏe hợp đồng') }}
+          {{
+            __('Bảng sức khỏe hợp đồng')
+          }}
         </caption>
         <thead>
           <tr class="text-p-sm text-ink-gray-6">
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('Số HĐ') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('Bệnh viện') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('Hết hạn') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 text-right font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 text-right font-medium"
+            >
               {{ __('Giá trị') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('% Quota') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('Trạng thái') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 text-right font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 text-right font-medium"
+            >
               {{ __('Thao tác') }}
             </th>
           </tr>
@@ -95,23 +136,31 @@
             :key="row.name"
             role="link"
             tabindex="0"
-            :aria-label="__('Xem chi tiết hợp đồng') + ' ' + (row.contract_no || row.name)"
+            :aria-label="
+              __('Xem chi tiết hợp đồng') + ' ' + (row.contract_no || row.name)
+            "
             class="cursor-pointer text-p-base text-ink-gray-8 transition hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-3"
             @click="openContract(row.name)"
             @keydown.enter="openContract(row.name)"
           >
             <!-- Số HĐ -->
-            <td class="border-b border-outline-gray-1 py-3 pr-4 font-medium text-ink-gray-9">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 font-medium text-ink-gray-9"
+            >
               {{ row.contract_no || row.name }}
             </td>
 
             <!-- Bệnh viện (tên, KHÔNG mã) -->
-            <td class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7"
+            >
               {{ row.hospital_name || row.hospital || '—' }}
             </td>
 
             <!-- Hết hạn dd/MM/yyyy + chip cảnh báo nếu ≤30 ngày / đã hết hạn -->
-            <td class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7"
+            >
               <div class="flex flex-col gap-1">
                 <span>{{ formatDate(row.valid_to) }}</span>
                 <span
@@ -124,7 +173,9 @@
             </td>
 
             <!-- Giá trị -->
-            <td class="border-b border-outline-gray-1 py-3 pr-4 text-right tabular-nums text-ink-gray-8">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 text-right tabular-nums text-ink-gray-8"
+            >
               {{ formatCurrency(row.total_value) }}
             </td>
 
@@ -137,7 +188,9 @@
                   :aria-valuenow="clampPct(row.quota_used_pct)"
                   aria-valuemin="0"
                   aria-valuemax="100"
-                  :aria-label="__('Quota đã dùng') + ' ' + pctLabel(row.quota_used_pct)"
+                  :aria-label="
+                    __('Quota đã dùng') + ' ' + pctLabel(row.quota_used_pct)
+                  "
                 >
                   <div
                     class="h-full rounded-full transition-all"
@@ -145,7 +198,9 @@
                     :style="{ width: clampPct(row.quota_used_pct) + '%' }"
                   />
                 </div>
-                <span class="min-w-[3rem] tabular-nums text-p-sm text-ink-gray-7">
+                <span
+                  class="min-w-[3rem] tabular-nums text-p-sm text-ink-gray-7"
+                >
                   {{ pctLabel(row.quota_used_pct) }}
                 </span>
               </div>
@@ -169,7 +224,11 @@
                 variant="outline"
                 size="sm"
                 :label="__('Chi tiết')"
-                :aria-label="__('Xem chi tiết hợp đồng') + ' ' + (row.contract_no || row.name)"
+                :aria-label="
+                  __('Xem chi tiết hợp đồng') +
+                  ' ' +
+                  (row.contract_no || row.name)
+                "
                 @click.stop="openContract(row.name)"
               />
             </td>
@@ -209,13 +268,24 @@ import { RouterLink, useRouter } from 'vue-router'
 import { Badge, Button, toast } from 'frappe-ui'
 import LoadingIndicator from '@/components/Icons/LoadingIndicator.vue'
 import AntmedTopQuotaItemsCard from '@/components/Antmed/AntmedTopQuotaItemsCard.vue'
-import { getContractHealth, getTopQuotaItems, CONTRACT_WORKFLOW_THEME } from '@/data/antmed'
-import { healthBarClass, expiryLabel } from '@/utils/antmedUi'
+import {
+  getContractHealth,
+  getTopQuotaItems,
+  CONTRACT_WORKFLOW_THEME,
+} from '@/data/antmed'
+import {
+  healthBarClass,
+  expiryLabel,
+  fmtDate as formatDate,
+} from '@/utils/antmedUi'
 
 const router = useRouter()
 
 // Resource — endpoint trả dict bọc { data, total_count }, đọc r.data.data (KHÔNG createListResource).
-const health = getContractHealth({ params: { start: 0, page_length: 50 }, auto: true })
+const health = getContractHealth({
+  params: { start: 0, page_length: 50 },
+  auto: true,
+})
 
 const rows = computed(() => health.data?.data || [])
 const totalCount = computed(() => health.data?.total_count ?? rows.value.length)
@@ -224,9 +294,13 @@ const totalCount = computed(() => health.data?.total_count ?? rows.value.length)
 // data đã sort GIẢM theo used_pct + cắt top ở BE ⇒ đọc r.data.data nguyên thứ tự (KHÔNG sort lại).
 const topQuota = getTopQuotaItems({ params: { limit: 5 }, auto: true })
 const topItems = computed(() => topQuota.data?.data || [])
-const topItemsCount = computed(() => topQuota.data?.total_count ?? topItems.value.length)
+const topItemsCount = computed(
+  () => topQuota.data?.total_count ?? topItems.value.length,
+)
 topQuota.onError = (err) => {
-  toast.error(err?.messages?.[0] || __('Không tải được danh mục vật tư trúng thầu'))
+  toast.error(
+    err?.messages?.[0] || __('Không tải được danh mục vật tư trúng thầu'),
+  )
 }
 
 const errorMessage = computed(
@@ -245,22 +319,17 @@ function statusTheme(status) {
   return CONTRACT_WORKFLOW_THEME[status] || 'gray'
 }
 
-// Hết hạn theo định dạng dd/MM/yyyy (vi-VN gibi DD/MM/YYYY) — '—' khi thiếu.
-function formatDate(value) {
-  if (!value) return '—'
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return value
-  const dd = String(d.getDate()).padStart(2, '0')
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const yyyy = d.getFullYear()
-  return `${dd}/${mm}/${yyyy}`
-}
+// formatDate (dd/MM/yyyy) gom về canon fmtDate @/utils/antmedUi (alias — template không đổi).
 
 function formatCurrency(value) {
   if (value === null || value === undefined || value === '') return '—'
   const n = Number(value)
   if (Number.isNaN(n)) return String(value)
-  return n.toLocaleString('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 })
+  return n.toLocaleString('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+    maximumFractionDigits: 0,
+  })
 }
 
 // % Quota đã dùng (BE đã tính quota_used_pct) — clamp 0–100 cho width thanh; nhãn số.

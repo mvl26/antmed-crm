@@ -13,6 +13,8 @@ import frappe
 from frappe import _
 from frappe.utils import get_datetime, now_datetime
 
+from antmed_crm.api.antmed._filters import coerce_filters
+
 DELIVERY_DOCTYPE = "AntMed Delivery"
 HOSPITAL_DOCTYPE = "AntMed Hospital"
 DOCTOR_DOCTYPE = "AntMed Doctor"
@@ -37,6 +39,7 @@ def _check_write(name: str) -> None:
 	"""Gate quyền cho endpoint mutating (LL-BE-13 — KHÔNG tin FE ẩn nút)."""
 	if not frappe.has_permission(DELIVERY_DOCTYPE, "write", doc=name):
 		frappe.throw(_("Bạn không có quyền cập nhật phiếu giao này."), frappe.PermissionError)
+
 
 DELIVERY_LIST_FIELDS = [
 	"name",
@@ -77,17 +80,20 @@ DELIVERY_DETAIL_FIELDS = (
 	"notes",
 	"docstatus",
 )
-DELIVERY_ITEM_KEYS = ("item", "item_name", "lot", "uom", "requested_qty", "delivered_qty", "consumed_qty", "returned_qty")
+DELIVERY_ITEM_KEYS = (
+	"item",
+	"item_name",
+	"lot",
+	"uom",
+	"requested_qty",
+	"delivered_qty",
+	"consumed_qty",
+	"returned_qty",
+)
 
 
 def _coerce_filters(filters: dict | str | None) -> list:
-	if not filters:
-		return []
-	if isinstance(filters, str):
-		filters = frappe.parse_json(filters) or []
-	if isinstance(filters, dict):
-		return [[k, "=", v] for k, v in filters.items()]
-	return list(filters)
+	return coerce_filters(filters)
 
 
 @frappe.whitelist(methods=["GET"])
@@ -126,7 +132,9 @@ def list_deliveries(
 	)
 	data = [{k: r.get(k) for k in DELIVERY_LIST_ITEM_KEYS} for r in rows]
 
-	total_count = len(frappe.get_list(DELIVERY_DOCTYPE, filters=conditions, pluck="name", limit_page_length=0))
+	total_count = len(
+		frappe.get_list(DELIVERY_DOCTYPE, filters=conditions, pluck="name", limit_page_length=0)
+	)
 	return {"data": data, "total_count": total_count}
 
 
@@ -140,13 +148,17 @@ def get_delivery(name: str) -> dict:
 	result = {k: doc.get(k) for k in DELIVERY_DETAIL_FIELDS}
 	# LL-BE-2 + LL-BE-5: enrich *_name, null-guard FK orphan.
 	result["hospital_name"] = (
-		frappe.db.get_value(HOSPITAL_DOCTYPE, doc.get("hospital"), "hospital_name") if doc.get("hospital") else None
+		frappe.db.get_value(HOSPITAL_DOCTYPE, doc.get("hospital"), "hospital_name")
+		if doc.get("hospital")
+		else None
 	)
 	result["doctor_name"] = (
 		frappe.db.get_value(DOCTOR_DOCTYPE, doc.get("doctor"), "full_name") if doc.get("doctor") else None
 	)
 	result["assigned_employee_name"] = (
-		frappe.db.get_value("User", doc.get("assigned_employee"), "full_name") if doc.get("assigned_employee") else None
+		frappe.db.get_value("User", doc.get("assigned_employee"), "full_name")
+		if doc.get("assigned_employee")
+		else None
 	)
 	result["items"] = [{k: row.get(k) for k in DELIVERY_ITEM_KEYS} for row in (doc.get("items") or [])]
 	return result
@@ -187,7 +199,9 @@ def assign(name: str, assigned_employee: str) -> dict:
 	_check_write(name)
 	current = frappe.db.get_value(DELIVERY_DOCTYPE, name, "status")
 	_assert_transition(current, "Đã gán NV")
-	frappe.db.set_value(DELIVERY_DOCTYPE, name, {"assigned_employee": assigned_employee, "status": "Đã gán NV"})
+	frappe.db.set_value(
+		DELIVERY_DOCTYPE, name, {"assigned_employee": assigned_employee, "status": "Đã gán NV"}
+	)
 	return {"name": name, "status": "Đã gán NV", "assigned_employee": assigned_employee}
 
 
@@ -257,7 +271,12 @@ def handover(
 	# Wire M04→M03: ghi sổ tồn tiêu hao ca mổ (best-effort — KHÔNG vỡ bàn giao nếu lỗi/thiếu kho).
 	_post_delivery_consumption(doc)
 
-	return {"name": name, "status": doc.status, "sla_status": doc.sla_status, "delivered_at": str(doc.delivered_at)}
+	return {
+		"name": name,
+		"status": doc.status,
+		"sla_status": doc.sla_status,
+		"delivered_at": str(doc.delivered_at),
+	}
 
 
 def _post_delivery_consumption(doc) -> None:

@@ -64,12 +64,24 @@ def seed_antmed_sample():
 	"""Tạo dữ liệu mẫu (idempotent). Trả dict đếm số bản ghi sau seed."""
 	# 1) Bệnh viện
 	for code, name, rank, cstatus in _HOSPITALS:
-		_ensure("AntMed Hospital", "hospital_code", code, {"hospital_name": name, "rank": rank, "contract_status": cstatus})
+		_ensure(
+			"AntMed Hospital",
+			"hospital_code",
+			code,
+			{"hospital_name": name, "rank": rank, "contract_status": cstatus},
+		)
 	# 2) Bác sỹ
 	for code, full_name, hosp, spec, phone in _DOCTORS:
 		if not frappe.db.exists("AntMed Doctor", {"doctor_code": code}):
 			frappe.get_doc(
-				{"doctype": "AntMed Doctor", "doctor_code": code, "full_name": full_name, "hospital": hosp, "specialty": spec, "phone": phone}
+				{
+					"doctype": "AntMed Doctor",
+					"doctor_code": code,
+					"full_name": full_name,
+					"hospital": hosp,
+					"specialty": spec,
+					"phone": phone,
+				}
 			).insert(ignore_permissions=True)
 	# 3) Nhà cung cấp
 	for code, name, tax in _SUPPLIERS:
@@ -77,8 +89,17 @@ def seed_antmed_sample():
 	# 4) Vật tư
 	for code, name, cls, cocq, shelf, uom, price in _ITEMS:
 		_ensure(
-			"AntMed Item", "item_code", code,
-			{"item_name": name, "classification": cls, "requires_cocq": cocq, "shelf_life_months": shelf, "uom": uom, "default_unit_price": price},
+			"AntMed Item",
+			"item_code",
+			code,
+			{
+				"item_name": name,
+				"classification": cls,
+				"requires_cocq": cocq,
+				"shelf_life_months": shelf,
+				"uom": uom,
+				"default_unit_price": price,
+			},
 		)
 	# 5) Lô (mỗi vật tư 1-2 lô, HSD trải đều, gắn NCC)
 	suppliers = [s[0] for s in _SUPPLIERS]
@@ -120,7 +141,14 @@ def seed_antmed_sample():
 					"entry_type": "Nhập NCC",
 					"to_warehouse": tong,
 					"reason": f"SEED-{code}",
-					"items": [{"item": code, "lot": lot, "qty": 150, "unit_price": frappe.db.get_value("AntMed Item", code, "default_unit_price")}],
+					"items": [
+						{
+							"item": code,
+							"lot": lot,
+							"qty": 150,
+							"unit_price": frappe.db.get_value("AntMed Item", code, "default_unit_price"),
+						}
+					],
 				}
 			)
 			se.insert(ignore_permissions=True)
@@ -130,7 +158,16 @@ def seed_antmed_sample():
 
 
 def _counts():
-	dts = ["AntMed Hospital", "AntMed Doctor", "AntMed Supplier", "AntMed Item", "AntMed Lot", "AntMed Warehouse", "AntMed Contract", "AntMed Stock Entry"]
+	dts = [
+		"AntMed Hospital",
+		"AntMed Doctor",
+		"AntMed Supplier",
+		"AntMed Item",
+		"AntMed Lot",
+		"AntMed Warehouse",
+		"AntMed Contract",
+		"AntMed Stock Entry",
+	]
 	return {dt: frappe.db.count(dt) for dt in dts}
 
 
@@ -143,7 +180,12 @@ def seed_portal_demo():
 	from antmed_crm.api.antmed import customer
 
 	hosp = _ensure("AntMed Hospital", "hospital_code", "BV-CR", {"hospital_name": "Bệnh viện Chợ Rẫy"})
-	doctor = _ensure("AntMed Doctor", "doctor_code", "BS-PORTAL", {"full_name": "BS. Trần Mạnh Hùng", "hospital": hosp, "specialty": "Ngoại tổng quát"})
+	doctor = _ensure(
+		"AntMed Doctor",
+		"doctor_code",
+		"BS-PORTAL",
+		{"full_name": "BS. Trần Mạnh Hùng", "hospital": hosp, "specialty": "Ngoại tổng quát"},
+	)
 	cat = [
 		("VTYT-VICRYL", "Chỉ Vicryl 2-0", "Loại B", 200000),
 		("VTYT-DAOMO11", "Dao mổ #11", "Loại A", 50000),
@@ -163,7 +205,16 @@ def seed_portal_demo():
 				"status": "Hiệu lực",
 				"valid_to": add_months(nowdate(), 12),
 				"items": [
-					{"item": code, "item_name": name, "uom": "Cái", "unit_price": price, "quota_qty": 1000, "used_qty": 0, "remaining_pct": 100, "lock_at_100": 1}
+					{
+						"item": code,
+						"item_name": name,
+						"uom": "Cái",
+						"unit_price": price,
+						"quota_qty": 1000,
+						"used_qty": 0,
+						"remaining_pct": 100,
+						"lock_at_100": 1,
+					}
 					for code, name, _cls, price in cat
 				],
 			}
@@ -172,7 +223,9 @@ def seed_portal_demo():
 		c.submit()
 
 	# Yêu cầu vật tư + 1 phiếu giao (cho G2 history). Idempotent theo cờ surgery_room.
-	mr = frappe.db.get_value("AntMed Material Request", {"hospital": hosp, "surgery_room": "PM 4 · Demo"}, "name")
+	mr = frappe.db.get_value(
+		"AntMed Material Request", {"hospital": hosp, "surgery_room": "PM 4 · Demo"}, "name"
+	)
 	if not mr:
 		mr = customer.create_material_request(
 			hospital=hosp,

@@ -31,7 +31,16 @@ DETAIL_HEADER_KEYS = {
 	"note",
 	"docstatus",
 }
-DETAIL_ITEM_KEYS = {"item", "item_name", "lot", "lot_no", "expiry_date", "system_qty", "counted_qty", "variance"}
+DETAIL_ITEM_KEYS = {
+	"item",
+	"item_name",
+	"lot",
+	"lot_no",
+	"expiry_date",
+	"system_qty",
+	"counted_qty",
+	"variance",
+}
 
 
 def _mk_item(code, name):
@@ -100,7 +109,9 @@ class TestAntMedStockCount(FrappeTestCase):
 	def test_count_up_adjusts_stock(self):
 		"""counted 110 > system 100 → variance +10 → tồn về 110."""
 		lot = self._fresh("UP", 100)
-		res = inventory.create_stock_count(self.wh, items=[{"item": self.item, "lot": lot, "counted_qty": 110}])
+		res = inventory.create_stock_count(
+			self.wh, items=[{"item": self.item, "lot": lot, "counted_qty": 110}]
+		)
 		self.assertEqual(res["docstatus"], 1)
 		self.assertEqual(res["total_variance_qty"], 10.0)
 		self.assertEqual(inventory.get_stock(self.wh, self.item, lot)["balance_qty"], 110.0)
@@ -108,14 +119,18 @@ class TestAntMedStockCount(FrappeTestCase):
 	def test_count_down_adjusts_stock(self):
 		"""counted 70 < system 100 → variance -30 → tồn về 70."""
 		lot = self._fresh("DOWN", 100)
-		res = inventory.create_stock_count(self.wh, items=[{"item": self.item, "lot": lot, "counted_qty": 70}])
+		res = inventory.create_stock_count(
+			self.wh, items=[{"item": self.item, "lot": lot, "counted_qty": 70}]
+		)
 		self.assertEqual(res["total_variance_qty"], -30.0)
 		self.assertEqual(inventory.get_stock(self.wh, self.item, lot)["balance_qty"], 70.0)
 
 	def test_count_zero_variance_no_ledger(self):
 		"""counted == system → variance 0 → KHÔNG ghi dòng điều chỉnh."""
 		lot = self._fresh("ZERO", 50)
-		res = inventory.create_stock_count(self.wh, items=[{"item": self.item, "lot": lot, "counted_qty": 50}])
+		res = inventory.create_stock_count(
+			self.wh, items=[{"item": self.item, "lot": lot, "counted_qty": 50}]
+		)
 		self.assertEqual(res["total_variance_qty"], 0.0)
 		n = frappe.db.count(
 			"AntMed Stock Ledger", {"voucher_type": "AntMed Stock Count", "voucher_no": res["name"]}
@@ -136,7 +151,9 @@ class TestAntMedStockCount(FrappeTestCase):
 	def test_cancel_reverses(self):
 		"""on_cancel đảo điều chỉnh → tồn về 100."""
 		lot = self._fresh("CANCEL", 100)
-		res = inventory.create_stock_count(self.wh, items=[{"item": self.item, "lot": lot, "counted_qty": 130}])
+		res = inventory.create_stock_count(
+			self.wh, items=[{"item": self.item, "lot": lot, "counted_qty": 130}]
+		)
 		self.assertEqual(inventory.get_stock(self.wh, self.item, lot)["balance_qty"], 130.0)
 		frappe.get_doc("AntMed Stock Count", res["name"]).cancel()
 		self.assertEqual(inventory.get_stock(self.wh, self.item, lot)["balance_qty"], 100.0)
@@ -144,7 +161,9 @@ class TestAntMedStockCount(FrappeTestCase):
 	def test_idempotent_post(self):
 		"""1 phiếu submit → đúng 1 dòng ledger điều chỉnh (không nhân đôi)."""
 		lot = self._fresh("IDEM", 100)
-		res = inventory.create_stock_count(self.wh, items=[{"item": self.item, "lot": lot, "counted_qty": 95}])
+		res = inventory.create_stock_count(
+			self.wh, items=[{"item": self.item, "lot": lot, "counted_qty": 95}]
+		)
 		n = frappe.db.count(
 			"AntMed Stock Ledger", {"voucher_type": "AntMed Stock Count", "voucher_no": res["name"]}
 		)
@@ -160,7 +179,15 @@ class TestAntMedStockCount(FrappeTestCase):
 		row = res["data"][0]
 		self.assertEqual(
 			set(row.keys()),
-			{"name", "warehouse", "count_datetime", "docstatus", "total_variance_qty", "counted_by", "counted_by_name"},
+			{
+				"name",
+				"warehouse",
+				"count_datetime",
+				"docstatus",
+				"total_variance_qty",
+				"counted_by",
+				"counted_by_name",
+			},
 		)
 
 	def test_get_stock_count(self):

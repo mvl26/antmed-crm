@@ -55,7 +55,12 @@ TENDER_STAGES = (
 		"doctype": DEAL_DOCTYPE,
 		"statuses": ["Qualification", "Demo/Making", "Proposal/Quotation"],
 	},
-	{"key": "bid", "label": "Dự thầu", "doctype": DEAL_DOCTYPE, "statuses": ["Negotiation", "Ready to Close"]},
+	{
+		"key": "bid",
+		"label": "Dự thầu",
+		"doctype": DEAL_DOCTYPE,
+		"statuses": ["Negotiation", "Ready to Close"],
+	},
 	{"key": "won", "label": "Trúng", "doctype": DEAL_DOCTYPE, "statuses": ["Won"]},
 )
 
@@ -72,9 +77,7 @@ def _count_under_permission(doctype: str) -> int:
 	về 0 (KHÔNG leak: không có quyền = thấy 0, không phải tổng toàn hệ thống).
 	"""
 	try:
-		return len(
-			frappe.get_list(doctype, pluck="name", limit_page_length=0)
-		)
+		return len(frappe.get_list(doctype, pluck="name", limit_page_length=0))
 	except frappe.PermissionError:
 		return 0
 

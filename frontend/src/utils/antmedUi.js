@@ -40,7 +40,11 @@ export function barFillClass(theme) {
  */
 export function quotaUsedPct(remainingPct) {
   // null/undefined/'' = chưa có dữ liệu quota → coi như chưa dùng (0% → xanh, không vỡ).
-  if (remainingPct === null || remainingPct === undefined || remainingPct === '')
+  if (
+    remainingPct === null ||
+    remainingPct === undefined ||
+    remainingPct === ''
+  )
     return 0
   const r = Number(remainingPct)
   if (!Number.isFinite(r)) return 0
@@ -208,7 +212,8 @@ export function alertText(alert) {
   }
   if (alert.kind === 'expiry') {
     const d = Number(alert.days_to_expiry)
-    if (Number.isFinite(d) && d < 0) return `${head} — đã quá hạn ${Math.abs(d)} ngày`
+    if (Number.isFinite(d) && d < 0)
+      return `${head} — đã quá hạn ${Math.abs(d)} ngày`
     return `${head} — còn ${alert.days_to_expiry} ngày`
   }
   return head
@@ -735,7 +740,11 @@ export const FUNNEL_BAR_MIN_FLOOR = 36
  * @param {number} [minFloor]  % tối thiểu (mặc định FUNNEL_BAR_MIN_FLOOR)
  * @returns {number} % width trong [0, 100]
  */
-export function funnelBarWidth(count, maxCount, minFloor = FUNNEL_BAR_MIN_FLOOR) {
+export function funnelBarWidth(
+  count,
+  maxCount,
+  minFloor = FUNNEL_BAR_MIN_FLOOR,
+) {
   const max = Number(maxCount)
   if (!Number.isFinite(max) || max <= 0) return 0
   const c = Number(count)
@@ -760,7 +769,10 @@ export const TENDER_STAGE_THEME = [
 
 /** Lớp nền dải teal nhạt dần cho bar funnel ở bậc index (fallback nhạt nhất). */
 export function funnelBarClass(index) {
-  return TENDER_STAGE_THEME[index] ?? TENDER_STAGE_THEME[TENDER_STAGE_THEME.length - 1]
+  return (
+    TENDER_STAGE_THEME[index] ??
+    TENDER_STAGE_THEME[TENDER_STAGE_THEME.length - 1]
+  )
 }
 
 // ── M10-1 "Quản lý Đội ngũ" (mockup B2) — helper THUẦN bảng KPI đội ngũ ───────
@@ -914,7 +926,8 @@ export const REVENUE_GROUP_COLORS = {
  * @returns {string} class Tailwind nền segment.
  */
 export function revenueGroupBarClass(classification) {
-  return (REVENUE_GROUP_COLORS[classification] || REVENUE_GROUP_COLORS['Khác']).bar
+  return (REVENUE_GROUP_COLORS[classification] || REVENUE_GROUP_COLORS['Khác'])
+    .bar
 }
 
 /**
@@ -923,7 +936,8 @@ export function revenueGroupBarClass(classification) {
  * @returns {string} class Tailwind nền ô legend.
  */
 export function revenueGroupSwatchClass(classification) {
-  return (REVENUE_GROUP_COLORS[classification] || REVENUE_GROUP_COLORS['Khác']).swatch
+  return (REVENUE_GROUP_COLORS[classification] || REVENUE_GROUP_COLORS['Khác'])
+    .swatch
 }
 
 /**
@@ -1057,11 +1071,15 @@ export function formatTrieu(value) {
  */
 export function formatNotifTime(ts, now = new Date()) {
   if (ts === null || ts === undefined || ts === '') return '—'
-  const d = ts instanceof Date ? ts : new Date(typeof ts === 'string' ? ts.replace(' ', 'T') : ts)
+  const d =
+    ts instanceof Date
+      ? ts
+      : new Date(typeof ts === 'string' ? ts.replace(' ', 'T') : ts)
   if (Number.isNaN(d.getTime())) return '—'
   const p = (x) => String(x).padStart(2, '0')
   // Số ngày lịch chênh lệch (theo ngày local, bỏ phần giờ — tránh lệch do giờ trong ngày).
-  const dayOf = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime()
+  const dayOf = (x) =>
+    new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime()
   const diffDays = Math.round((dayOf(now) - dayOf(d)) / 86_400_000)
   if (diffDays === 0) return `hôm nay ${p(d.getHours())}:${p(d.getMinutes())}`
   if (diffDays === 1) return 'hôm qua'
@@ -1109,7 +1127,9 @@ export function tenderQuotaChipLabel(quotaChip, remainingPct) {
   if (quotaChip === 'danger') return 'Hết quota'
   if (quotaChip === 'warn') {
     const n = Number(remainingPct)
-    const pct = Number.isFinite(n) ? n.toLocaleString('vi-VN', { maximumFractionDigits: 1 }) : '0'
+    const pct = Number.isFinite(n)
+      ? n.toLocaleString('vi-VN', { maximumFractionDigits: 1 })
+      : '0'
     return `Còn ${pct}%`
   }
   return 'Còn quota'

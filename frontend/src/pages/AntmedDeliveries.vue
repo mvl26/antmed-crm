@@ -5,7 +5,10 @@
       class="flex flex-col gap-3 border-b border-outline-gray-modals px-6 py-4 sm:flex-row sm:items-center sm:justify-between"
     >
       <div class="flex flex-col gap-1">
-        <h1 id="antmed-deliveries-title" class="text-xl font-semibold text-ink-gray-9">
+        <h1
+          id="antmed-deliveries-title"
+          class="text-xl font-semibold text-ink-gray-9"
+        >
           {{ __('Giao phòng mổ') }}
         </h1>
         <p class="text-p-sm text-ink-gray-6">
@@ -45,7 +48,9 @@
         class="flex items-center justify-center gap-2 py-16 text-ink-gray-6"
       >
         <LoadingIndicator class="h-4 w-4" />
-        <span class="text-p-base">{{ __('Đang tải danh sách phiếu giao…') }}</span>
+        <span class="text-p-base">{{
+          __('Đang tải danh sách phiếu giao…')
+        }}</span>
       </div>
 
       <!-- Error -->
@@ -54,9 +59,18 @@
         class="flex flex-col items-center gap-3 py-16 text-center"
         role="alert"
       >
-        <Badge variant="subtle" theme="red" size="lg" :label="__('Không tải được')" />
+        <Badge
+          variant="subtle"
+          theme="red"
+          size="lg"
+          :label="__('Không tải được')"
+        />
         <p class="max-w-md text-p-sm text-ink-gray-6">{{ errorMessage }}</p>
-        <Button variant="outline" :label="__('Thử lại')" @click="deliveries.reload()" />
+        <Button
+          variant="outline"
+          :label="__('Thử lại')"
+          @click="deliveries.reload()"
+        />
       </div>
 
       <!-- Empty -->
@@ -64,32 +78,50 @@
         v-else-if="!rows.length"
         class="flex flex-col items-center gap-2 py-16 text-center text-ink-gray-6"
       >
-        <p class="text-p-base">{{ __('Chưa có phiếu giao nào khớp điều kiện.') }}</p>
+        <p class="text-p-base">
+          {{ __('Chưa có phiếu giao nào khớp điều kiện.') }}
+        </p>
         <p class="text-p-sm">
-          {{ __('Tạo phiếu giao trong Frappe Desk (AntMed Delivery) rồi tải lại.') }}
+          {{
+            __(
+              'Tạo phiếu giao trong Frappe Desk (AntMed Delivery) rồi tải lại.',
+            )
+          }}
         </p>
       </div>
 
       <!-- Data table -->
       <table v-else class="w-full border-separate border-spacing-0 text-left">
         <caption class="sr-only">
-          {{ __('Danh sách phiếu giao phòng mổ') }}
+          {{
+            __('Danh sách phiếu giao phòng mổ')
+          }}
         </caption>
         <thead>
           <tr class="text-p-sm text-ink-gray-6">
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('Bệnh viện') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('Bác sỹ') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('Giờ phẫu thuật') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('Trạng thái') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('SLA') }}
             </th>
             <th class="border-b border-outline-gray-modals py-2 font-medium">
@@ -103,19 +135,29 @@
             :key="row.name"
             tabindex="0"
             role="link"
-            :aria-label="__('Xem chi tiết phiếu giao') + ' ' + (row.hospital_name || row.name)"
+            :aria-label="
+              __('Xem chi tiết phiếu giao') +
+              ' ' +
+              (row.hospital_name || row.name)
+            "
             class="cursor-pointer text-p-base text-ink-gray-8 transition hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-3"
             @click="openDelivery(row.name)"
             @keydown.enter="openDelivery(row.name)"
             @keydown.space.prevent="openDelivery(row.name)"
           >
-            <td class="border-b border-outline-gray-1 py-3 pr-4 font-medium text-ink-gray-9">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 font-medium text-ink-gray-9"
+            >
               {{ row.hospital_name || row.hospital || '—' }}
             </td>
-            <td class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7"
+            >
               {{ row.doctor_name || '—' }}
             </td>
-            <td class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7"
+            >
               {{ formatDateTime(row.surgery_datetime) }}
             </td>
             <td class="border-b border-outline-gray-1 py-3 pr-4">
@@ -142,7 +184,9 @@
               <span v-if="row.assigned_employee_name" class="text-ink-gray-8">{{
                 row.assigned_employee_name
               }}</span>
-              <span v-else class="text-p-sm text-ink-gray-5">{{ __('Chưa gán') }}</span>
+              <span v-else class="text-p-sm text-ink-gray-5">{{
+                __('Chưa gán')
+              }}</span>
             </td>
           </tr>
         </tbody>
@@ -196,7 +240,9 @@ const deliveries = listDeliveries({
 })
 
 const rows = computed(() => deliveries.data?.data || [])
-const totalCount = computed(() => deliveries.data?.total_count ?? rows.value.length)
+const totalCount = computed(
+  () => deliveries.data?.total_count ?? rows.value.length,
+)
 
 const errorMessage = computed(
   () =>

@@ -52,9 +52,7 @@ def list_notes(reference_doctype: str, reference_docname: str) -> dict:
 
 
 @frappe.whitelist(methods=["POST"])
-def add_note(
-	reference_doctype: str, reference_docname: str, content: str, title: str | None = None
-) -> dict:
+def add_note(reference_doctype: str, reference_docname: str, content: str, title: str | None = None) -> dict:
 	"""Thêm ghi chú vào bản ghi AntMed. content bắt buộc (không rỗng). Trả {name, title, content}."""
 	if not (content and content.strip()):
 		frappe.throw(_("Nội dung ghi chú không được để trống."))

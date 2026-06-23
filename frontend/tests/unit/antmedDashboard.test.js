@@ -22,7 +22,9 @@ const alertsSrc = read('components/Antmed/AntmedAlertsPanel.vue')
 // ── (a) resource overview + render 2 KPI value THẬT (mock {hospital_count:7,doctor_count:12}) ──
 describe('M11 FE Slice 2 — resource overview + 2 KPI thật', () => {
   it('data/antmed.js expose resource url antmed_crm.api.antmed.dashboard.overview', () => {
-    expect(dataSrc).toMatch(/url:\s*['"]antmed_crm\.api\.antmed\.dashboard\.overview['"]/)
+    expect(dataSrc).toMatch(
+      /url:\s*['"]antmed_crm\.api\.antmed\.dashboard\.overview['"]/,
+    )
     expect(dataSrc).toMatch(/getDashboardOverview/)
   })
 
@@ -102,7 +104,9 @@ describe('M11 FE Slice 2 — tri-branch loading/error/data', () => {
 // ── (d) AntmedKpiCard component wiring (props empty/value/label) ──
 describe('M11 FE Slice 2 — AntmedKpiCard props', () => {
   it('AntmedKpiCard có prop label (required) + value + empty', () => {
-    expect(kpiCardSrc).toMatch(/label:\s*\{\s*type:\s*String,\s*required:\s*true/)
+    expect(kpiCardSrc).toMatch(
+      /label:\s*\{\s*type:\s*String,\s*required:\s*true/,
+    )
     expect(kpiCardSrc).toMatch(/value:/)
     expect(kpiCardSrc).toMatch(/empty:\s*\{\s*type:\s*Boolean/)
   })
@@ -169,7 +173,9 @@ describe('M11-3 — panel "⚠ Cảnh báo điều hành" = alerts pill thật (
     // hint string là dấu vân tay duy nhất của placeholder cũ → phải biến mất.
     expect(homeSrc).not.toMatch(/Sắp có \(cần module Công nợ \/ Bộ dụng cụ\)/)
     // title 'Cảnh báo điều hành' KHÔNG còn truyền vào PlaceholderPanel (chuyển sang AntmedAlertsPanel).
-    expect(homeSrc).not.toMatch(/PlaceholderPanel\s+:title="__\('Cảnh báo điều hành'\)"/)
+    expect(homeSrc).not.toMatch(
+      /PlaceholderPanel\s+:title="__\('Cảnh báo điều hành'\)"/,
+    )
   })
 
   it('AntmedAlertsPanel: tri-branch loading/error(Thử lại)/empty "Không có cảnh báo" + render label', () => {

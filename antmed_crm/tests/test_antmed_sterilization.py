@@ -26,16 +26,20 @@ STR_NAME_RE = re.compile(r"^AntMed-STR-\d{4}-\d+")
 def _mk_hospital(code, name):
 	if frappe.db.exists("AntMed Hospital", code):
 		return frappe.get_doc("AntMed Hospital", code)
-	return frappe.get_doc({"doctype": "AntMed Hospital", "hospital_code": code, "hospital_name": name}).insert(
-		ignore_permissions=True
-	)
+	return frappe.get_doc(
+		{"doctype": "AntMed Hospital", "hospital_code": code, "hospital_name": name}
+	).insert(ignore_permissions=True)
 
 
 def _mk_set(set_code):
 	if frappe.db.exists("AntMed Instrument Set", set_code):
 		return frappe.get_doc("AntMed Instrument Set", set_code)
 	return frappe.get_doc(
-		{"doctype": "AntMed Instrument Set", "set_code": set_code, "components": [{"component_name": "Kẹp", "qty": 1}]}
+		{
+			"doctype": "AntMed Instrument Set",
+			"set_code": set_code,
+			"components": [{"component_name": "Kẹp", "qty": 1}],
+		}
 	).insert(ignore_permissions=True)
 
 
@@ -67,8 +71,12 @@ class TestAntMedSterilization(FrappeTestCase):
 		loan, s = self._returned_loan("STZ")
 		res = instrument_loan.sterilize(loan=loan, method="Hấp", result="Pass")
 		self.assertRegex(res["sterilization"], STR_NAME_RE)
-		self.assertEqual(frappe.db.get_value("AntMed Instrument Loan", loan, "status"), "Đang xử lý/tiệt khuẩn")
-		self.assertEqual(frappe.db.get_value("AntMed Instrument Set", s, "current_status"), "Đang xử lý/tiệt khuẩn")
+		self.assertEqual(
+			frappe.db.get_value("AntMed Instrument Loan", loan, "status"), "Đang xử lý/tiệt khuẩn"
+		)
+		self.assertEqual(
+			frappe.db.get_value("AntMed Instrument Set", s, "current_status"), "Đang xử lý/tiệt khuẩn"
+		)
 
 	def test_br09_block(self):
 		loan, s = self._returned_loan("BR09")

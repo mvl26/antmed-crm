@@ -4,10 +4,7 @@
     aria-labelledby="antmed-home-title"
   >
     <header class="flex flex-col gap-1">
-      <h1
-        id="antmed-home-title"
-        class="text-xl font-semibold text-ink-gray-9"
-      >
+      <h1 id="antmed-home-title" class="text-xl font-semibold text-ink-gray-9">
         {{ __('Dashboard điều hành') }}
       </h1>
       <p class="text-p-sm text-ink-gray-6">

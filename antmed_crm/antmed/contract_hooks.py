@@ -140,9 +140,7 @@ def consume_quota(contract: str, item: str, qty: float, do_ref: str | None = Non
 	Gọi từ `AntMed Delivery.on_submit` (M04). Trả `name` của log (mới hoặc đã tồn tại).
 	"""
 	if do_ref:
-		existing = frappe.db.exists(
-			USAGE_LOG_DOCTYPE, {"contract": contract, "item": item, "do_ref": do_ref}
-		)
+		existing = frappe.db.exists(USAGE_LOG_DOCTYPE, {"contract": contract, "item": item, "do_ref": do_ref})
 		if existing:
 			return existing
 	log = frappe.get_doc(

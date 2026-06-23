@@ -14,6 +14,8 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, date_diff, getdate, nowdate
 
+from antmed_crm.api.antmed._filters import coerce_filters
+
 ITEM_DOCTYPE = "AntMed Item"
 WAREHOUSE_DOCTYPE = "AntMed Warehouse"
 LOT_DOCTYPE = "AntMed Lot"
@@ -215,13 +217,7 @@ ITEM_DETAIL_FIELDS = (
 
 def _coerce_filters(filters: dict | str | None) -> list:
 	"""Chuẩn hoá filters về list điều kiện (dict hoặc JSON-string từ FE/GET)."""
-	if not filters:
-		return []
-	if isinstance(filters, str):
-		filters = frappe.parse_json(filters) or []
-	if isinstance(filters, dict):
-		return [[k, "=", v] for k, v in filters.items()]
-	return list(filters)
+	return coerce_filters(filters)
 
 
 @frappe.whitelist(methods=["GET"])
@@ -320,7 +316,9 @@ def list_warehouses(
 	)
 	data = [{k: r.get(k) for k in WAREHOUSE_LIST_ITEM_KEYS} for r in rows]
 
-	total_count = len(frappe.get_list(WAREHOUSE_DOCTYPE, filters=conditions, pluck="name", limit_page_length=0))
+	total_count = len(
+		frappe.get_list(WAREHOUSE_DOCTYPE, filters=conditions, pluck="name", limit_page_length=0)
+	)
 	return {"data": data, "total_count": total_count}
 
 
@@ -597,7 +595,14 @@ def fifo_suggest(item: str, warehouse: str, qty: float = 1) -> dict:
 	from antmed_crm.antmed import stock
 
 	want = float(qty or 0)
-	base = {"item": item, "warehouse": warehouse, "requested_qty": want, "fulfillable": False, "shortage": want, "lots": []}
+	base = {
+		"item": item,
+		"warehouse": warehouse,
+		"requested_qty": want,
+		"fulfillable": False,
+		"shortage": want,
+		"lots": [],
+	}
 	if not frappe.has_permission(LEDGER_DOCTYPE, "read") or not frappe.has_permission(LOT_DOCTYPE, "read"):
 		return base
 
@@ -633,10 +638,17 @@ def check_fifo(item: str, warehouse: str, lot: str) -> dict:
 	  is_priority=True (không cảnh báo vô nghĩa). FE warn khi is_priority=False.
 	- BR-13 fail-closed: thiếu read-perm → is_priority=True (không chặn/không rò), suggested None.
 	"""
-	from antmed_crm.antmed import stock
 	from frappe.utils import getdate
 
-	base = {"is_priority": True, "chosen_lot": lot, "chosen_expiry": None, "suggested_lot": None, "suggested_expiry": None}
+	from antmed_crm.antmed import stock
+
+	base = {
+		"is_priority": True,
+		"chosen_lot": lot,
+		"chosen_expiry": None,
+		"suggested_lot": None,
+		"suggested_expiry": None,
+	}
 	if not frappe.has_permission(LEDGER_DOCTYPE, "read") or not frappe.has_permission(LOT_DOCTYPE, "read"):
 		return base
 
@@ -807,7 +819,9 @@ def list_stock_entries(
 		row["total_value"] = totals.get(r["name"])
 		data.append(row)
 
-	total_count = len(frappe.get_list(STOCK_ENTRY_DOCTYPE, filters=conditions, pluck="name", limit_page_length=0))
+	total_count = len(
+		frappe.get_list(STOCK_ENTRY_DOCTYPE, filters=conditions, pluck="name", limit_page_length=0)
+	)
 	return {"data": data, "total_count": total_count}
 
 
@@ -1131,13 +1145,9 @@ def get_stock_entry(name: str) -> dict:
 
 	# Header *_name resolve qua dotted-fetch (null-guard FK orphan/None) — KHÔNG lộ mã/email thô.
 	nv_employee = doc.get("nv_employee")
-	nv_employee_name = (
-		frappe.db.get_value("User", nv_employee, "full_name") if nv_employee else None
-	)
+	nv_employee_name = frappe.db.get_value("User", nv_employee, "full_name") if nv_employee else None
 	hospital = doc.get("hospital")
-	hospital_name = (
-		frappe.db.get_value(HOSPITAL_DOCTYPE, hospital, "hospital_name") if hospital else None
-	)
+	hospital_name = frappe.db.get_value(HOSPITAL_DOCTYPE, hospital, "hospital_name") if hospital else None
 
 	# Dòng vật tư: đọc thẳng từ child table (doc.items). Resolve item_name + lot_no/expiry_date THEO
 	# BATCH — gom mã item/lot rồi 1 get_all/loại (KHÔNG N+1 theo số dòng).
@@ -1266,7 +1276,9 @@ def stock_count_snapshot(warehouse: str) -> dict:
 	"""
 	from antmed_crm.antmed import stock
 
-	if not frappe.has_permission(LEDGER_DOCTYPE, "read") or not frappe.has_permission(WAREHOUSE_DOCTYPE, "read"):
+	if not frappe.has_permission(LEDGER_DOCTYPE, "read") or not frappe.has_permission(
+		WAREHOUSE_DOCTYPE, "read"
+	):
 		return {"warehouse": warehouse, "rows": []}
 	return {"warehouse": warehouse, "rows": stock.get_warehouse_balances(warehouse)}
 
@@ -1321,7 +1333,9 @@ def list_stock_counts(
 		return {"data": [], "total_count": 0}
 
 	data = [{k: r.get(k) for k in STOCK_COUNT_LIST_ITEM_KEYS} for r in rows]
-	total_count = len(frappe.get_list(STOCK_COUNT_DOCTYPE, filters=conditions, pluck="name", limit_page_length=0))
+	total_count = len(
+		frappe.get_list(STOCK_COUNT_DOCTYPE, filters=conditions, pluck="name", limit_page_length=0)
+	)
 	return {"data": data, "total_count": total_count}
 
 
@@ -1434,7 +1448,11 @@ def notify_expiry_alerts(within_days: int = 90) -> dict:
 	users = (
 		frappe.get_all(
 			"User",
-			filters=[["name", "in", user_ids], ["enabled", "=", 1], ["name", "not in", ["Administrator", "Guest"]]],
+			filters=[
+				["name", "in", user_ids],
+				["enabled", "=", 1],
+				["name", "not in", ["Administrator", "Guest"]],
+			],
 			pluck="name",
 		)
 		if user_ids
@@ -1545,12 +1563,18 @@ def lot_genealogy(lot: str) -> dict:
 	hosp_ids = list({d["hospital"] for d in dels if d.get("hospital")})
 	doc_ids = list({d["doctor"] for d in dels if d.get("doctor")})
 	hosp_map = (
-		{r["name"]: r.get("hospital_name") for r in frappe.get_all(HOSPITAL_DOCTYPE, {"name": ["in", hosp_ids]}, ["name", "hospital_name"])}
+		{
+			r["name"]: r.get("hospital_name")
+			for r in frappe.get_all(HOSPITAL_DOCTYPE, {"name": ["in", hosp_ids]}, ["name", "hospital_name"])
+		}
 		if hosp_ids
 		else {}
 	)
 	doc_map = (
-		{r["name"]: r.get("full_name") for r in frappe.get_all(DOCTOR_DOCTYPE, {"name": ["in", doc_ids]}, ["name", "full_name"])}
+		{
+			r["name"]: r.get("full_name")
+			for r in frappe.get_all(DOCTOR_DOCTYPE, {"name": ["in", doc_ids]}, ["name", "full_name"])
+		}
 		if doc_ids
 		else {}
 	)
@@ -1558,7 +1582,9 @@ def lot_genealogy(lot: str) -> dict:
 	# E-Invoice theo phiếu (batch; 1 hóa đơn/phiếu — lấy đầu).
 	del_names = [d["name"] for d in dels]
 	einv_map: dict = {}
-	for e in frappe.get_all(EINVOICE_DOCTYPE, {"delivery": ["in", del_names]}, ["name", "delivery", "status", "pdf_file"]):
+	for e in frappe.get_all(
+		EINVOICE_DOCTYPE, {"delivery": ["in", del_names]}, ["name", "delivery", "status", "pdf_file"]
+	):
 		einv_map.setdefault(e["delivery"], e)
 
 	deliveries = []
@@ -1767,7 +1793,9 @@ def _recall_affected_hospitals(lot: str) -> list[dict]:
 
 	name_map = {}
 	if by_hosp:
-		for r in frappe.get_all(HOSPITAL_DOCTYPE, {"name": ["in", list(by_hosp.keys())]}, ["name", "hospital_name"]):
+		for r in frappe.get_all(
+			HOSPITAL_DOCTYPE, {"name": ["in", list(by_hosp.keys())]}, ["name", "hospital_name"]
+		):
 			name_map[r["name"]] = r.get("hospital_name")
 	return [
 		{
@@ -1788,11 +1816,19 @@ def _notify_recall(lot_label: str, item: str | None, affected: list) -> int:
 	"""
 	hosp_names = [a["hospital"] for a in affected]
 	recipients = set(
-		frappe.get_all("Has Role", {"role": ["in", ["Quản lý", "Thủ kho"]], "parenttype": "User"}, pluck="parent", distinct=True)
+		frappe.get_all(
+			"Has Role",
+			{"role": ["in", ["Quản lý", "Thủ kho"]], "parenttype": "User"},
+			pluck="parent",
+			distinct=True,
+		)
 	)
 	if hosp_names:
 		for u in frappe.get_all(
-			"User Permission", {"allow": HOSPITAL_DOCTYPE, "for_value": ["in", hosp_names]}, pluck="user", distinct=True
+			"User Permission",
+			{"allow": HOSPITAL_DOCTYPE, "for_value": ["in", hosp_names]},
+			pluck="user",
+			distinct=True,
 		):
 			recipients.add(u)
 	recipients.discard("Administrator")
@@ -1808,7 +1844,13 @@ def _notify_recall(lot_label: str, item: str | None, affected: list) -> int:
 	notified = 0
 	for u in recipients:
 		frappe.get_doc(
-			{"doctype": "Notification Log", "for_user": u, "type": "Alert", "subject": subject, "email_content": content}
+			{
+				"doctype": "Notification Log",
+				"for_user": u,
+				"type": "Alert",
+				"subject": subject,
+				"email_content": content,
+			}
 		).insert(ignore_permissions=True)
 		notified += 1
 	return notified
@@ -1818,7 +1860,10 @@ def _create_recall_notification(lot: str, reason: str) -> dict:
 	"""Tạo AntMed Recall Notification cho lô (idempotent theo bản đang mở) + thông báo. Trả {name, affected_count}."""
 	existing = frappe.db.get_value(RN_DOCTYPE, {"lot": lot, "status": ["!=", "Đóng"]}, "name")
 	if existing:
-		return {"name": existing, "affected_count": frappe.db.get_value(RN_DOCTYPE, existing, "affected_count") or 0}
+		return {
+			"name": existing,
+			"affected_count": frappe.db.get_value(RN_DOCTYPE, existing, "affected_count") or 0,
+		}
 
 	lot_no = frappe.db.get_value(LOT_DOCTYPE, lot, "lot_no")
 	item = frappe.db.get_value(LOT_DOCTYPE, lot, "item")
@@ -1925,17 +1970,23 @@ def _render_lot_trace_html(doc, graph: dict) -> str:
 			("Trạng thái thu hồi", info.get("recall_status")),
 		)
 	)
-	ev_rows = "".join(
-		f"<tr><td>{_esc(e.get('posting_datetime'))}</td><td>{_esc(e.get('entry_type'))}</td>"
-		f"<td>{_esc(e.get('direction'))}</td><td>{_esc(e.get('warehouse_name') or e.get('warehouse'))}</td>"
-		f"<td>{_esc(e.get('qty'))}</td></tr>"
-		for e in events
-	) or "<tr><td colspan='5'>Không có dòng thời gian</td></tr>"
-	del_rows = "".join(
-		f"<tr><td>{_esc(d.get('hospital_name') or d.get('hospital'))}</td><td>{_esc(d.get('doctor_name') or d.get('doctor'))}</td>"
-		f"<td>{_esc(d.get('surgery_datetime'))}</td><td>{_esc(d.get('used_qty'))}</td><td>{_esc(d.get('einvoice') or '—')}</td></tr>"
-		for d in deliveries
-	) or "<tr><td colspan='5'>Chưa có ca mổ dùng lô này</td></tr>"
+	ev_rows = (
+		"".join(
+			f"<tr><td>{_esc(e.get('posting_datetime'))}</td><td>{_esc(e.get('entry_type'))}</td>"
+			f"<td>{_esc(e.get('direction'))}</td><td>{_esc(e.get('warehouse_name') or e.get('warehouse'))}</td>"
+			f"<td>{_esc(e.get('qty'))}</td></tr>"
+			for e in events
+		)
+		or "<tr><td colspan='5'>Không có dòng thời gian</td></tr>"
+	)
+	del_rows = (
+		"".join(
+			f"<tr><td>{_esc(d.get('hospital_name') or d.get('hospital'))}</td><td>{_esc(d.get('doctor_name') or d.get('doctor'))}</td>"
+			f"<td>{_esc(d.get('surgery_datetime'))}</td><td>{_esc(d.get('used_qty'))}</td><td>{_esc(d.get('einvoice') or '—')}</td></tr>"
+			for d in deliveries
+		)
+		or "<tr><td colspan='5'>Chưa có ca mổ dùng lô này</td></tr>"
+	)
 
 	return f"""<html><head><meta charset='utf-8'><style>
 	body{{font-family:Arial,sans-serif;font-size:12px;color:#1a1a1a;padding:18px}}

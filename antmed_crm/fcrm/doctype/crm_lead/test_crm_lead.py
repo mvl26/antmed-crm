@@ -118,8 +118,8 @@ class TestCRMLead(FrappeTestCase):
 		with self.assertRaises(frappe.exceptions.ValidationError) as context:
 			create_lead(
 				first_name="Test",
-				email="antmed_crm.user1@example.com",
-				lead_owner="antmed_crm.user1@example.com",
+				email="crm.user1@example.com",
+				lead_owner="crm.user1@example.com",
 			)
 		self.assertIn("Lead Owner cannot be same as the Lead Email Address", str(context.exception))
 
@@ -173,15 +173,15 @@ class TestCRMLead(FrappeTestCase):
 		)
 		self.assertEqual(len(after_docshares), initial_docshare_count)
 
-		lead.lead_owner = "antmed_crm.user1@example.com"
+		lead.lead_owner = "crm.user1@example.com"
 		lead.save()
 		lead.reload()
 
 		# Verify new owner is assigned and shared
-		self.assertEqual(lead.lead_owner, "antmed_crm.user1@example.com")
+		self.assertEqual(lead.lead_owner, "crm.user1@example.com")
 		new_docshare = frappe.db.exists(
 			"DocShare",
-			{"user": "antmed_crm.user1@example.com", "share_name": lead.name, "share_doctype": "CRM Lead"},
+			{"user": "crm.user1@example.com", "share_name": lead.name, "share_doctype": "CRM Lead"},
 		)
 		self.assertTrue(new_docshare)
 
@@ -493,19 +493,19 @@ class TestCRMLead(FrappeTestCase):
 			lead_owner="Administrator",
 		)
 
-		lead.assign_agent("antmed_crm.user1@example.com")
+		lead.assign_agent("crm.user1@example.com")
 
 		lead_assignees = lead.get_assigned_users()
 
 		self.assertIn("Administrator", lead_assignees)
-		self.assertIn("antmed_crm.user1@example.com", lead_assignees)
+		self.assertIn("crm.user1@example.com", lead_assignees)
 
 		deal_name = lead.convert_to_deal()
 		deal = frappe.get_doc("CRM Deal", deal_name)
 
 		deal_assignees = deal.get_assigned_users()
 		self.assertIn("Administrator", deal_assignees)
-		self.assertIn("antmed_crm.user1@example.com", deal_assignees)
+		self.assertIn("crm.user1@example.com", deal_assignees)
 
 
 def create_lead(**kwargs):

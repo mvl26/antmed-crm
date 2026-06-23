@@ -46,9 +46,9 @@ SCAN_LOT_KEYS = {
 def _mk_item(code, name, **kw):
 	if frappe.db.exists("AntMed Item", code):
 		return frappe.get_doc("AntMed Item", code)
-	return frappe.get_doc(
-		{"doctype": "AntMed Item", "item_code": code, "item_name": name, **kw}
-	).insert(ignore_permissions=True)
+	return frappe.get_doc({"doctype": "AntMed Item", "item_code": code, "item_name": name, **kw}).insert(
+		ignore_permissions=True
+	)
 
 
 def _mk_lot(lot_no, item, expiry, **kw):
@@ -63,7 +63,13 @@ def _mk_cert(cert_no, cert_type, item=None, lot=None):
 	if frappe.db.exists("AntMed Certificate", cert_no):
 		return frappe.get_doc("AntMed Certificate", cert_no)
 	return frappe.get_doc(
-		{"doctype": "AntMed Certificate", "cert_no": cert_no, "cert_type": cert_type, "item": item, "lot": lot}
+		{
+			"doctype": "AntMed Certificate",
+			"cert_no": cert_no,
+			"cert_type": cert_type,
+			"item": item,
+			"lot": lot,
+		}
 	).insert(ignore_permissions=True)
 
 
@@ -139,10 +145,14 @@ class TestFifoLots(FrappeTestCase):
 			)
 		# lot_zero: nhập 5 rồi xuất hết → tồn 0 (KHÔNG lọt FIFO).
 		inventory.create_stock_entry(
-			entry_type="Nhập NCC", to_warehouse=cls.wh, items=[{"item": cls.item, "lot": cls.lot_zero, "qty": 5}]
+			entry_type="Nhập NCC",
+			to_warehouse=cls.wh,
+			items=[{"item": cls.item, "lot": cls.lot_zero, "qty": 5}],
 		)
 		inventory.create_stock_entry(
-			entry_type="Xuất cho NV", from_warehouse=cls.wh, nv_employee="Administrator",
+			entry_type="Xuất cho NV",
+			from_warehouse=cls.wh,
+			nv_employee="Administrator",
 			items=[{"item": cls.item, "lot": cls.lot_zero, "qty": 5}],
 		)
 
@@ -173,7 +183,9 @@ class TestFifoSuggest(FrappeTestCase):
 			entry_type="Nhập NCC", to_warehouse=cls.wh, items=[{"item": cls.item, "lot": cls.lot_a, "qty": 8}]
 		)
 		inventory.create_stock_entry(
-			entry_type="Nhập NCC", to_warehouse=cls.wh, items=[{"item": cls.item, "lot": cls.lot_b, "qty": 10}]
+			entry_type="Nhập NCC",
+			to_warehouse=cls.wh,
+			items=[{"item": cls.item, "lot": cls.lot_b, "qty": 10}],
 		)
 
 	def test_allocate_across_lots(self):
@@ -224,7 +236,9 @@ class TestScanLot(FrappeTestCase):
 	@classmethod
 	def setUpClass(cls):
 		super().setUpClass()
-		cls.item = _mk_item("_T-SCAN-ITEM", "VT quét QR", requires_cocq=1, uom="Cái", default_unit_price=250000).name
+		cls.item = _mk_item(
+			"_T-SCAN-ITEM", "VT quét QR", requires_cocq=1, uom="Cái", default_unit_price=250000
+		).name
 		cls.wh = _mk_wh("_T-SCAN-WH", "Tổng").name
 		cls.exp = add_days(nowdate(), 200)
 		cls.lot = _mk_lot("_T-SCAN-LOT", cls.item, cls.exp).name  # thiếu CO/CQ → cocq_ok False
@@ -314,7 +328,9 @@ class TestWarehouseBalances(FrappeTestCase):
 		self.assertEqual(by_lot[self.lot1]["system_qty"], 40.0)
 		self.assertEqual(by_lot[self.lot2]["system_qty"], 25.0)
 		self.assertEqual(by_lot[self.lot1]["item_name"], "VT snapshot kho")
-		self.assertEqual(set(rows[0].keys()), {"item", "item_name", "lot", "lot_no", "expiry_date", "system_qty"})
+		self.assertEqual(
+			set(rows[0].keys()), {"item", "item_name", "lot", "lot_no", "expiry_date", "system_qty"}
+		)
 
 	def test_snapshot_empty_warehouse(self):
 		self.assertEqual(stock.get_warehouse_balances(""), [])
@@ -388,7 +404,9 @@ class TestRecallBlockOnIssue(FrappeTestCase):
 		lot = self._stocked_lot("ISSUE", recall_status="Đã thu hồi")
 		with self.assertRaises(frappe.ValidationError) as ctx:
 			inventory.create_stock_entry(
-				entry_type="Xuất cho NV", from_warehouse=self.wh, nv_employee="Administrator",
+				entry_type="Xuất cho NV",
+				from_warehouse=self.wh,
+				nv_employee="Administrator",
 				items=[{"item": self.item, "lot": lot, "qty": 5}],
 			)
 		self.assertIn("thu hồi", str(ctx.exception))
@@ -397,7 +415,9 @@ class TestRecallBlockOnIssue(FrappeTestCase):
 		"""Lô 'Theo dõi' (chưa thu hồi hẳn) vẫn xuất được (chỉ chặn 'Đã thu hồi')."""
 		lot = self._stocked_lot("WATCH", recall_status="Theo dõi")
 		res = inventory.create_stock_entry(
-			entry_type="Xuất cho NV", from_warehouse=self.wh, nv_employee="Administrator",
+			entry_type="Xuất cho NV",
+			from_warehouse=self.wh,
+			nv_employee="Administrator",
 			items=[{"item": self.item, "lot": lot, "qty": 5}],
 		)
 		self.assertEqual(res["docstatus"], 1)
@@ -406,7 +426,9 @@ class TestRecallBlockOnIssue(FrappeTestCase):
 		"""Chuyển kho lô recall (gom về kho cách ly) KHÔNG bị chặn."""
 		lot = self._stocked_lot("TRF", recall_status="Đã thu hồi")
 		res = inventory.create_stock_entry(
-			entry_type="Chuyển kho", from_warehouse=self.wh, to_warehouse=self.wh_nv,
+			entry_type="Chuyển kho",
+			from_warehouse=self.wh,
+			to_warehouse=self.wh_nv,
 			items=[{"item": self.item, "lot": lot, "qty": 5}],
 		)
 		self.assertEqual(res["docstatus"], 1)
@@ -417,7 +439,8 @@ class TestRecallBlockOnIssue(FrappeTestCase):
 		frappe.db.set_value("AntMed Lot", lot, "recall_status", "Đã thu hồi")
 		with self.assertRaises(frappe.ValidationError):
 			inventory.create_stock_entry(
-				entry_type="Nhập ký gửi BV", to_warehouse=self.wh,
+				entry_type="Nhập ký gửi BV",
+				to_warehouse=self.wh,
 				items=[{"item": self.item, "lot": lot, "qty": 5}],
 			)
 
@@ -434,25 +457,33 @@ class TestExpiredBlockOnIssue(FrappeTestCase):
 		# Lô đã hết hạn (HSD hôm qua) + tồn 50 (Nhập NCC KHÔNG bị chặn).
 		cls.lot_expired = _mk_lot("_T-EXPB-LOT-EXP", cls.item, add_days(nowdate(), -1)).name
 		inventory.create_stock_entry(
-			entry_type="Nhập NCC", to_warehouse=cls.wh, items=[{"item": cls.item, "lot": cls.lot_expired, "qty": 50}]
+			entry_type="Nhập NCC",
+			to_warehouse=cls.wh,
+			items=[{"item": cls.item, "lot": cls.lot_expired, "qty": 50}],
 		)
 		# Lô còn hạn để đối chứng.
 		cls.lot_ok = _mk_lot("_T-EXPB-LOT-OK", cls.item, add_days(nowdate(), 200)).name
 		inventory.create_stock_entry(
-			entry_type="Nhập NCC", to_warehouse=cls.wh, items=[{"item": cls.item, "lot": cls.lot_ok, "qty": 50}]
+			entry_type="Nhập NCC",
+			to_warehouse=cls.wh,
+			items=[{"item": cls.item, "lot": cls.lot_ok, "qty": 50}],
 		)
 
 	def test_expired_lot_blocks_issue(self):
 		with self.assertRaises(frappe.ValidationError) as ctx:
 			inventory.create_stock_entry(
-				entry_type="Xuất cho NV", from_warehouse=self.wh, nv_employee="Administrator",
+				entry_type="Xuất cho NV",
+				from_warehouse=self.wh,
+				nv_employee="Administrator",
 				items=[{"item": self.item, "lot": self.lot_expired, "qty": 5}],
 			)
 		self.assertIn("hết hạn", str(ctx.exception))
 
 	def test_valid_lot_allows_issue(self):
 		res = inventory.create_stock_entry(
-			entry_type="Xuất cho NV", from_warehouse=self.wh, nv_employee="Administrator",
+			entry_type="Xuất cho NV",
+			from_warehouse=self.wh,
+			nv_employee="Administrator",
 			items=[{"item": self.item, "lot": self.lot_ok, "qty": 5}],
 		)
 		self.assertEqual(res["docstatus"], 1)
@@ -460,7 +491,9 @@ class TestExpiredBlockOnIssue(FrappeTestCase):
 	def test_expired_lot_allows_transfer(self):
 		"""Chuyển kho lô hết hạn (gom thanh lý) KHÔNG bị chặn."""
 		res = inventory.create_stock_entry(
-			entry_type="Chuyển kho", from_warehouse=self.wh, to_warehouse=self.wh_nv,
+			entry_type="Chuyển kho",
+			from_warehouse=self.wh,
+			to_warehouse=self.wh_nv,
 			items=[{"item": self.item, "lot": self.lot_expired, "qty": 5}],
 		)
 		self.assertEqual(res["docstatus"], 1)

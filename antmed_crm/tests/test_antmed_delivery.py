@@ -35,7 +35,15 @@ DELIVERY_MIN_FIELDS = {
 	"sla_status",
 	"items",
 }
-DELIVERY_ITEM_FIELDS = {"item", "item_name", "requested_qty", "delivered_qty", "consumed_qty", "returned_qty", "lot"}
+DELIVERY_ITEM_FIELDS = {
+	"item",
+	"item_name",
+	"requested_qty",
+	"delivered_qty",
+	"consumed_qty",
+	"returned_qty",
+	"lot",
+}
 # Shape list_deliveries — đã mở rộng (factory): + doctor_name + assigned_employee_name (enrich cho FE điều phối).
 LIST_KEYS = {
 	"name",
@@ -54,9 +62,9 @@ LIST_KEYS = {
 def _mk_hospital(code, name):
 	if frappe.db.exists("AntMed Hospital", code):
 		return frappe.get_doc("AntMed Hospital", code)
-	return frappe.get_doc({"doctype": "AntMed Hospital", "hospital_code": code, "hospital_name": name}).insert(
-		ignore_permissions=True
-	)
+	return frappe.get_doc(
+		{"doctype": "AntMed Hospital", "hospital_code": code, "hospital_name": name}
+	).insert(ignore_permissions=True)
 
 
 def _mk_doctor(code, name, hospital):
@@ -105,7 +113,9 @@ class TestAntMedDelivery(FrappeTestCase):
 			items=[{"item": cls.item, "item_name": "Stent giao test", "requested_qty": 2, "uom": "Cái"}],
 			status="Đã gán NV",
 		).name
-		cls.dr2 = _mk_delivery(cls.hosp2, None, items=[{"item": cls.item, "requested_qty": 1}], status="Nháp").name
+		cls.dr2 = _mk_delivery(
+			cls.hosp2, None, items=[{"item": cls.item, "requested_qty": 1}], status="Nháp"
+		).name
 
 	def test_doctypes_and_naming(self):
 		self.assertTrue(frappe.db.exists("DocType", "AntMed Delivery"))
@@ -115,7 +125,9 @@ class TestAntMedDelivery(FrappeTestCase):
 		dfields = {f.fieldname for f in frappe.get_meta("AntMed Delivery").fields}
 		self.assertTrue(DELIVERY_MIN_FIELDS.issubset(dfields), msg=f"thiếu: {DELIVERY_MIN_FIELDS - dfields}")
 		ifields = {f.fieldname for f in frappe.get_meta("AntMed Delivery Item").fields}
-		self.assertTrue(DELIVERY_ITEM_FIELDS.issubset(ifields), msg=f"thiếu: {DELIVERY_ITEM_FIELDS - ifields}")
+		self.assertTrue(
+			DELIVERY_ITEM_FIELDS.issubset(ifields), msg=f"thiếu: {DELIVERY_ITEM_FIELDS - ifields}"
+		)
 
 	def test_create_delivery(self):
 		self.assertRegex(self.dr1, DR_NAME_RE)
@@ -149,9 +161,9 @@ class TestAntMedDelivery(FrappeTestCase):
 		# permission guard
 		email = "_t_dr_noperm@example.com"
 		if not frappe.db.exists("User", email):
-			frappe.get_doc({"doctype": "User", "email": email, "first_name": "NoPermDR", "send_welcome_email": 0}).insert(
-				ignore_permissions=True
-			)
+			frappe.get_doc(
+				{"doctype": "User", "email": email, "first_name": "NoPermDR", "send_welcome_email": 0}
+			).insert(ignore_permissions=True)
 		frappe.set_user(email)
 		try:
 			with self.assertRaises(frappe.PermissionError):

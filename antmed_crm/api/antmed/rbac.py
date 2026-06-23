@@ -39,6 +39,4 @@ def is_crm_or_antmed_user(user: str | None = None) -> bool:
 	from antmed_crm.api.session import CRM_ALLOWED_ROLES
 
 	roles = set(frappe.get_roles(user))
-	return bool(
-		roles.intersection(CRM_ALLOWED_ROLES) or roles.intersection(ANTMED_ALLOWED_ROLES)
-	)
+	return bool(roles.intersection(CRM_ALLOWED_ROLES) or roles.intersection(ANTMED_ALLOWED_ROLES))

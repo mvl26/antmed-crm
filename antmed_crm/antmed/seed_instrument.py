@@ -19,26 +19,65 @@ SET_DOCTYPE = "AntMed Instrument Set"
 # Danh mục món theo loại bộ (item_count = số dòng này).
 COMPONENTS = {
 	"Sọ não": [
-		"Khoan điện cầm tay", "Lưỡi cưa #2", "Lưỡi cưa #3", "Bộ kìm gắp", "Banh xương #5",
-		"Ống hút phẫu thuật", "Đầu khoan #2.5mm", "Kẹp cầm máu", "Dao tách màng", "Kéo vi phẫu",
+		"Khoan điện cầm tay",
+		"Lưỡi cưa #2",
+		"Lưỡi cưa #3",
+		"Bộ kìm gắp",
+		"Banh xương #5",
+		"Ống hút phẫu thuật",
+		"Đầu khoan #2.5mm",
+		"Kẹp cầm máu",
+		"Dao tách màng",
+		"Kéo vi phẫu",
 	],
 	"CTCH": [
-		"Khoan xương", "Vít nén 4.5mm", "Nẹp khóa chữ T", "Banh Hohmann", "Búa chỉnh hình",
-		"Kìm bẻ nẹp", "Mũi taro", "Thước đo độ",
+		"Khoan xương",
+		"Vít nén 4.5mm",
+		"Nẹp khóa chữ T",
+		"Banh Hohmann",
+		"Búa chỉnh hình",
+		"Kìm bẻ nẹp",
+		"Mũi taro",
+		"Thước đo độ",
 	],
 	"Tim mạch": [
-		"Kẹp mạch máu", "Banh lồng ngực", "Kéo Metzenbaum", "Kẹp Satinsky", "Ống thông",
-		"Kẹp giữ van", "Que dò mạch",
+		"Kẹp mạch máu",
+		"Banh lồng ngực",
+		"Kéo Metzenbaum",
+		"Kẹp Satinsky",
+		"Ống thông",
+		"Kẹp giữ van",
+		"Que dò mạch",
 	],
 	"Nội soi": [
-		"Ống soi 30°", "Trocar 10mm", "Trocar 5mm", "Kẹp grasper", "Kéo nội soi", "Đầu đốt điện", "Ống hút-tưới",
+		"Ống soi 30°",
+		"Trocar 10mm",
+		"Trocar 5mm",
+		"Kẹp grasper",
+		"Kéo nội soi",
+		"Đầu đốt điện",
+		"Ống hút-tưới",
 	],
-	"Tiêu hóa": ["Banh thành bụng", "Kẹp ruột", "Kéo phẫu tích", "Stapler tròn", "Kẹp khăn mổ", "Ống dẫn lưu"],
+	"Tiêu hóa": [
+		"Banh thành bụng",
+		"Kẹp ruột",
+		"Kéo phẫu tích",
+		"Stapler tròn",
+		"Kẹp khăn mổ",
+		"Ống dẫn lưu",
+	],
 	"Khoan": ["Tay khoan", "Mũi khoan 2.0mm", "Mũi khoan 3.2mm", "Cờ lê chỉnh", "Đầu kẹp mũi"],
 }
 CRITICAL = {
-	"Khoan điện cầm tay", "Bộ kìm gắp", "Banh xương #5", "Khoan xương", "Vít nén 4.5mm",
-	"Kẹp mạch máu", "Ống soi 30°", "Stapler tròn", "Tay khoan",
+	"Khoan điện cầm tay",
+	"Bộ kìm gắp",
+	"Banh xương #5",
+	"Khoan xương",
+	"Vít nén 4.5mm",
+	"Kẹp mạch máu",
+	"Ống soi 30°",
+	"Stapler tròn",
+	"Tay khoan",
 }
 
 # (set_code, surgery_type, target_state, overdue?)
@@ -144,4 +183,6 @@ def run():
 		created += 1
 
 	frappe.db.commit()
-	print(f"SEED DONE — created={created} skipped(existing)={skipped} total_plan={len(PLAN)} employee={employee}")
+	print(
+		f"SEED DONE — created={created} skipped(existing)={skipped} total_plan={len(PLAN)} employee={employee}"
+	)

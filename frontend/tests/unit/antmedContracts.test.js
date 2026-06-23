@@ -115,7 +115,9 @@ describe('AntmedContracts.vue — tri-branch render + param==selection + no dead
     expect(pageSrc).toMatch(/contracts\.data\?\.data/)
     expect(pageSrc).toMatch(/contracts\.data\?\.total_count/)
     // listContracts dùng createResource (đọc dict bọc) — KHÔNG createListResource (coi là array).
-    expect(dataSrc).toMatch(/import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/)
+    expect(dataSrc).toMatch(
+      /import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/,
+    )
     expect(dataSrc).not.toMatch(/import[^\n]*createListResource/)
   })
 

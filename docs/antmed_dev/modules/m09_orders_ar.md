@@ -2,9 +2,9 @@
 
 | Mục | Giá trị |
 |---|---|
-| Module folder | `crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) — DocType M09 đặt tại `crm/antmed/doctype/antmed_order/`, `crm/antmed/doctype/antmed_ar_entry/`, … |
-| Code path BE | `crm/antmed/doctype/<snake>/` + endpoint `crm/api/antmed/orders_ar.py` (đường gọi `antmed_crm.api.antmed.orders_ar.<fn>`) |
-| Module hooks (BR) | `doc_events` wiring trong `crm/hooks.py` → `crm/antmed/<module hooks>.py` (vd `crm.antmed.orders_ar_hooks.*`) |
+| Module folder | `antmed_crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) — DocType M09 đặt tại `antmed_crm/antmed/doctype/antmed_order/`, `antmed_crm/antmed/doctype/antmed_ar_entry/`, … |
+| Code path BE | `antmed_crm/antmed/doctype/<snake>/` + endpoint `antmed_crm/api/antmed/orders_ar.py` (đường gọi `antmed_crm.api.antmed.orders_ar.<fn>`) |
+| Module hooks (BR) | `doc_events` wiring trong `antmed_crm/hooks.py` → `antmed_crm/antmed/<module hooks>.py` (vd `antmed_crm.antmed.orders_ar_hooks.*`) |
 | FE pages | `frontend/src/pages/Antmed*` + route `/antmed/orders`, `/antmed/ar`, `/antmed/ar/:hospital` |
 | Wave (PLAN) | **W2 — Chuỗi vận hành lõi** (sau M04 → M06 → **M09**) |
 | Role chính (VI) | `Kế toán` **[PLANNED — chưa có trong fixture]**, `Quản lý` (override BR-14) · phụ: `NV kinh doanh` (xem AR theo tuyến), `System Manager` |
@@ -73,7 +73,7 @@ Theo `AntMed_CRM_Modules.md §9` (mô tả nghiệp vụ ground-truth):
 
 ## 3. Workflow
 
-M09 dùng **docstatus** (Frappe-native submit) cho các txn, và **một Workflow nhẹ** cho vòng đời đơn — đề xuất qua fixtures `crm/fixtures/workflow.json` (D2 Frappe-native, KHÔNG `workflowcore`). State field = `status` (hoặc `workflow_state`), giá trị **tiếng Việt**.
+M09 dùng **docstatus** (Frappe-native submit) cho các txn, và **một Workflow nhẹ** cho vòng đời đơn — đề xuất qua fixtures `antmed_crm/fixtures/workflow.json` (D2 Frappe-native, KHÔNG `workflowcore`). State field = `status` (hoặc `workflow_state`), giá trị **tiếng Việt**.
 
 ### `AntMed Order` — vòng đời đơn (đề xuất)
 
@@ -94,7 +94,7 @@ M09 dùng **docstatus** (Frappe-native submit) cho các txn, và **một Workflo
 
 | BR | Mô tả | Nơi enforce (ĐỀ XUẤT) | Trạng thái |
 |---|---|---|---|
-| **BR-14** | **Chặn đơn khi công nợ BV vượt ngưỡng.** Khi submit/validate `AntMed Order`: tính tổng `outstanding_amount` các `AntMed AR Entry` (docstatus=1) của BV; nếu ≥ `threshold_vnd` (từ `AntMed Debt Threshold Block` của BV) → `frappe.throw`. Chỉ `Quản lý` được vượt. | `doc_events`: `AntMed Order` → `validate` → `crm.antmed.orders_ar_hooks.check_debt_threshold_block` | **[PLANNED]** — scaffold có `check_debt_threshold_block` (đọc `AM Hospital Profile.debt_threshold`, override `AM CEO`); **adapt**: native AR sum thay `Sales Invoice`, role override `Quản lý` thay `AM CEO`. |
+| **BR-14** | **Chặn đơn khi công nợ BV vượt ngưỡng.** Khi submit/validate `AntMed Order`: tính tổng `outstanding_amount` các `AntMed AR Entry` (docstatus=1) của BV; nếu ≥ `threshold_vnd` (từ `AntMed Debt Threshold Block` của BV) → `frappe.throw`. Chỉ `Quản lý` được vượt. | `doc_events`: `AntMed Order` → `validate` → `antmed_crm.antmed.orders_ar_hooks.check_debt_threshold_block` | **[PLANNED]** — scaffold có `check_debt_threshold_block` (đọc `AM Hospital Profile.debt_threshold`, override `AM CEO`); **adapt**: native AR sum thay `Sales Invoice`, role override `Quản lý` thay `AM CEO`. |
 | BR-13 | **Data-scope**: NV chỉ thấy AR/đơn của BV được giao. | `permission_query_conditions` cho `AntMed Order`/`AntMed AR Entry` (wiring ở M14/W4) — giữ invariant `count == rows` ngay từ M09. | **[ROADMAP — M14]** (ADR-M01-05) |
 | BR-10 | **Audit hash-chain** mọi thao tác ghi thu / mở khóa công nợ / xuất kế toán. | M14 `audit.write_log` gọi từ handler `record_payment`, `unblock_hospital`, `export_accounting`. | **[ROADMAP — M14]** |
 | BR-12 | **2FA** cho thao tác nhạy cảm (mở khóa công nợ BR-14, ghi nhận thu lớn). | M14 `audit.require_2fa_and_log` (gate trước override). | **[ROADMAP — M14]** |
@@ -106,7 +106,7 @@ M09 dùng **docstatus** (Frappe-native submit) cho các txn, và **một Workflo
 
 ## 5. API
 
-> File: `crm/api/antmed/orders_ar.py`. Mọi hàm `@frappe.whitelist(methods=["GET"|"POST"])`, **type-annotated** (`crm/hooks.py:28 require_type_annotated_api_methods = True`), trả **RAW dict/list** (KHÔNG `_ok/_err`/envelope). Lỗi nghiệp vụ = `frappe.throw(_("BR-XX: …"))`. List giữ **count == rows**.
+> File: `antmed_crm/api/antmed/orders_ar.py`. Mọi hàm `@frappe.whitelist(methods=["GET"|"POST"])`, **type-annotated** (`antmed_crm/hooks.py:28 require_type_annotated_api_methods = True`), trả **RAW dict/list** (KHÔNG `_ok/_err`/envelope). Lỗi nghiệp vụ = `frappe.throw(_("BR-XX: …"))`. List giữ **count == rows**.
 
 | Endpoint (`antmed_crm.api.antmed.orders_ar.<fn>`) | Verb | Mô tả |
 |---|---|---|
@@ -121,7 +121,7 @@ M09 dùng **docstatus** (Frappe-native submit) cho các txn, và **một Workflo
 | `unblock_hospital` | POST | `Quản lý` mở khóa BR-14 cho BV: ghi `unblock_reason`/`unblocked_by` vào `AntMed Debt Threshold Block`. 2FA (M14). |
 | `export_accounting` | POST | Xuất file kế toán MISA/Fast/Bravo cho khoảng ngày → sinh file + ghi `AntMed Accounting Export Log` (`target`, `date_from/to`, `file_xml`, `status`). |
 
-> **Scheduler (không phải whitelist):** `crm.antmed.orders_ar_scheduler.send_payment_reminders` — chạy **daily** (khai trong `scheduler_events` của `crm/hooks.py`). **Adapt** từ scaffold `scheduler.py`: quét `AntMed AR Entry` (thay `Sales Invoice`) có `outstanding_amount>0` và `DATEDIFF(today, due_date) IN (0,7,30)`; chống trùng theo `(ar_entry, days_overdue)`; set `escalation_level` 1/2/3. **[UNVERIFIED]** tích hợp kênh gửi thật (Email/Zalo/SMS) = M13.
+> **Scheduler (không phải whitelist):** `antmed_crm.antmed.orders_ar_scheduler.send_payment_reminders` — chạy **daily** (khai trong `scheduler_events` của `antmed_crm/hooks.py`). **Adapt** từ scaffold `scheduler.py`: quét `AntMed AR Entry` (thay `Sales Invoice`) có `outstanding_amount>0` và `DATEDIFF(today, due_date) IN (0,7,30)`; chống trùng theo `(ar_entry, days_overdue)`; set `escalation_level` 1/2/3. **[UNVERIFIED]** tích hợp kênh gửi thật (Email/Zalo/SMS) = M13.
 
 ---
 
@@ -328,7 +328,7 @@ COMMISSION_SUMMARY_KEYS = ("total_commission", "total_revenue", "rep_count", "gr
 
 ## 9. ADRs
 
-> Quyết định cấp dự án **ADR-M01-01** (in-place app `crm`), **ADR-M01-02** (prefix `AntMed `), **ADR-M01-05** (hoãn data-scope BR-13), **DEC-A** (role VI), **DEC-B** (tách route AntMed), **D1** (native-lite, KHÔNG ERPNext), **D2** (Frappe Workflow gốc) đều áp cho M09 — kế thừa, không lặp lại.
+> Quyết định cấp dự án **ADR-M01-01** (gốc: in-place; THỰC TẾ = app RIÊNG `antmed_crm`), **ADR-M01-02** (prefix `AntMed `), **ADR-M01-05** (hoãn data-scope BR-13), **DEC-A** (role VI), **DEC-B** (tách route AntMed), **D1** (native-lite, KHÔNG ERPNext), **D2** (Frappe Workflow gốc) đều áp cho M09 — kế thừa, không lặp lại.
 
 ### ADR-M09-01: AR ledger **native** (`AntMed AR Entry`/`AntMed Payment`), KHÔNG reuse ERPNext Sales Invoice/Payment Entry
 - **Status**: Proposed (chốt ở S2)
@@ -349,7 +349,7 @@ COMMISSION_SUMMARY_KEYS = ("total_commission", "total_revenue", "rep_count", "gr
 
 Một slice M09 "xong" khi đạt **toàn bộ**:
 
-1. **BE run-tests xanh thật**: `bench --site miyano run-tests --module crm.tests.test_antmed_orders_ar` → **`Ran N tests … OK`**, 0 fail. TC tối thiểu theo slice:
+1. **BE run-tests xanh thật**: `bench --site miyano run-tests --module antmed_crm.tests.test_antmed_orders_ar` → **`Ran N tests … OK`**, 0 fail. TC tối thiểu theo slice:
    - DocType tồn tại sau migrate + đủ field tối thiểu (`frappe.get_meta`); naming series `AM-SO-`/`AM-AR-`/`AM-PAY-`/`PR-`/`EXP-` sinh đúng.
    - `create_order_from_delivery` copy đúng SL **tiêu hao** từ DO (M04) + đơn giá HĐ (M02).
    - `get_ar_aging` chia đúng 4 khoảng 0–30/31–60/61–90/>90; tổng khớp; **`len(data) == total_count`** (count==rows).

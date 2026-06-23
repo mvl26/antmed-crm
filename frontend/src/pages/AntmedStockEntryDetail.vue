@@ -1,7 +1,12 @@
 <template>
-  <main class="flex h-full flex-col" aria-labelledby="antmed-stock-entry-detail-title">
+  <main
+    class="flex h-full flex-col"
+    aria-labelledby="antmed-stock-entry-detail-title"
+  >
     <!-- Header + breadcrumb: Trang chủ › Tồn kho › Phiếu xuất › <name> -->
-    <header class="flex flex-col gap-2 border-b border-outline-gray-modals px-6 py-4">
+    <header
+      class="flex flex-col gap-2 border-b border-outline-gray-modals px-6 py-4"
+    >
       <nav class="text-p-xs text-ink-gray-5" :aria-label="__('Đường dẫn')">
         <RouterLink
           to="/antmed"
@@ -22,7 +27,10 @@
         <span class="text-ink-gray-7" aria-current="page">{{ routeName }}</span>
       </nav>
       <div class="flex flex-col gap-1">
-        <h1 id="antmed-stock-entry-detail-title" class="text-xl font-semibold text-ink-gray-9">
+        <h1
+          id="antmed-stock-entry-detail-title"
+          class="text-xl font-semibold text-ink-gray-9"
+        >
           {{ __('Phiếu') }} {{ routeName }}
         </h1>
         <p class="text-p-sm text-ink-gray-6">
@@ -50,10 +58,16 @@
           class="flex flex-col items-center gap-3 py-16 text-center"
           role="alert"
         >
-          <Badge variant="subtle" theme="gray" size="lg" :label="__('Không tìm thấy')" />
+          <Badge
+            variant="subtle"
+            theme="gray"
+            size="lg"
+            :label="__('Không tìm thấy')"
+          />
           <p class="max-w-md text-p-sm text-ink-gray-6">
             {{ __('Không tìm thấy phiếu') }}
-            <span class="font-medium text-ink-gray-8">{{ routeName }}</span>.
+            <span class="font-medium text-ink-gray-8">{{ routeName }}</span
+            >.
           </p>
           <Button
             variant="outline"
@@ -68,17 +82,32 @@
           class="flex flex-col items-center gap-3 py-16 text-center"
           role="alert"
         >
-          <Badge variant="subtle" theme="red" size="lg" :label="__('Không tải được')" />
-          <p class="max-w-md text-p-sm text-ink-gray-6">{{ __('Lỗi tải phiếu') }}</p>
-          <Button variant="outline" :label="__('Thử lại')" @click="entry.reload()" />
+          <Badge
+            variant="subtle"
+            theme="red"
+            size="lg"
+            :label="__('Không tải được')"
+          />
+          <p class="max-w-md text-p-sm text-ink-gray-6">
+            {{ __('Lỗi tải phiếu') }}
+          </p>
+          <Button
+            variant="outline"
+            :label="__('Thử lại')"
+            @click="entry.reload()"
+          />
         </div>
 
         <!-- Data: header card + card "Vật tư đã chuẩn bị" -->
         <template v-else-if="data">
           <!-- Card HEADER: loại / BV / NV / ngày dự kiến dùng / kho / tổng giá trị -->
-          <div class="rounded-lg border border-outline-gray-modals bg-surface-white p-4">
+          <div
+            class="rounded-lg border border-outline-gray-modals bg-surface-white p-4"
+          >
             <div class="mb-3 flex items-center justify-between gap-3">
-              <h2 class="text-base font-semibold text-ink-gray-9">{{ __('Thông tin phiếu') }}</h2>
+              <h2 class="text-base font-semibold text-ink-gray-9">
+                {{ __('Thông tin phiếu') }}
+              </h2>
               <!-- Chip loại phiếu: KÈM CHỮ (entry_type VI) — không chỉ màu (WCAG AA) -->
               <Badge
                 v-if="data.entry_type"
@@ -99,14 +128,18 @@
               </div>
               <!-- NV kinh doanh (nv_employee_name — tên, KHÔNG email/ID) -->
               <div class="flex flex-col gap-0.5">
-                <dt class="text-p-xs text-ink-gray-5">{{ __('NV kinh doanh') }}</dt>
+                <dt class="text-p-xs text-ink-gray-5">
+                  {{ __('NV kinh doanh') }}
+                </dt>
                 <dd class="text-p-base text-ink-gray-8">
                   {{ data.nv_employee_name || '—' }}
                 </dd>
               </div>
               <!-- Ngày dự kiến dùng (expected_use_date dd/MM/yyyy) -->
               <div class="flex flex-col gap-0.5">
-                <dt class="text-p-xs text-ink-gray-5">{{ __('Ngày dự kiến dùng') }}</dt>
+                <dt class="text-p-xs text-ink-gray-5">
+                  {{ __('Ngày dự kiến dùng') }}
+                </dt>
                 <dd class="text-p-base tabular-nums text-ink-gray-8">
                   {{ fmtDate(data.expected_use_date) }}
                 </dd>
@@ -121,17 +154,25 @@
               <!-- Kho xuất (from_warehouse) -->
               <div class="flex flex-col gap-0.5">
                 <dt class="text-p-xs text-ink-gray-5">{{ __('Kho xuất') }}</dt>
-                <dd class="text-p-base text-ink-gray-8">{{ data.from_warehouse || '—' }}</dd>
+                <dd class="text-p-base text-ink-gray-8">
+                  {{ data.from_warehouse || '—' }}
+                </dd>
               </div>
               <!-- Kho nhận (to_warehouse) -->
               <div class="flex flex-col gap-0.5">
                 <dt class="text-p-xs text-ink-gray-5">{{ __('Kho nhận') }}</dt>
-                <dd class="text-p-base text-ink-gray-8">{{ data.to_warehouse || '—' }}</dd>
+                <dd class="text-p-base text-ink-gray-8">
+                  {{ data.to_warehouse || '—' }}
+                </dd>
               </div>
               <!-- Tổng giá trị (total_value, format VI) -->
               <div class="flex flex-col gap-0.5 sm:col-span-2">
-                <dt class="text-p-xs text-ink-gray-5">{{ __('Tổng giá trị') }}</dt>
-                <dd class="text-p-base font-semibold tabular-nums text-ink-gray-9">
+                <dt class="text-p-xs text-ink-gray-5">
+                  {{ __('Tổng giá trị') }}
+                </dt>
+                <dd
+                  class="text-p-base font-semibold tabular-nums text-ink-gray-9"
+                >
                   {{ formatVnMoney(data.total_value) }}
                 </dd>
               </div>
@@ -139,7 +180,9 @@
           </div>
 
           <!-- Card "Vật tư đã chuẩn bị — <hospital_name>" (mockup C2): bảng SKU/Tên/Lot/HSD/SL/ĐVT/CO-CQ -->
-          <div class="rounded-lg border border-outline-gray-modals bg-surface-white p-4">
+          <div
+            class="rounded-lg border border-outline-gray-modals bg-surface-white p-4"
+          >
             <h2 class="mb-3 text-base font-semibold text-ink-gray-9">
               {{ __('Vật tư đã chuẩn bị') }}
               <span v-if="data.hospital_name" class="text-ink-gray-6">
@@ -156,29 +199,50 @@
             </div>
 
             <!-- Data table mockup C2: SKU / Tên / Lot / HSD / SL / ĐVT / CO-CQ -->
-            <table v-else class="w-full border-separate border-spacing-0 text-left">
-              <caption class="sr-only">{{ __('Bảng vật tư đã chuẩn bị') }}</caption>
+            <table
+              v-else
+              class="w-full border-separate border-spacing-0 text-left"
+            >
+              <caption class="sr-only">
+                {{
+                  __('Bảng vật tư đã chuẩn bị')
+                }}
+              </caption>
               <thead>
                 <tr class="text-p-sm text-ink-gray-6">
-                  <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+                  <th
+                    class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+                  >
                     {{ __('SKU') }}
                   </th>
-                  <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+                  <th
+                    class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+                  >
                     {{ __('Tên') }}
                   </th>
-                  <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+                  <th
+                    class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+                  >
                     {{ __('Lot') }}
                   </th>
-                  <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+                  <th
+                    class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+                  >
                     {{ __('HSD') }}
                   </th>
-                  <th class="border-b border-outline-gray-modals py-2 pr-4 text-right font-medium">
+                  <th
+                    class="border-b border-outline-gray-modals py-2 pr-4 text-right font-medium"
+                  >
                     {{ __('SL') }}
                   </th>
-                  <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+                  <th
+                    class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+                  >
                     {{ __('ĐVT') }}
                   </th>
-                  <th class="border-b border-outline-gray-modals py-2 font-medium">
+                  <th
+                    class="border-b border-outline-gray-modals py-2 font-medium"
+                  >
                     {{ __('CO-CQ') }}
                   </th>
                 </tr>
@@ -190,34 +254,51 @@
                   class="text-p-base text-ink-gray-8"
                 >
                   <!-- SKU (item = mã) — phụ trợ, tên là chính ở cột Tên -->
-                  <td class="border-b border-outline-gray-1 py-3 pr-4 tabular-nums text-ink-gray-7">
+                  <td
+                    class="border-b border-outline-gray-1 py-3 pr-4 tabular-nums text-ink-gray-7"
+                  >
                     {{ row.item || '—' }}
                   </td>
                   <!-- Tên (item_name — tên VTYT, KHÔNG mã thô) -->
-                  <td class="border-b border-outline-gray-1 py-3 pr-4 font-medium text-ink-gray-9">
+                  <td
+                    class="border-b border-outline-gray-1 py-3 pr-4 font-medium text-ink-gray-9"
+                  >
                     {{ row.item_name || '—' }}
                   </td>
                   <!-- Lot (lot_no) -->
-                  <td class="border-b border-outline-gray-1 py-3 pr-4 tabular-nums text-ink-gray-7">
+                  <td
+                    class="border-b border-outline-gray-1 py-3 pr-4 tabular-nums text-ink-gray-7"
+                  >
                     {{ row.lot_no || '—' }}
                   </td>
                   <!-- HSD (expiry_date dd/MM/yyyy) -->
-                  <td class="border-b border-outline-gray-1 py-3 pr-4 tabular-nums text-ink-gray-7">
+                  <td
+                    class="border-b border-outline-gray-1 py-3 pr-4 tabular-nums text-ink-gray-7"
+                  >
                     {{ fmtDate(row.expiry_date) }}
                   </td>
                   <!-- SL (qty) -->
-                  <td class="border-b border-outline-gray-1 py-3 pr-4 text-right tabular-nums text-ink-gray-8">
+                  <td
+                    class="border-b border-outline-gray-1 py-3 pr-4 text-right tabular-nums text-ink-gray-8"
+                  >
                     {{ fmtQty(row.qty) }}
                   </td>
                   <!-- ĐVT (uom) -->
-                  <td class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7">
+                  <td
+                    class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7"
+                  >
                     {{ row.uom || '—' }}
                   </td>
                   <!-- CO-CQ chip: KÈM CHỮ (cocqChipLabel) — không chỉ màu (WCAG AA) -->
                   <td class="border-b border-outline-gray-1 py-3">
                     <span
-                      :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-p-xs font-medium', cocqChipClass(row.cocq_ok)]"
-                      :aria-label="__('Chứng từ CO/CQ') + ': ' + cocqChipLabel(row.cocq_ok)"
+                      :class="[
+                        'inline-flex items-center rounded-full px-2.5 py-0.5 text-p-xs font-medium',
+                        cocqChipClass(row.cocq_ok),
+                      ]"
+                      :aria-label="
+                        __('Chứng từ CO/CQ') + ': ' + cocqChipLabel(row.cocq_ok)
+                      "
                     >
                       {{ cocqChipLabel(row.cocq_ok) }}
                     </span>
@@ -273,7 +354,10 @@ const isNotFound = computed(() => {
   if (err) {
     const exc = err.exc_type || err.exception || ''
     const msg = err.messages?.[0] || err.message || ''
-    return /DoesNotExist/i.test(exc) || /not found|does not exist|không tìm thấy/i.test(msg)
+    return (
+      /DoesNotExist/i.test(exc) ||
+      /not found|does not exist|không tìm thấy/i.test(msg)
+    )
   }
   // Fail-closed shape rỗng: BE trả name nhưng entry_type rỗng + 0 dòng → không có gì để xem.
   const d = entry.data

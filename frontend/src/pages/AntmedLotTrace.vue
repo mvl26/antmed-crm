@@ -1,7 +1,9 @@
 <template>
   <main class="flex h-full flex-col" aria-labelledby="antmed-lot-trace-title">
     <!-- Header + breadcrumb: Trang chủ › Tồn kho › Truy vết lot -->
-    <header class="flex flex-col gap-2 border-b border-outline-gray-modals px-6 py-4">
+    <header
+      class="flex flex-col gap-2 border-b border-outline-gray-modals px-6 py-4"
+    >
       <nav class="text-p-xs text-ink-gray-5" :aria-label="__('Đường dẫn')">
         <RouterLink
           to="/antmed"
@@ -12,14 +14,23 @@
         <span class="px-1.5 text-ink-gray-4" aria-hidden="true">›</span>
         <span class="text-ink-gray-6">{{ __('Tồn kho') }}</span>
         <span class="px-1.5 text-ink-gray-4" aria-hidden="true">›</span>
-        <span class="text-ink-gray-7" aria-current="page">{{ __('Truy vết lot') }}</span>
+        <span class="text-ink-gray-7" aria-current="page">{{
+          __('Truy vết lot')
+        }}</span>
       </nav>
       <div class="flex flex-col gap-1">
-        <h1 id="antmed-lot-trace-title" class="text-xl font-semibold text-ink-gray-9">
+        <h1
+          id="antmed-lot-trace-title"
+          class="text-xl font-semibold text-ink-gray-9"
+        >
           {{ __('Truy vết lot') }}
         </h1>
         <p class="text-p-sm text-ink-gray-6">
-          {{ __('Tra cứu một lô vật tư: số lượng nhập/xuất/còn, chứng từ CO/CQ và trạng thái thu hồi.') }}
+          {{
+            __(
+              'Tra cứu một lô vật tư: số lượng nhập/xuất/còn, chứng từ CO/CQ và trạng thái thu hồi.',
+            )
+          }}
         </p>
       </div>
     </header>
@@ -32,7 +43,10 @@
           @submit.prevent="submitTrace"
         >
           <div class="flex flex-1 flex-col gap-1">
-            <label for="lot-trace-input" class="text-p-xs font-medium text-ink-gray-6">
+            <label
+              for="lot-trace-input"
+              class="text-p-xs font-medium text-ink-gray-6"
+            >
               {{ __('Mã Lot') }}
             </label>
             <FormControl
@@ -82,9 +96,16 @@
           class="flex flex-col items-center gap-3 py-16 text-center"
           role="alert"
         >
-          <Badge variant="subtle" theme="gray" size="lg" :label="__('Không tìm thấy')" />
+          <Badge
+            variant="subtle"
+            theme="gray"
+            size="lg"
+            :label="__('Không tìm thấy')"
+          />
           <p class="max-w-md text-p-sm text-ink-gray-6">
-            {{ __('Không tìm thấy lot') }} <span class="font-medium text-ink-gray-8">{{ lastTraced }}</span>.
+            {{ __('Không tìm thấy lot') }}
+            <span class="font-medium text-ink-gray-8">{{ lastTraced }}</span
+            >.
           </p>
         </div>
 
@@ -94,9 +115,18 @@
           class="flex flex-col items-center gap-3 py-16 text-center"
           role="alert"
         >
-          <Badge variant="subtle" theme="red" size="lg" :label="__('Không truy vết được')" />
+          <Badge
+            variant="subtle"
+            theme="red"
+            size="lg"
+            :label="__('Không truy vết được')"
+          />
           <p class="max-w-md text-p-sm text-ink-gray-6">{{ errorMessage }}</p>
-          <Button variant="outline" :label="__('Thử lại')" @click="lot.reload()" />
+          <Button
+            variant="outline"
+            :label="__('Thử lại')"
+            @click="lot.reload()"
+          />
         </div>
 
         <!-- Data: cardrow cols-2 (mockup D3): trái 'Thông tin lot' + phải 'Cây truy vết' -->
@@ -105,122 +135,204 @@
           class="grid grid-cols-1 items-start gap-4 lg:grid-cols-2"
         >
           <!-- Card TRÁI: "Thông tin lot" (đã có M03-2) -->
-          <div class="rounded-lg border border-outline-gray-modals bg-surface-white p-4">
-          <div class="mb-3 flex items-center justify-between gap-3">
-            <h2 class="text-base font-semibold text-ink-gray-9">{{ __('Thông tin lot') }}</h2>
-            <!-- Chip trạng thái thu hồi: KÈM CHỮ (không chỉ màu — WCAG AA) -->
-            <span
-              :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-p-xs font-medium', recallChipClass(data.recall_status)]"
-              :aria-label="__('Trạng thái thu hồi') + ': ' + (data.recall_status || '—')"
-            >
-              {{ data.recall_status || '—' }}
-            </span>
-          </div>
+          <div
+            class="rounded-lg border border-outline-gray-modals bg-surface-white p-4"
+          >
+            <div class="mb-3 flex items-center justify-between gap-3">
+              <h2 class="text-base font-semibold text-ink-gray-9">
+                {{ __('Thông tin lot') }}
+              </h2>
+              <!-- Chip trạng thái thu hồi: KÈM CHỮ (không chỉ màu — WCAG AA) -->
+              <span
+                :class="[
+                  'inline-flex items-center rounded-full px-2.5 py-0.5 text-p-xs font-medium',
+                  recallChipClass(data.recall_status),
+                ]"
+                :aria-label="
+                  __('Trạng thái thu hồi') + ': ' + (data.recall_status || '—')
+                "
+              >
+                {{ data.recall_status || '—' }}
+              </span>
+            </div>
 
-          <table class="w-full border-separate border-spacing-0 text-left">
-            <caption class="sr-only">{{ __('Bảng thông tin lô') }}</caption>
-            <thead>
-              <tr class="text-p-xs text-ink-gray-5">
-                <th class="w-32 border-b border-outline-gray-modals py-2 pr-4 font-medium">
-                  {{ __('Trường') }}
-                </th>
-                <th class="border-b border-outline-gray-modals py-2 font-medium">
-                  {{ __('Giá trị') }}
-                </th>
-              </tr>
-            </thead>
-            <tbody class="text-p-base">
-              <!-- SKU: item_code · item_name (KHÔNG lộ mã thô đứng riêng) -->
-              <tr>
-                <td class="border-b border-outline-gray-1 py-2.5 pr-4 text-ink-gray-6">{{ __('SKU') }}</td>
-                <td class="border-b border-outline-gray-1 py-2.5 text-ink-gray-8">
-                  <span class="font-medium text-ink-gray-9">{{ data.item_name || '—' }}</span>
-                  <span v-if="data.item" class="text-ink-gray-5"> · {{ data.item }}</span>
-                </td>
-              </tr>
-              <!-- NCC: supplier_name (tên), KHÔNG mã -->
-              <tr>
-                <td class="border-b border-outline-gray-1 py-2.5 pr-4 text-ink-gray-6">{{ __('NCC') }}</td>
-                <td class="border-b border-outline-gray-1 py-2.5 text-ink-gray-8">
-                  {{ data.supplier_name || data.supplier || '—' }}
-                </td>
-              </tr>
-              <!-- NSX (mfg_date dd/MM/yyyy) -->
-              <tr>
-                <td class="border-b border-outline-gray-1 py-2.5 pr-4 text-ink-gray-6">{{ __('NSX') }}</td>
-                <td class="border-b border-outline-gray-1 py-2.5 tabular-nums text-ink-gray-8">
-                  {{ fmtDate(data.mfg_date) }}
-                </td>
-              </tr>
-              <!-- HSD (expiry_date dd/MM/yyyy) -->
-              <tr>
-                <td class="border-b border-outline-gray-1 py-2.5 pr-4 text-ink-gray-6">{{ __('HSD') }}</td>
-                <td class="border-b border-outline-gray-1 py-2.5 tabular-nums text-ink-gray-8">
-                  {{ fmtDate(data.expiry_date) }}
-                </td>
-              </tr>
-              <!-- SL nhập / SL đã xuất / SL còn (khớp sổ tồn) -->
-              <tr>
-                <td class="border-b border-outline-gray-1 py-2.5 pr-4 text-ink-gray-6">{{ __('SL nhập') }}</td>
-                <td class="border-b border-outline-gray-1 py-2.5 tabular-nums text-ink-gray-8">
-                  {{ fmtQty(data.qty_in) }}
-                </td>
-              </tr>
-              <tr>
-                <td class="border-b border-outline-gray-1 py-2.5 pr-4 text-ink-gray-6">{{ __('SL đã xuất') }}</td>
-                <td class="border-b border-outline-gray-1 py-2.5 tabular-nums text-ink-gray-8">
-                  {{ fmtQty(data.qty_out) }}
-                </td>
-              </tr>
-              <tr>
-                <td class="border-b border-outline-gray-1 py-2.5 pr-4 text-ink-gray-6">{{ __('SL còn') }}</td>
-                <td class="border-b border-outline-gray-1 py-2.5 tabular-nums font-medium text-ink-gray-9">
-                  {{ fmtQty(data.qty_remaining) }}
-                  <!-- Tách theo loại kho (mockup D3 "153 = Tổng 80 · Ký gửi BV 73") -->
-                  <span v-if="balanceBreakdown" class="ml-1 text-p-xs font-normal text-ink-gray-5">
-                    ({{ balanceBreakdown }})
-                  </span>
-                </td>
-              </tr>
-              <!-- CO / CQ: link tải PDF nếu có file_url; fallback mã chứng từ; '—' nếu trống -->
-              <tr>
-                <td class="border-b border-outline-gray-1 py-2.5 pr-4 text-ink-gray-6">{{ __('CO') }}</td>
-                <td class="border-b border-outline-gray-1 py-2.5 text-ink-gray-8">
-                  <a
-                    v-if="data.co_file_url"
-                    :href="data.co_file_url"
-                    target="_blank"
-                    rel="noopener"
-                    class="rounded text-teal-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-3"
+            <table class="w-full border-separate border-spacing-0 text-left">
+              <caption class="sr-only">
+                {{
+                  __('Bảng thông tin lô')
+                }}
+              </caption>
+              <thead>
+                <tr class="text-p-xs text-ink-gray-5">
+                  <th
+                    class="w-32 border-b border-outline-gray-modals py-2 pr-4 font-medium"
                   >
-                    {{ __('Tải CO') }}<span v-if="data.co_cert" class="text-ink-gray-5"> · {{ data.co_cert }}</span>
-                  </a>
-                  <span v-else>{{ data.co_cert || '—' }}</span>
-                </td>
-              </tr>
-              <tr>
-                <td class="py-2.5 pr-4 text-ink-gray-6">{{ __('CQ') }}</td>
-                <td class="py-2.5 text-ink-gray-8">
-                  <a
-                    v-if="data.cq_file_url"
-                    :href="data.cq_file_url"
-                    target="_blank"
-                    rel="noopener"
-                    class="rounded text-teal-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-3"
+                    {{ __('Trường') }}
+                  </th>
+                  <th
+                    class="border-b border-outline-gray-modals py-2 font-medium"
                   >
-                    {{ __('Tải CQ') }}<span v-if="data.cq_cert" class="text-ink-gray-5"> · {{ data.cq_cert }}</span>
-                  </a>
-                  <span v-else>{{ data.cq_cert || '—' }}</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                    {{ __('Giá trị') }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="text-p-base">
+                <!-- SKU: item_code · item_name (KHÔNG lộ mã thô đứng riêng) -->
+                <tr>
+                  <td
+                    class="border-b border-outline-gray-1 py-2.5 pr-4 text-ink-gray-6"
+                  >
+                    {{ __('SKU') }}
+                  </td>
+                  <td
+                    class="border-b border-outline-gray-1 py-2.5 text-ink-gray-8"
+                  >
+                    <span class="font-medium text-ink-gray-9">{{
+                      data.item_name || '—'
+                    }}</span>
+                    <span v-if="data.item" class="text-ink-gray-5">
+                      · {{ data.item }}</span
+                    >
+                  </td>
+                </tr>
+                <!-- NCC: supplier_name (tên), KHÔNG mã -->
+                <tr>
+                  <td
+                    class="border-b border-outline-gray-1 py-2.5 pr-4 text-ink-gray-6"
+                  >
+                    {{ __('NCC') }}
+                  </td>
+                  <td
+                    class="border-b border-outline-gray-1 py-2.5 text-ink-gray-8"
+                  >
+                    {{ data.supplier_name || data.supplier || '—' }}
+                  </td>
+                </tr>
+                <!-- NSX (mfg_date dd/MM/yyyy) -->
+                <tr>
+                  <td
+                    class="border-b border-outline-gray-1 py-2.5 pr-4 text-ink-gray-6"
+                  >
+                    {{ __('NSX') }}
+                  </td>
+                  <td
+                    class="border-b border-outline-gray-1 py-2.5 tabular-nums text-ink-gray-8"
+                  >
+                    {{ fmtDate(data.mfg_date) }}
+                  </td>
+                </tr>
+                <!-- HSD (expiry_date dd/MM/yyyy) -->
+                <tr>
+                  <td
+                    class="border-b border-outline-gray-1 py-2.5 pr-4 text-ink-gray-6"
+                  >
+                    {{ __('HSD') }}
+                  </td>
+                  <td
+                    class="border-b border-outline-gray-1 py-2.5 tabular-nums text-ink-gray-8"
+                  >
+                    {{ fmtDate(data.expiry_date) }}
+                  </td>
+                </tr>
+                <!-- SL nhập / SL đã xuất / SL còn (khớp sổ tồn) -->
+                <tr>
+                  <td
+                    class="border-b border-outline-gray-1 py-2.5 pr-4 text-ink-gray-6"
+                  >
+                    {{ __('SL nhập') }}
+                  </td>
+                  <td
+                    class="border-b border-outline-gray-1 py-2.5 tabular-nums text-ink-gray-8"
+                  >
+                    {{ fmtQty(data.qty_in) }}
+                  </td>
+                </tr>
+                <tr>
+                  <td
+                    class="border-b border-outline-gray-1 py-2.5 pr-4 text-ink-gray-6"
+                  >
+                    {{ __('SL đã xuất') }}
+                  </td>
+                  <td
+                    class="border-b border-outline-gray-1 py-2.5 tabular-nums text-ink-gray-8"
+                  >
+                    {{ fmtQty(data.qty_out) }}
+                  </td>
+                </tr>
+                <tr>
+                  <td
+                    class="border-b border-outline-gray-1 py-2.5 pr-4 text-ink-gray-6"
+                  >
+                    {{ __('SL còn') }}
+                  </td>
+                  <td
+                    class="border-b border-outline-gray-1 py-2.5 tabular-nums font-medium text-ink-gray-9"
+                  >
+                    {{ fmtQty(data.qty_remaining) }}
+                    <!-- Tách theo loại kho (mockup D3 "153 = Tổng 80 · Ký gửi BV 73") -->
+                    <span
+                      v-if="balanceBreakdown"
+                      class="ml-1 text-p-xs font-normal text-ink-gray-5"
+                    >
+                      ({{ balanceBreakdown }})
+                    </span>
+                  </td>
+                </tr>
+                <!-- CO / CQ: link tải PDF nếu có file_url; fallback mã chứng từ; '—' nếu trống -->
+                <tr>
+                  <td
+                    class="border-b border-outline-gray-1 py-2.5 pr-4 text-ink-gray-6"
+                  >
+                    {{ __('CO') }}
+                  </td>
+                  <td
+                    class="border-b border-outline-gray-1 py-2.5 text-ink-gray-8"
+                  >
+                    <a
+                      v-if="data.co_file_url"
+                      :href="data.co_file_url"
+                      target="_blank"
+                      rel="noopener"
+                      class="rounded text-teal-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-3"
+                    >
+                      {{ __('Tải CO')
+                      }}<span v-if="data.co_cert" class="text-ink-gray-5">
+                        · {{ data.co_cert }}</span
+                      >
+                    </a>
+                    <span v-else>{{ data.co_cert || '—' }}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 pr-4 text-ink-gray-6">{{ __('CQ') }}</td>
+                  <td class="py-2.5 text-ink-gray-8">
+                    <a
+                      v-if="data.cq_file_url"
+                      :href="data.cq_file_url"
+                      target="_blank"
+                      rel="noopener"
+                      class="rounded text-teal-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-3"
+                    >
+                      {{ __('Tải CQ')
+                      }}<span v-if="data.cq_cert" class="text-ink-gray-5">
+                        · {{ data.cq_cert }}</span
+                      >
+                    </a>
+                    <span v-else>{{ data.cq_cert || '—' }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
           <!-- Card PHẢI: "Cây truy vết" (MỚI M03-6) — dòng thời gian di chuyển của lô -->
-          <div class="rounded-lg border border-outline-gray-modals bg-surface-white p-4">
+          <div
+            class="rounded-lg border border-outline-gray-modals bg-surface-white p-4"
+          >
             <div class="mb-3 flex items-center justify-between gap-3">
-              <h2 class="text-base font-semibold text-ink-gray-9">{{ __('Cây truy vết') }}</h2>
+              <h2 class="text-base font-semibold text-ink-gray-9">
+                {{ __('Cây truy vết') }}
+              </h2>
               <span class="text-p-xs text-ink-gray-5">
                 {{ __('Nhập NCC → Xuất NV → Chuyển kho / Ký gửi BV') }}
               </span>
@@ -244,9 +356,20 @@
               class="flex flex-col items-center gap-3 py-12 text-center"
               role="alert"
             >
-              <Badge variant="subtle" theme="red" size="lg" :label="__('Không tải được lịch sử')" />
-              <p class="max-w-md text-p-sm text-ink-gray-6">{{ traceErrorMessage }}</p>
-              <Button variant="outline" :label="__('Thử lại')" @click="trace.reload()" />
+              <Badge
+                variant="subtle"
+                theme="red"
+                size="lg"
+                :label="__('Không tải được lịch sử')"
+              />
+              <p class="max-w-md text-p-sm text-ink-gray-6">
+                {{ traceErrorMessage }}
+              </p>
+              <Button
+                variant="outline"
+                :label="__('Thử lại')"
+                @click="trace.reload()"
+              />
             </div>
 
             <!-- Empty: lô tồn tại nhưng chưa có ledger -->
@@ -258,7 +381,11 @@
             </div>
 
             <!-- Data: timeline các event (BE đã sort posting_datetime ASC) -->
-            <ol v-else class="flex flex-col gap-0" aria-label="Dòng thời gian di chuyển lô">
+            <ol
+              v-else
+              class="flex flex-col gap-0"
+              aria-label="Dòng thời gian di chuyển lô"
+            >
               <li
                 v-for="(ev, idx) in events"
                 :key="idx"
@@ -283,17 +410,28 @@
                 <!-- Nội dung 1 event -->
                 <div class="flex flex-1 flex-col gap-1">
                   <div class="flex flex-wrap items-center gap-2">
-                    <span class="text-p-xs tabular-nums text-ink-gray-5">{{ fmtDate(ev.posting_datetime) }}</span>
+                    <span class="text-p-xs tabular-nums text-ink-gray-5">{{
+                      fmtDate(ev.posting_datetime)
+                    }}</span>
                     <!-- Chip chiều: KÈM CHỮ (Nhập/Xuất) — không chỉ màu (WCAG AA) -->
                     <span
-                      :class="['inline-flex items-center rounded-full px-2 py-0.5 text-p-xs font-medium', traceDirectionChipClass(ev.direction)]"
-                      :aria-label="__('Chiều') + ': ' + traceDirectionLabel(ev.direction)"
+                      :class="[
+                        'inline-flex items-center rounded-full px-2 py-0.5 text-p-xs font-medium',
+                        traceDirectionChipClass(ev.direction),
+                      ]"
+                      :aria-label="
+                        __('Chiều') + ': ' + traceDirectionLabel(ev.direction)
+                      "
                     >
                       {{ traceDirectionLabel(ev.direction) }}
                     </span>
-                    <span class="text-p-sm font-medium text-ink-gray-9">{{ entryDirectionLabel(ev.entry_type) }}</span>
+                    <span class="text-p-sm font-medium text-ink-gray-9">{{
+                      entryDirectionLabel(ev.entry_type)
+                    }}</span>
                   </div>
-                  <div class="flex flex-wrap items-center gap-2 text-p-sm text-ink-gray-7">
+                  <div
+                    class="flex flex-wrap items-center gap-2 text-p-sm text-ink-gray-7"
+                  >
                     <span>{{ ev.warehouse_name || ev.warehouse || '—' }}</span>
                     <!-- Chip loại kho -->
                     <span
@@ -302,26 +440,40 @@
                     >
                       {{ ev.warehouse_type }}
                     </span>
-                    <span class="tabular-nums text-ink-gray-8">{{ __('SL') }}: {{ fmtQty(ev.qty) }}</span>
+                    <span class="tabular-nums text-ink-gray-8"
+                      >{{ __('SL') }}: {{ fmtQty(ev.qty) }}</span
+                    >
                   </div>
-                  <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-p-xs text-ink-gray-5">
-                    <span v-if="ev.voucher_no">{{ __('Phiếu') }}: {{ ev.voucher_no }}</span>
-                    <span v-if="ev.hospital">{{ __('BV') }}: {{ ev.hospital }}</span>
-                    <span v-if="ev.nv_employee">{{ __('NV') }}: {{ ev.nv_employee }}</span>
+                  <div
+                    class="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-p-xs text-ink-gray-5"
+                  >
+                    <span v-if="ev.voucher_no"
+                      >{{ __('Phiếu') }}: {{ ev.voucher_no }}</span
+                    >
+                    <span v-if="ev.hospital"
+                      >{{ __('BV') }}: {{ ev.hospital }}</span
+                    >
+                    <span v-if="ev.nv_employee"
+                      >{{ __('NV') }}: {{ ev.nv_employee }}</span
+                    >
                   </div>
                 </div>
               </li>
             </ol>
 
             <!-- CHÂN card "Cây truy vết" (mockup D3): action Khởi tạo Recall theo lô (Thủ kho) -->
-            <div class="mt-4 flex flex-col gap-2 border-t border-outline-gray-modals pt-4">
+            <div
+              class="mt-4 flex flex-col gap-2 border-t border-outline-gray-modals pt-4"
+            >
               <Button
                 variant="solid"
                 theme="red"
                 :label="__('⚠ Khởi tạo Recall theo lot này')"
                 :disabled="!data || data.recall_status === 'Đã thu hồi'"
                 :loading="initiateRecall.loading"
-                :aria-label="__('Khởi tạo recall theo lô') + ' ' + (data?.lot_no || '')"
+                :aria-label="
+                  __('Khởi tạo recall theo lô') + ' ' + (data?.lot_no || '')
+                "
                 @click="openRecallModal"
               />
               <!-- Lô đã thu hồi: hint vì sao nút disabled (UX — không để user kẹt im lặng) -->
@@ -329,15 +481,21 @@
                 v-if="data && data.recall_status === 'Đã thu hồi'"
                 class="text-p-xs text-ink-gray-5"
               >
-                {{ __('Lô này đã được thu hồi — không thể khởi tạo recall lại.') }}
+                {{
+                  __('Lô này đã được thu hồi — không thể khởi tạo recall lại.')
+                }}
               </p>
             </div>
           </div>
 
           <!-- Card "Sử dụng tại ca mổ" (phả hệ lô → giao phòng mổ → hóa đơn) — col-span 2 -->
-          <div class="rounded-lg border border-outline-gray-modals bg-surface-white p-4 lg:col-span-2">
+          <div
+            class="rounded-lg border border-outline-gray-modals bg-surface-white p-4 lg:col-span-2"
+          >
             <div class="mb-3 flex items-center justify-between gap-3">
-              <h2 class="text-base font-semibold text-ink-gray-9">{{ __('Sử dụng tại ca mổ') }}</h2>
+              <h2 class="text-base font-semibold text-ink-gray-9">
+                {{ __('Sử dụng tại ca mổ') }}
+              </h2>
               <div class="flex items-center gap-2">
                 <Button
                   variant="subtle"
@@ -371,8 +529,17 @@
               class="flex flex-col items-center gap-2 py-10 text-center"
               role="alert"
             >
-              <Badge variant="subtle" theme="red" size="lg" :label="__('Không tải được phả hệ')" />
-              <Button variant="outline" :label="__('Thử lại')" @click="genealogy.reload()" />
+              <Badge
+                variant="subtle"
+                theme="red"
+                size="lg"
+                :label="__('Không tải được phả hệ')"
+              />
+              <Button
+                variant="outline"
+                :label="__('Thử lại')"
+                @click="genealogy.reload()"
+              />
             </div>
             <div
               v-else-if="!deliveries.length"
@@ -386,13 +553,29 @@
                 :key="d.delivery"
                 class="rounded-lg border border-outline-gray-1 bg-surface-gray-1 p-3"
               >
-                <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-p-sm">
-                  <span class="font-medium text-ink-gray-9">{{ d.hospital_name || d.hospital || '—' }}</span>
-                  <span class="text-ink-gray-7">{{ __('Bác sỹ') }}: {{ d.doctor_name || d.doctor || '—' }}</span>
-                  <span class="text-ink-gray-7">{{ __('Ca mổ') }}: {{ formatStockTime(d.surgery_datetime) }}<span v-if="d.surgery_room"> · {{ d.surgery_room }}</span></span>
-                  <span class="tabular-nums text-ink-gray-8">{{ __('SL dùng') }}: {{ fmtQty(d.used_qty) }}</span>
+                <div
+                  class="flex flex-wrap items-center gap-x-4 gap-y-1 text-p-sm"
+                >
+                  <span class="font-medium text-ink-gray-9">{{
+                    d.hospital_name || d.hospital || '—'
+                  }}</span>
+                  <span class="text-ink-gray-7"
+                    >{{ __('Bác sỹ') }}:
+                    {{ d.doctor_name || d.doctor || '—' }}</span
+                  >
+                  <span class="text-ink-gray-7"
+                    >{{ __('Ca mổ') }}: {{ formatStockTime(d.surgery_datetime)
+                    }}<span v-if="d.surgery_room">
+                      · {{ d.surgery_room }}</span
+                    ></span
+                  >
+                  <span class="tabular-nums text-ink-gray-8"
+                    >{{ __('SL dùng') }}: {{ fmtQty(d.used_qty) }}</span
+                  >
                 </div>
-                <div class="mt-1.5 flex flex-wrap items-center gap-2 text-p-xs text-ink-gray-5">
+                <div
+                  class="mt-1.5 flex flex-wrap items-center gap-2 text-p-xs text-ink-gray-5"
+                >
                   <span>{{ __('Phiếu giao') }}: {{ d.delivery }}</span>
                   <template v-if="d.einvoice">
                     <span class="text-ink-gray-4" aria-hidden="true">·</span>
@@ -423,20 +606,27 @@
     </section>
 
     <!-- Confirm-modal Khởi tạo Recall (mockup D3): mã lô + SKU + lý do (bắt buộc) + mức recall -->
-    <Dialog v-model="showRecallModal" :options="{ title: __('Khởi tạo Recall theo lô') }">
+    <Dialog
+      v-model="showRecallModal"
+      :options="{ title: __('Khởi tạo Recall theo lô') }"
+    >
       <template #body-content>
         <div class="flex flex-col gap-4">
           <!-- Mã lô + SKU (KHÔNG lộ mã thô đứng riêng — item_name là chính) -->
           <div class="rounded-md bg-surface-gray-1 px-3 py-2.5 text-p-sm">
             <div class="flex items-center justify-between gap-2">
               <span class="text-ink-gray-6">{{ __('Mã lô') }}</span>
-              <span class="font-medium text-ink-gray-9">{{ data?.lot_no || '—' }}</span>
+              <span class="font-medium text-ink-gray-9">{{
+                data?.lot_no || '—'
+              }}</span>
             </div>
             <div class="mt-1 flex items-center justify-between gap-2">
               <span class="text-ink-gray-6">{{ __('SKU') }}</span>
               <span class="text-right font-medium text-ink-gray-9">
                 {{ data?.item_name || '—' }}
-                <span v-if="data?.item" class="font-normal text-ink-gray-5"> · {{ data.item }}</span>
+                <span v-if="data?.item" class="font-normal text-ink-gray-5">
+                  · {{ data.item }}</span
+                >
               </span>
             </div>
           </div>
@@ -508,6 +698,7 @@ import {
 } from '@/data/antmed'
 import {
   fmtDate,
+  fmtQty,
   formatStockTime,
   recallChipClass,
   entryDirectionLabel,
@@ -542,9 +733,13 @@ const exportPdf = createExportLotTracePdf({ auto: false })
 const savedTraceName = ref('')
 
 // SL còn tách theo loại kho (mockup D3 "153 = Tổng 80 · Ký gửi BV 73"). BE đã GROUP BY → FE chỉ nối.
-const balanceByType = computed(() => data.value?.balance_by_warehouse_type || [])
+const balanceByType = computed(
+  () => data.value?.balance_by_warehouse_type || [],
+)
 const balanceBreakdown = computed(() =>
-  balanceByType.value.map((b) => `${b.warehouse_type} ${fmtQty(b.qty)}`).join(' · '),
+  balanceByType.value
+    .map((b) => `${b.warehouse_type} ${fmtQty(b.qty)}`)
+    .join(' · '),
 )
 
 function doSaveTrace() {
@@ -580,13 +775,7 @@ function doExportPdf() {
   )
 }
 
-// Số lượng: hiển thị số nguyên VI có phân tách (1.000); thiếu/NaN → '—'.
-function fmtQty(value) {
-  if (value === null || value === undefined || value === '') return '—'
-  const n = Number(value)
-  if (!Number.isFinite(n)) return '—'
-  return n.toLocaleString('vi-VN', { maximumFractionDigits: 2 })
-}
+// fmtQty (SL VI có phân tách, maxFractionDigits 2) gom về canon @/utils/antmedUi (identical).
 
 // Phân biệt not-found (BE raise DoesNotExistError → exc_type/HTTP 404) với lỗi khác.
 const isNotFound = computed(() => {
@@ -594,7 +783,10 @@ const isNotFound = computed(() => {
   if (!err) return false
   const exc = err.exc_type || err.exception || ''
   const msg = err.messages?.[0] || err.message || ''
-  return /DoesNotExist/i.test(exc) || /not found|does not exist|không tìm thấy/i.test(msg)
+  return (
+    /DoesNotExist/i.test(exc) ||
+    /not found|does not exist|không tìm thấy/i.test(msg)
+  )
 })
 
 const errorMessage = computed(
@@ -657,7 +849,10 @@ const recallSubmitted = ref(false)
 
 // Options dropdown 'Mức recall' — KEY khớp EXACT BE (RECALL_INITIATE_STATUSES = options DocType).
 // value = key kỹ thuật gửi đi == lựa chọn UI (chống dead-control); label = nhãn VI (chính key VI).
-const recallStatusOptions = RECALL_INITIATE_STATUSES.map((s) => ({ label: s, value: s }))
+const recallStatusOptions = RECALL_INITIATE_STATUSES.map((s) => ({
+  label: s,
+  value: s,
+}))
 
 function openRecallModal() {
   if (!data.value || data.value.recall_status === 'Đã thu hồi') return
@@ -690,7 +885,9 @@ function submitRecall() {
             ]),
           )
         } else {
-          toast.success(__('Đã khởi tạo recall cho lô {0}', [data.value?.lot_no || '']))
+          toast.success(
+            __('Đã khởi tạo recall cho lô {0}', [data.value?.lot_no || '']),
+          )
         }
         showRecallModal.value = false
         recallReason.value = ''

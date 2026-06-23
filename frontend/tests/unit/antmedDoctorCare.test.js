@@ -11,7 +11,6 @@ const FACTORIES = [
   ['listCareNotes', 'list_care_notes', 'GET'],
   ['saveCareNote', 'save_care_note', 'POST'],
   ['listVisits', 'list_visits', 'GET'],
-  ['getVisit', 'get_visit', 'GET'],
   ['listGifts', 'list_gifts', 'GET'],
   ['createGift', 'create_gift', 'POST'],
   ['checkInDoctor', 'check_in', 'POST'],

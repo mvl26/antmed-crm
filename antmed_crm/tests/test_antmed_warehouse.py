@@ -34,7 +34,12 @@ def _mk_hospital(code, name):
 
 def _mk_warehouse(warehouse_name, warehouse_type, **kw):
 	doc = frappe.get_doc(
-		{"doctype": "AntMed Warehouse", "warehouse_name": warehouse_name, "warehouse_type": warehouse_type, **kw}
+		{
+			"doctype": "AntMed Warehouse",
+			"warehouse_name": warehouse_name,
+			"warehouse_type": warehouse_type,
+			**kw,
+		}
 	)
 	doc.insert(ignore_permissions=True)
 	return doc

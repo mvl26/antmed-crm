@@ -5,7 +5,9 @@
   >
     <div class="px-6 pt-4">
       <Button variant="ghost" :label="__('Quay lại')" @click="goBack">
-        <template #prefix><FeatherIcon name="arrow-left" class="h-4 w-4" /></template>
+        <template #prefix
+          ><FeatherIcon name="arrow-left" class="h-4 w-4"
+        /></template>
       </Button>
     </div>
 
@@ -23,25 +25,44 @@
       class="flex flex-col items-center gap-3 py-16 text-center"
       role="alert"
     >
-      <Badge variant="subtle" theme="red" size="lg" :label="__('Không tải được')" />
+      <Badge
+        variant="subtle"
+        theme="red"
+        size="lg"
+        :label="__('Không tải được')"
+      />
       <p class="max-w-md text-p-sm text-ink-gray-6">{{ errorMessage }}</p>
-      <Button variant="outline" :label="__('Thử lại')" @click="doctor.reload()" />
+      <Button
+        variant="outline"
+        :label="__('Thử lại')"
+        @click="doctor.reload()"
+      />
     </div>
 
     <template v-else-if="doctor.data">
       <!-- Header + hành động -->
       <header class="px-6 py-5">
-        <h1 id="antmed-doctor-detail-title" class="text-2xl font-semibold text-ink-gray-9">
+        <h1
+          id="antmed-doctor-detail-title"
+          class="text-2xl font-semibold text-ink-gray-9"
+        >
           {{ doctor.data.full_name || doctor.data.name }}
         </h1>
-        <p v-if="doctor.data.specialty" class="mt-1 text-p-base text-ink-gray-6">
+        <p
+          v-if="doctor.data.specialty"
+          class="mt-1 text-p-base text-ink-gray-6"
+        >
           {{ doctor.data.specialty }}
         </p>
         <button
           v-if="doctor.data.hospital"
           type="button"
           class="mt-3 inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-p-sm font-medium text-ink-gray-7 transition hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-3"
-          :aria-label="__('Mở bệnh viện') + ' ' + (doctor.data.hospital_name || doctor.data.hospital)"
+          :aria-label="
+            __('Mở bệnh viện') +
+            ' ' +
+            (doctor.data.hospital_name || doctor.data.hospital)
+          "
           @click="openHospital"
         >
           <FeatherIcon name="briefcase" class="h-4 w-4 text-ink-gray-5" />
@@ -54,10 +75,16 @@
             variant="solid"
             :label="__('Gọi')"
             :disabled="!doctor.data.phone"
-            :title="doctor.data.phone ? doctor.data.phone : __('Chưa có số điện thoại')"
+            :title="
+              doctor.data.phone
+                ? doctor.data.phone
+                : __('Chưa có số điện thoại')
+            "
             @click="startCall"
           >
-            <template #prefix><FeatherIcon name="phone" class="h-4 w-4" /></template>
+            <template #prefix
+              ><FeatherIcon name="phone" class="h-4 w-4"
+            /></template>
           </Button>
           <Button
             variant="subtle"
@@ -65,7 +92,9 @@
             :disabled="!doctor.data.zalo"
             @click="openZalo"
           >
-            <template #prefix><FeatherIcon name="message-circle" class="h-4 w-4" /></template>
+            <template #prefix
+              ><FeatherIcon name="message-circle" class="h-4 w-4"
+            /></template>
           </Button>
           <Button
             variant="subtle"
@@ -73,7 +102,9 @@
             :loading="checkInRes.loading"
             @click="checkIn"
           >
-            <template #prefix><FeatherIcon name="map-pin" class="h-4 w-4" /></template>
+            <template #prefix
+              ><FeatherIcon name="map-pin" class="h-4 w-4"
+            /></template>
           </Button>
         </div>
       </header>
@@ -105,8 +136,8 @@
         <div v-if="activeTab === 'notes'">
           <div class="mb-4 flex flex-col gap-2">
             <FormControl
-              type="textarea"
               v-model="noteContent"
+              type="textarea"
               :placeholder="__('Thêm ghi chú chăm sóc…')"
               :aria-label="__('Nội dung ghi chú')"
             />
@@ -120,10 +151,7 @@
               />
             </div>
           </div>
-          <AntmedCareList
-            :resource="careNotes"
-            :empty="__('Chưa có ghi chú')"
-          >
+          <AntmedCareList :resource="careNotes" :empty="__('Chưa có ghi chú')">
             <template #row="{ row }">
               <div class="text-p-xs text-ink-gray-5">
                 {{ fmtDate(row.note_date) }} · {{ row.category || __('Khác') }}
@@ -142,7 +170,9 @@
           :empty="__('Chưa có lượt ghé thăm')"
         >
           <template #row="{ row }">
-            <div class="text-p-xs text-ink-gray-5">{{ fmtDateTime(row.checked_in_at) }}</div>
+            <div class="text-p-xs text-ink-gray-5">
+              {{ fmtDateTime(row.checked_in_at) }}
+            </div>
             <div class="mt-0.5 text-p-sm font-medium text-ink-gray-8">
               {{ row.status }}<span v-if="row.topic"> · {{ row.topic }}</span>
             </div>
@@ -153,20 +183,20 @@
         <div v-else-if="activeTab === 'gifts'">
           <div class="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
             <FormControl
-              type="text"
               v-model="giftForm.item_or_text"
+              type="text"
               :placeholder="__('Quà / nội dung')"
               :aria-label="__('Nội dung quà')"
             />
             <FormControl
-              type="number"
               v-model="giftForm.value_vnd"
+              type="number"
               :placeholder="__('Giá trị (VND)')"
               :aria-label="__('Giá trị quà')"
             />
             <FormControl
-              type="text"
               v-model="giftForm.approved_by"
+              type="text"
               :placeholder="__('Người duyệt')"
               :aria-label="__('Người duyệt')"
             />
@@ -179,12 +209,11 @@
               />
             </div>
           </div>
-          <AntmedCareList
-            :resource="gifts"
-            :empty="__('Chưa có quà tặng')"
-          >
+          <AntmedCareList :resource="gifts" :empty="__('Chưa có quà tặng')">
             <template #row="{ row }">
-              <div class="text-p-xs text-ink-gray-5">{{ fmtDate(row.gift_date) }}</div>
+              <div class="text-p-xs text-ink-gray-5">
+                {{ fmtDate(row.gift_date) }}
+              </div>
               <div class="mt-0.5 text-p-sm text-ink-gray-8">
                 {{ row.item_or_text }}
                 <span v-if="row.value_vnd" class="text-ink-gray-5">
@@ -204,7 +233,9 @@
               :disabled="!doctor.data.phone"
               @click="startCall"
             >
-              <template #prefix><FeatherIcon name="phone" class="h-4 w-4" /></template>
+              <template #prefix
+                ><FeatherIcon name="phone" class="h-4 w-4"
+              /></template>
             </Button>
           </div>
           <AntmedCareList :resource="callLogs" :empty="__('Chưa có cuộc gọi')">
@@ -215,7 +246,9 @@
                   :class="callChipClass(row.status)"
                   >{{ row.outcome }}</span
                 >
-                <span class="text-p-xs text-ink-gray-5">{{ fmtDateTime(row.start_time) }}</span>
+                <span class="text-p-xs text-ink-gray-5">{{
+                  fmtDateTime(row.start_time)
+                }}</span>
                 <span v-if="row.duration" class="text-p-xs text-ink-gray-5"
                   >· {{ fmtDuration(row.duration) }}</span
                 >
@@ -223,7 +256,9 @@
               <div v-if="row.note_text" class="mt-1 text-p-sm text-ink-gray-8">
                 {{ row.note_text }}
               </div>
-              <div class="mt-0.5 text-p-xs text-ink-gray-5">{{ row.caller_name }}</div>
+              <div class="mt-0.5 text-p-xs text-ink-gray-5">
+                {{ row.caller_name }}
+              </div>
             </template>
           </AntmedCareList>
         </div>
@@ -255,6 +290,7 @@ import {
   saveCareNote,
   createGift,
 } from '@/data/antmed'
+import { fmtDate } from '@/utils/antmedUi'
 
 const props = defineProps({ name: { type: String, required: true } })
 const router = useRouter()
@@ -376,11 +412,8 @@ function fmtDuration(sec) {
   const r = s % 60
   return m ? `${m}p${r ? ' ' + r + 's' : ''}` : `${r}s`
 }
-function fmtDate(d) {
-  if (!d) return '—'
-  const [y, m, day] = String(d).split(' ')[0].split('-')
-  return y && m && day ? `${day}/${m}/${y}` : d
-}
+// fmtDate (dd/MM/yyyy) gom về canon @/utils/antmedUi; fmtDateTime giữ inline (dd/MM/yyyy HH:mm,
+// thứ tự ngày-trước-giờ — không có canon khớp) nhưng dùng lại fmtDate đã import.
 function fmtDateTime(d) {
   if (!d) return '—'
   const [date, time] = String(d).split(' ')
@@ -396,11 +429,17 @@ const errorMessage = computed(
 
 function openHospital() {
   if (doctor.data?.hospital)
-    router.push({ name: 'AntmedHospitalDetail', params: { name: doctor.data.hospital } })
+    router.push({
+      name: 'AntmedHospitalDetail',
+      params: { name: doctor.data.hospital },
+    })
 }
 function goBack() {
   if (doctor.data?.hospital)
-    router.push({ name: 'AntmedHospitalDetail', params: { name: doctor.data.hospital } })
+    router.push({
+      name: 'AntmedHospitalDetail',
+      params: { name: doctor.data.hospital },
+    })
   else router.push({ name: 'AntmedHospitalList' })
 }
 doctor.onError = (err) => {
@@ -409,24 +448,42 @@ doctor.onError = (err) => {
 
 // Inline list renderer (loading/error/empty/rows) dùng chung 4 tab.
 const AntmedCareList = {
-  props: { resource: { type: Object, required: true }, empty: { type: String, default: '' } },
+  props: {
+    resource: { type: Object, required: true },
+    empty: { type: String, default: '' },
+  },
   setup(p, { slots }) {
     return () => {
       const r = p.resource
       if (r.loading)
-        return h('div', { class: 'py-8 text-center text-p-sm text-ink-gray-5' }, __('Đang tải…'))
+        return h(
+          'div',
+          { class: 'py-8 text-center text-p-sm text-ink-gray-5' },
+          __('Đang tải…'),
+        )
       if (r.error)
-        return h('div', { class: 'py-8 text-center text-p-sm text-red-600', role: 'alert' }, __('Lỗi tải dữ liệu'))
+        return h(
+          'div',
+          { class: 'py-8 text-center text-p-sm text-red-600', role: 'alert' },
+          __('Lỗi tải dữ liệu'),
+        )
       const rows = r.data?.data || []
       if (!rows.length)
-        return h('div', { class: 'py-8 text-center text-p-sm text-ink-gray-5' }, p.empty)
+        return h(
+          'div',
+          { class: 'py-8 text-center text-p-sm text-ink-gray-5' },
+          p.empty,
+        )
       return h(
         'ul',
         { class: 'space-y-3' },
         rows.map((row) =>
           h(
             'li',
-            { key: row.name, class: 'rounded-lg border border-outline-gray-1 p-3' },
+            {
+              key: row.name,
+              class: 'rounded-lg border border-outline-gray-1 p-3',
+            },
             slots.row ? slots.row({ row }) : row.name,
           ),
         ),

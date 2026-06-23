@@ -2,7 +2,7 @@
 
 | Mục | Giá trị |
 |---|---|
-| Module folder | `crm/antmed/` (RBAC nền — thuộc trục M14 Security/RBAC, giao điểm M01 SPA boot) |
+| Module folder | `antmed_crm/antmed/` (RBAC nền — thuộc trục M14 Security/RBAC, giao điểm M01 SPA boot) |
 | Phase triển khai | W0 — RBAC nền (chạy trước mọi feature có route AntMed riêng) |
 | Đề mục | W0-2: user role AntMed thuần (`NV kinh doanh`) boot được SPA `/antmed/*` qua allow-check **additive** — KHÔNG narrow `CRM_ALLOWED_ROLES` |
 | Quyết định gốc | **DEC-B** — tách route/guard AntMed riêng (KHÔNG sửa ngữ nghĩa CRM gốc) |
@@ -25,8 +25,8 @@ AntMed SPA pages (`/antmed`, `/antmed/hospitals`, …) mount **bên trong Frappe
 
 | Tầng | File:line (verify) | Hành vi hiện tại với user AntMed thuần |
 |---|---|---|
-| **Gate-1 HTML serve** | `crm/www/crm.py:17` → `crm/api/__init__.py:54` `check_app_permission()` | `check_app_permission()` trả `False` (line 71–73 chỉ chấp nhận `System Manager`/`Sales User`/`Sales Manager`) → `get_context()` `frappe.throw(PermissionError)` → **KHÔNG nhận được SPA HTML** (Frappe trả trang lỗi, không phải app). |
-| **Gate-2 session API** | `crm/api/session.py:10–11` `get_session_role_flags()` | `roles.intersection(CRM_ALLOWED_ROLES)` rỗng → `frappe.throw("not permitted", PermissionError)`. Mọi endpoint gọi helper này (`get_users`, `get_organizations`) ném 403. |
+| **Gate-1 HTML serve** | `antmed_crm/www/crm.py:17` → `antmed_crm/api/__init__.py:54` `check_app_permission()` | `check_app_permission()` trả `False` (line 71–73 chỉ chấp nhận `System Manager`/`Sales User`/`Sales Manager`) → `get_context()` `frappe.throw(PermissionError)` → **KHÔNG nhận được SPA HTML** (Frappe trả trang lỗi, không phải app). |
+| **Gate-2 session API** | `antmed_crm/api/session.py:10–11` `get_session_role_flags()` | `roles.intersection(CRM_ALLOWED_ROLES)` rỗng → `frappe.throw("not permitted", PermissionError)`. Mọi endpoint gọi helper này (`get_users`, `get_organizations`) ném 403. |
 | **Gate-3 router guard** | `frontend/src/router.js:166` `!isCrmUser()` | `isCrmUser()` (`stores/users.js:80`) tra `users.data.crmUsers` — danh sách build ở `get_users()` (`session.py:70`) **chỉ append** user có `user.role ∈ {System Manager, Sales Manager, Sales User}`. User AntMed thuần có `user.role = ""` (không khớp nhánh nào, `session.py:53–62`) → KHÔNG nằm trong `crmUsers` → `isCrmUser()` falsy → guard redirect `Not Permitted` cho **MỌI** route, kể cả `/antmed/*`. |
 
 → NV KD AntMed thuần **KHÔNG boot được app**.
@@ -35,11 +35,11 @@ AntMed SPA pages (`/antmed`, `/antmed/hospitals`, …) mount **bên trong Frappe
 
 Mở **OR-thêm nhánh AntMed** ở cả 3 tầng, single-source danh sách Role AntMed ở BE, FE đọc qua boot flag:
 
-1. **BE single source**: hằng `ANTMED_ALLOWED_ROLES = ["NV kinh doanh", "Thủ kho", "Quản lý"]` + helper `is_antmed_user()` / allow-check additive `is_crm_or_antmed_user()` — **1 nơi định nghĩa** (`crm/api/antmed/rbac.py`).
+1. **BE single source**: hằng `ANTMED_ALLOWED_ROLES = ["NV kinh doanh", "Thủ kho", "Quản lý"]` + helper `is_antmed_user()` / allow-check additive `is_crm_or_antmed_user()` — **1 nơi định nghĩa** (`antmed_crm/api/antmed/rbac.py`).
 2. **Gate-1**: `check_app_permission()` OR-thêm: pass nếu có 1 trong CRM roles **HOẶC** 1 trong AntMed roles.
 3. **Gate-2**: `get_session_role_flags()` OR-thêm nhánh AntMed (không throw nếu là AntMed user); `CRM_ALLOWED_ROLES` **literal giữ nguyên** = `[System Manager, Sales Manager, Sales User]`.
 4. **Gate-3**: router guard tách nhánh — route `/antmed/*` cho phép boot nếu user là **CRM HOẶC AntMed**; route CRM gốc (`/leads`…) **GIỮ NGUYÊN** logic `isCrmUser()` (AntMed-thuần vẫn bị chặn route CRM gốc → no-regression).
-5. **Boot flag**: `get_boot()` (`crm/www/crm.py`) thêm `antmed_roles` + cờ `is_antmed_user` → FE đọc `window.antmed_roles` / helper store, **KHÔNG hardcode** danh sách Role lần 2 ở FE.
+5. **Boot flag**: `get_boot()` (`antmed_crm/www/crm.py`) thêm `antmed_roles` + cờ `is_antmed_user` → FE đọc `window.antmed_roles` / helper store, **KHÔNG hardcode** danh sách Role lần 2 ở FE.
 
 **Business value (W0-2)**: NV kinh doanh AntMed thuần đăng nhập là vào thẳng SPA AntMed mà KHÔNG cần cấp thêm Role CRM gốc (`Sales User`) — đúng nguyên tắc least-privilege; đồng thời CRM-pure user (Sales User) KHÔNG bị ảnh hưởng (no-regression toàn diện).
 
@@ -48,13 +48,13 @@ Mở **OR-thêm nhánh AntMed** ở cả 3 tầng, single-source danh sách Role
 ## Scope — Boundaries (Always / Never)
 
 ### Always (W0-2 LUÔN làm)
-- **Always** định nghĩa danh sách Role AntMed **1 nơi duy nhất** ở BE: hằng `ANTMED_ALLOWED_ROLES` trong `crm/api/antmed/rbac.py`. Mọi tầng (Gate-1/2/3, boot) **import từ đây**, KHÔNG lặp literal.
+- **Always** định nghĩa danh sách Role AntMed **1 nơi duy nhất** ở BE: hằng `ANTMED_ALLOWED_ROLES` trong `antmed_crm/api/antmed/rbac.py`. Mọi tầng (Gate-1/2/3, boot) **import từ đây**, KHÔNG lặp literal.
 - **Always** allow-check là **ADDITIVE / OR**: trả `True` nếu user có MỘT trong `{System Manager, Sales Manager, Sales User}` **HOẶC** MỘT trong `{NV kinh doanh, Thủ kho, Quản lý}`.
-- **Always** giữ literal `CRM_ALLOWED_ROLES = ["System Manager", "Sales Manager", "Sales User"]` **NGUYÊN VẸN** (không thêm/bớt/đổi value) trong `crm/api/session.py:4`.
-- **Always** chỉ **EXTEND** (thêm nhánh OR) ở 3 core file `crm/api/__init__.py`, `crm/api/session.py`, `frontend/src/router.js` — KHÔNG đổi ngữ nghĩa nhánh CRM gốc.
+- **Always** giữ literal `CRM_ALLOWED_ROLES = ["System Manager", "Sales Manager", "Sales User"]` **NGUYÊN VẸN** (không thêm/bớt/đổi value) trong `antmed_crm/api/session.py:4`.
+- **Always** chỉ **EXTEND** (thêm nhánh OR) ở 3 core file `antmed_crm/api/__init__.py`, `antmed_crm/api/session.py`, `frontend/src/router.js` — KHÔNG đổi ngữ nghĩa nhánh CRM gốc.
 - **Always** để route **CRM gốc** (`/leads`, `/deals`, `/contacts`…) GIỮ guard `isCrmUser()` — AntMed-thuần vẫn redirect `Not Permitted` khi vào route CRM gốc (no-regression CRM gốc).
 - **Always** cho route **`/antmed/*`** pass với cả CRM user **và** AntMed user (CRM user vào `/antmed/*` cũng pass).
-- **Always** expose danh sách Role AntMed + cờ qua **boot** (`get_boot()` trong `crm/www/crm.py`) → FE đọc `window.antmed_roles` (KHÔNG hardcode lần 2).
+- **Always** expose danh sách Role AntMed + cờ qua **boot** (`get_boot()` trong `antmed_crm/www/crm.py`) → FE đọc `window.antmed_roles` (KHÔNG hardcode lần 2).
 - **Always** ghi **ADR** nêu *vì sao buộc đụng core* (gate ở HTML/session layer — không có hook extension-point khác) + cam kết CHỈ extend.
 
 ### Never (W0-2 TUYỆT ĐỐI KHÔNG)
@@ -62,7 +62,7 @@ Mở **OR-thêm nhánh AntMed** ở cả 3 tầng, single-source danh sách Role
 - **Never** đổi ngữ nghĩa nhánh CRM gốc ở `check_app_permission()` / `get_session_role_flags()` / `isCrmUser()` (chỉ OR-thêm, không sửa AND/return cũ).
 - **Never** cho phép user AntMed-thuần vào route **CRM gốc** (`/leads`…) — phải vẫn redirect `Not Permitted` (no-regression CRM gốc, Gate-3 yêu cầu rõ).
 - **Never** hardcode danh sách Role AntMed lần 2 ở FE (router.js / store) — phải đọc từ boot (`window.antmed_roles`). Nếu boot chưa có (fallback) → ghi rõ fallback, KHÔNG copy literal rời.
-- **Never** sửa `crm/api/session.py::get_users()` để nhét AntMed user vào `crmUsers` array (sẽ rò AntMed user vào mọi dropdown CRM gốc: AssignTo, Assignment, Dashboard… — xem §Risk). `crmUsers` GIỮ nguyên ngữ nghĩa "CRM-pure users".
+- **Never** sửa `antmed_crm/api/session.py::get_users()` để nhét AntMed user vào `crmUsers` array (sẽ rò AntMed user vào mọi dropdown CRM gốc: AssignTo, Assignment, Dashboard… — xem §Risk). `crmUsers` GIỮ nguyên ngữ nghĩa "CRM-pure users".
 - **Never** git commit / push / merge / reset DB / drop site (HARD-STOP — thuộc user).
 - **Never** đổi build base SPA (`createWebHistory('/crm')`) hay tách app FE riêng ở W0-2 (DEC-B = tách **route/guard**, KHÔNG tách app — pages AntMed vẫn mount trong shell `/crm`, chỉ mở guard cho prefix `/antmed`).
 
@@ -76,7 +76,7 @@ Mở **OR-thêm nhánh AntMed** ở cả 3 tầng, single-source danh sách Role
 
 ## BE — Single source RBAC AntMed
 
-### File mới: `crm/api/antmed/rbac.py`
+### File mới: `antmed_crm/api/antmed/rbac.py`
 
 | Thành phần | Chữ ký | Trả về (RAW) | Vai trò |
 |---|---|---|---|
@@ -84,12 +84,12 @@ Mở **OR-thêm nhánh AntMed** ở cả 3 tầng, single-source danh sách Role
 | Helper | `is_antmed_user(user: str \| None = None) -> bool` | `True` nếu `frappe.get_roles(user)` giao `ANTMED_ALLOWED_ROLES` khác rỗng | check role AntMed |
 | Helper | `is_crm_or_antmed_user(user: str \| None = None) -> bool` | `True` nếu là CRM user (giao `CRM_ALLOWED_ROLES`) **HOẶC** AntMed user | allow-check additive dùng chung |
 
-> **Vì sao đặt ở `crm/api/antmed/rbac.py`** (không nhét vào `session.py`): `session.py` là **core CRM gốc** — đặt hằng AntMed ở đó làm "ô nhiễm" file gốc + khó grep. `rbac.py` trong package `crm/api/antmed/` cô lập code AntMed dưới prefix, dễ tách app sau (theo ADR-M01-01). `session.py` chỉ **import** `ANTMED_ALLOWED_ROLES` từ package AntMed (one-line, không lặp literal).
+> **Vì sao đặt ở `antmed_crm/api/antmed/rbac.py`** (không nhét vào `session.py`): `session.py` là **core CRM gốc** (thừa kế từ Frappe CRM) — đặt hằng AntMed ở đó làm "ô nhiễm" file gốc + khó grep. `rbac.py` trong package `antmed_crm/api/antmed/` cô lập code AntMed dưới prefix `antmed`, dễ bảo trì/grep và đúng tinh thần tách-bạch của ADR-M01-01 (app đã cài THẬT là app RIÊNG `antmed_crm`, fork Frappe CRM — KHÔNG in-place trong app `crm`). `session.py` chỉ **import** `ANTMED_ALLOWED_ROLES` từ package AntMed (one-line, không lặp literal).
 
 **Logic chốt (spec — BE hiện thực, KHÔNG bịa thêm):**
 
 ```python
-# crm/api/antmed/rbac.py
+# antmed_crm/api/antmed/rbac.py
 import frappe
 
 # SINGLE SOURCE — 3 Role AntMed VI (đồng bộ tên với W0-1 / role.json).
@@ -104,7 +104,7 @@ def is_antmed_user(user: str | None = None) -> bool:
 
 def is_crm_or_antmed_user(user: str | None = None) -> bool:
     """Allow-check ADDITIVE: CRM-pure user HOẶC AntMed user."""
-    from crm.api.session import CRM_ALLOWED_ROLES  # lazy-import: tránh circular
+    from antmed_crm.api.session import CRM_ALLOWED_ROLES  # lazy-import: tránh circular
     roles = set(frappe.get_roles(user))
     return bool(
         roles.intersection(CRM_ALLOWED_ROLES)
@@ -112,18 +112,18 @@ def is_crm_or_antmed_user(user: str | None = None) -> bool:
     )
 ```
 
-> ⚠️ **Lazy-import bắt buộc**: `is_crm_or_antmed_user` import `CRM_ALLOWED_ROLES` từ `crm.api.session` **trong thân hàm** (không top-level) để tránh circular import khi `session.py` cũng import từ package AntMed. (Pattern B cross-module — xem skill `antmed-doc`.)
+> ⚠️ **Lazy-import bắt buộc**: `is_crm_or_antmed_user` import `CRM_ALLOWED_ROLES` từ `antmed_crm.api.session` **trong thân hàm** (không top-level) để tránh circular import khi `session.py` cũng import từ package AntMed. (Pattern B cross-module — xem skill `antmed-doc`.)
 
 ---
 
 ## Core files — điểm wiring (CHỈ extend, OR-thêm nhánh)
 
-### Gate-1 — `crm/api/__init__.py::check_app_permission()`
+### Gate-1 — `antmed_crm/api/__init__.py::check_app_permission()`
 
 **Hiện tại** (line 71–75): trả `True` chỉ khi có role CRM. **Đổi** (OR-thêm nhánh AntMed, giữ nguyên check module + nhánh CRM):
 
 ```python
-# crm/api/__init__.py — check_app_permission()
+# antmed_crm/api/__init__.py — check_app_permission()
 # ... giữ nguyên đoạn allowed_modules + 'FCRM' check (line 58–69) ...
 roles = frappe.get_roles()
 if any(role in ["System Manager", "Sales User", "Sales Manager"] for role in roles):
@@ -137,12 +137,12 @@ return False
 
 > ⚠️ *(Cần khảo sát khi BE wiring)*: dòng `if "FCRM" not in allowed_modules: return False` (line 68–69) — module `FCRM` được cấp qua Role Profile/Module Profile. **Phải xác nhận** 3 Role AntMed VI có map tới module cho phép `FCRM` (hoặc user AntMed có module `FCRM` trong `get_modules_from_all_apps_for_user()`) **trước** khi đến nhánh role-check; nếu không, Gate-1 vẫn `False` ở line 69 trước khi tới nhánh AntMed. Nếu user AntMed thuần KHÔNG có `FCRM` → cần (a) gán module `FCRM` cho Role AntMed, HOẶC (b) nới điều kiện module thành `FCRM` **HOẶC** `AntMed`. **BE đo trên site `miyano`**: `frappe.config.get_modules_from_all_apps_for_user(<user AntMed>)` — nếu thiếu `FCRM`/`AntMed` thì xử theo (b) (OR-thêm `"AntMed"` vào điều kiện module, vẫn additive). Đánh dấu *(Cần khảo sát baseline module-of-user)*.
 
-### Gate-2 — `crm/api/session.py::get_session_role_flags()`
+### Gate-2 — `antmed_crm/api/session.py::get_session_role_flags()`
 
 **Hiện tại** (line 10–11): throw nếu không giao `CRM_ALLOWED_ROLES`. **Đổi** (OR-thêm AntMed vào điều kiện không-throw; `CRM_ALLOWED_ROLES` literal GIỮ NGUYÊN):
 
 ```python
-# crm/api/session.py
+# antmed_crm/api/session.py
 from antmed_crm.api.antmed.rbac import ANTMED_ALLOWED_ROLES  # top-level OK: rbac.py không import ngược ở top-level
 
 CRM_ALLOWED_ROLES = ["System Manager", "Sales Manager", "Sales User"]  # GIỮ NGUYÊN — không đổi
@@ -201,12 +201,12 @@ if (isLoggedIn && to.name !== 'Not Permitted') {
 > - `/leads` + CRM user → `isCrmUser()` truthy → pass. ✅ (no-regression)
 > - ⚠️ **Lưu ý ordering**: nhánh `Home` (line 168, redirect default-view) hiện chạy SAU check `isCrmUser()`. Với user AntMed thuần, route `Home` (`/`) sẽ KHÔNG có `defaultView` CRM → cần quyết landing: **W0-2 chốt** — user AntMed thuần vào `/` (Home) thì redirect tới `/antmed` (landing AntMed). BE/FE wiring: trong nhánh `to.name === 'Home'`, nếu `!isCrmUser() && allowAntmed` → `next({ name: 'AntmedHome' })` TRƯỚC khi vào logic `getDefaultView()` CRM (logic CRM gốc giữ cho CRM user). *(Cần khảo sát: CRM user có cũng muốn landing AntMed không — mặc định KHÔNG, CRM user giữ landing CRM.)*
 
-### Boot — `crm/www/crm.py::get_boot()` (+ FE helper)
+### Boot — `antmed_crm/www/crm.py::get_boot()` (+ FE helper)
 
 **Đổi** `get_boot()` thêm 2 key (single source → FE):
 
 ```python
-# crm/www/crm.py — trong get_boot() dict, THÊM:
+# antmed_crm/www/crm.py — trong get_boot() dict, THÊM:
 from antmed_crm.api.antmed.rbac import ANTMED_ALLOWED_ROLES, is_antmed_user
 # ...
 "antmed_roles": ANTMED_ALLOWED_ROLES,
@@ -245,7 +245,7 @@ export const antmedRoles = window.antmed_roles || []
 | User KHÔNG role nào (cả CRM lẫn AntMed) | bị `Not Permitted` (Gate-2 throw + Gate-3 redirect) | — | tất cả |
 
 **Flow boot user `NV kinh doanh` (sau W0-2):**
-1. Login → request `/crm` → `crm.www.crm.get_context()` → `check_app_permission()` **True** (nhánh AntMed) → nhận SPA HTML + boot (`window.is_antmed_user = true`, `window.antmed_roles`).
+1. Login → request `/crm` → `antmed_crm.www.crm.get_context()` → `check_app_permission()` **True** (nhánh AntMed) → nhận SPA HTML + boot (`window.is_antmed_user = true`, `window.antmed_roles`).
 2. SPA mount → `get_users()` (qua `get_session_role_flags()`) **KHÔNG throw** (nhánh AntMed) → store load.
 3. Router guard: vào `/` → redirect `/antmed`; vào `/antmed/*` → pass; lỡ gõ `/leads` → `Not Permitted`.
 4. Render `/antmed` (AntmedHome) → các page Customer 360° (R2) hoạt động bình thường.
@@ -276,9 +276,9 @@ W0-2 là **RBAC nền (boot gate)** — KHÔNG thực thi BR nghiệp vụ mới
 
 ## Test harness (acceptance W0-2)
 
-### BE — module test mới `crm/tests/test_antmed_rbac_boot.py`
+### BE — module test mới `antmed_crm/tests/test_antmed_rbac_boot.py`
 
-> Acceptance gốc: `bench --site miyano run-tests crm.tests.test_antmed_rbac_boot` → `Ran N OK 0 fail`.
+> Acceptance gốc: `bench --site miyano run-tests antmed_crm.tests.test_antmed_rbac_boot` → `Ran N OK 0 fail`.
 
 | Test ID | Mục tiêu | Assert |
 |---|---|---|
@@ -312,9 +312,9 @@ W0-2 là **RBAC nền (boot gate)** — KHÔNG thực thi BR nghiệp vụ mới
 ### Lệnh chạy THẬT (dev — KHÔNG commit)
 ```
 bench --site miyano migrate                                   # nếu boot/role đụng — re-sync
-bench --site miyano run-tests --module crm.tests.test_antmed_rbac_boot
-bench --site miyano run-tests --module crm.tests.test_antmed_bootstrap
-bench --site miyano run-tests --module crm.tests.test_antmed_customer
+bench --site miyano run-tests --module antmed_crm.tests.test_antmed_rbac_boot
+bench --site miyano run-tests --module antmed_crm.tests.test_antmed_bootstrap
+bench --site miyano run-tests --module antmed_crm.tests.test_antmed_customer
 cd frontend && yarn vitest run && yarn build
 ```
 
@@ -322,11 +322,11 @@ cd frontend && yarn vitest run && yarn build
 
 ## Build sequence (cho BE/FE — KHÔNG commit)
 
-1. **BE**: tạo `crm/api/antmed/rbac.py` (`ANTMED_ALLOWED_ROLES` + `is_antmed_user` + `is_crm_or_antmed_user`, lazy-import `CRM_ALLOWED_ROLES`).
-2. **BE**: `crm/api/__init__.py::check_app_permission()` — OR-thêm nhánh `is_antmed_user()`; verify điều kiện module `FCRM` (Risk-2) trên `miyano` trước, xử theo (a)/(b) nếu thiếu.
-3. **BE**: `crm/api/session.py` — top-level import `ANTMED_ALLOWED_ROLES`; nới `get_session_role_flags()` bằng `allowed` cục bộ (union); GIỮ literal `CRM_ALLOWED_ROLES`.
-4. **BE**: `crm/www/crm.py::get_boot()` — thêm `antmed_roles` + `is_antmed_user`.
-5. **BE**: viết `crm/tests/test_antmed_rbac_boot.py` (8 test trên).
+1. **BE**: tạo `antmed_crm/api/antmed/rbac.py` (`ANTMED_ALLOWED_ROLES` + `is_antmed_user` + `is_crm_or_antmed_user`, lazy-import `CRM_ALLOWED_ROLES`).
+2. **BE**: `antmed_crm/api/__init__.py::check_app_permission()` — OR-thêm nhánh `is_antmed_user()`; verify điều kiện module `FCRM` (Risk-2) trên `miyano` trước, xử theo (a)/(b) nếu thiếu.
+3. **BE**: `antmed_crm/api/session.py` — top-level import `ANTMED_ALLOWED_ROLES`; nới `get_session_role_flags()` bằng `allowed` cục bộ (union); GIỮ literal `CRM_ALLOWED_ROLES`.
+4. **BE**: `antmed_crm/www/crm.py::get_boot()` — thêm `antmed_roles` + `is_antmed_user`.
+5. **BE**: viết `antmed_crm/tests/test_antmed_rbac_boot.py` (8 test trên).
 6. **FE**: helper `isAntmedUser()` đọc `window.is_antmed_user` (`utils/antmed.js` hoặc cạnh store).
 7. **FE**: `frontend/src/router.js` — tách nhánh `isAntmedRoute` (allow CRM HOẶC AntMed) vs CRM gốc (giữ `isCrmUser()`); Home landing → `/antmed` cho AntMed-thuần.
 8. **FE**: thêm vitest guard (4 case trên).
@@ -341,7 +341,7 @@ cd frontend && yarn vitest run && yarn build
 - **Status**: Accepted
 - **Date**: 2026-06-17
 - **Context**: User AntMed thuần (`NV kinh doanh`) bị 3 gate CRM gốc chặn boot (Gate-1 `check_app_permission`, Gate-2 `get_session_role_flags`, Gate-3 router `isCrmUser`). Cần cho họ boot `/antmed/*` mà KHÔNG phá CRM gốc. DEC-B (user chốt) = tách route/guard AntMed riêng, KHÔNG sửa ngữ nghĩa CRM gốc.
-- **Decision**: Thêm **nhánh OR** ở mỗi gate (pass nếu CRM role **HOẶC** AntMed role). `CRM_ALLOWED_ROLES` literal **giữ nguyên**. Danh sách Role AntMed single-source ở `crm/api/antmed/rbac.py::ANTMED_ALLOWED_ROLES`; FE đọc cờ boot `window.is_antmed_user`.
+- **Decision**: Thêm **nhánh OR** ở mỗi gate (pass nếu CRM role **HOẶC** AntMed role). `CRM_ALLOWED_ROLES` literal **giữ nguyên**. Danh sách Role AntMed single-source ở `antmed_crm/api/antmed/rbac.py::ANTMED_ALLOWED_ROLES`; FE đọc cờ boot `window.is_antmed_user`.
 - **Alternatives**:
   - *Thêm 3 Role AntMed VÀO `CRM_ALLOWED_ROLES`* — đổi value hằng CRM gốc → AntMed user lọt vào ngữ cảnh CRM-pure (vd `crmUsers`, flags `is_sales_user`), narrow/đổi semantics CRM gốc. **Loại** (vi phạm acceptance "literal không đổi" + DEC-B).
   - *Tách app FE AntMed riêng (build base `/antmed`, www context riêng)* — đúng tinh thần "tách app" nhưng nặng (router/build/auth/boot riêng), không cần ở W0-2; pages AntMed đang mount tốt trong shell `/crm`. **Hoãn** (`[ROADMAP]` nếu sau cần cô lập hoàn toàn).
@@ -349,7 +349,7 @@ cd frontend && yarn vitest run && yarn build
 - **Consequences**:
   - (+) NV KD AntMed boot được SPA mà không cần Role CRM; CRM-pure user không đổi hành vi (no-regression).
   - (+) Single-source ở BE → đổi danh sách Role AntMed 1 nơi; FE đọc cờ, không drift.
-  - (−) **Buộc đụng 3 core file** (`crm/api/__init__.py`, `crm/api/session.py`, `frontend/src/router.js`) — đây là tầng gate HTML/session/router, KHÔNG có extension-point/hook nào khác để chèn (Frappe www `get_context` gọi thẳng `check_app_permission`; session helper gọi thẳng; FE guard là 1 `beforeEach` tập trung). **Cam kết**: chỉ EXTEND (OR-thêm nhánh), KHÔNG sửa return/AND nhánh CRM gốc. Diff core tối thiểu, có ADR ghi lý do buộc đụng.
+  - (−) **Buộc đụng 3 core file** (`antmed_crm/api/__init__.py`, `antmed_crm/api/session.py`, `frontend/src/router.js`) — đây là tầng gate HTML/session/router, KHÔNG có extension-point/hook nào khác để chèn (Frappe www `get_context` gọi thẳng `check_app_permission`; session helper gọi thẳng; FE guard là 1 `beforeEach` tập trung). **Cam kết**: chỉ EXTEND (OR-thêm nhánh), KHÔNG sửa return/AND nhánh CRM gốc. Diff core tối thiểu, có ADR ghi lý do buộc đụng.
   - (−) Thêm 1 dependency core→AntMed: `session.py` import `antmed_crm.api.antmed.rbac`. Rủi ro circular xử bằng lazy-import trong `is_crm_or_antmed_user` (import `CRM_ALLOWED_ROLES` ngược). `session.py` import `ANTMED_ALLOWED_ROLES` top-level an toàn (rbac.py không import session ở top-level).
 
 ### ADR-M14W0-04: Bootflag `is_antmed_user` (tính sẵn ở BE) làm nguồn cho FE guard — KHÔNG hardcode role ở FE
@@ -366,8 +366,8 @@ cd frontend && yarn vitest run && yarn build
 
 ## Tham chiếu chéo
 - Tiền đề tên Role VI (W0-1): `./m14_rbac_w0_role_naming.md`
-- Bootstrap nền R1 (namespace `crm/antmed/`, `health.ping`): `./m01_bootstrap.md`
+- Bootstrap nền R1 (namespace `antmed_crm/antmed/`, `health.ping`): `./m01_bootstrap.md`
 - Convention naming FE↔BE: `./m01_naming_conventions.md`
 - Customer 360° R2 (pages `/antmed/*` được mở boot): `./m01_customer360.md`
-- Source thật (gate points): `crm/www/crm.py`, `crm/api/__init__.py`, `crm/api/session.py`, `frontend/src/router.js`, `frontend/src/stores/users.js`, `frontend/src/stores/session.js`, `crm/www/crm.html`
-- Source mới (W0-2): `crm/api/antmed/rbac.py`, `crm/tests/test_antmed_rbac_boot.py`, FE helper `frontend/src/utils/antmed.js` (hoặc cạnh store)
+- Source thật (gate points): `antmed_crm/www/crm.py`, `antmed_crm/api/__init__.py`, `antmed_crm/api/session.py`, `frontend/src/router.js`, `frontend/src/stores/users.js`, `frontend/src/stores/session.js`, `antmed_crm/www/crm.html`
+- Source mới (W0-2): `antmed_crm/api/antmed/rbac.py`, `antmed_crm/tests/test_antmed_rbac_boot.py`, FE helper `frontend/src/utils/antmed.js` (hoặc cạnh store)

@@ -18,9 +18,13 @@ describe('M02-8 data layer — getMonthlyRevenue url monthly_revenue + method GE
   })
 
   it("url == 'antmed_crm.api.antmed.contract.monthly_revenue' (KHÔNG prefix sai)", () => {
-    expect(dataSrc).toMatch(/antmed_crm\.api\.antmed\.contract\.monthly_revenue/)
+    expect(dataSrc).toMatch(
+      /antmed_crm\.api\.antmed\.contract\.monthly_revenue/,
+    )
     // KHÔNG dùng prefix app 'crm' (repo này là app riêng antmed_crm).
-    expect(dataSrc).not.toMatch(/['"]crm\.api\.antmed\.contract\.monthly_revenue/)
+    expect(dataSrc).not.toMatch(
+      /['"]crm\.api\.antmed\.contract\.monthly_revenue/,
+    )
   })
 
   it("resource có method === 'GET' (endpoint KHÔNG params → mặc định POST → 403)", () => {
@@ -48,7 +52,9 @@ describe('M02-8 AntmedHome — wire KPI Doanh thu tháng THẬT', () => {
   })
 
   it('khai báo resource monthlyRevenue = getMonthlyRevenue({ auto: true }) + onError toast', () => {
-    expect(homeSrc).toMatch(/const monthlyRevenue = getMonthlyRevenue\(\{[\s\S]*?auto:\s*true/)
+    expect(homeSrc).toMatch(
+      /const monthlyRevenue = getMonthlyRevenue\(\{[\s\S]*?auto:\s*true/,
+    )
     expect(homeSrc).toMatch(/getMonthlyRevenue\(\{[\s\S]*?onError/)
   })
 

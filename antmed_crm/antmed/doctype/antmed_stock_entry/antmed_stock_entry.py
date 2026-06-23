@@ -53,7 +53,9 @@ class AntMedStockEntry(Document):
 			{
 				r["name"]: r["requires_cocq"]
 				for r in frappe.get_all(
-					"AntMed Item", filters={"name": ["in", list(item_codes)]}, fields=["name", "requires_cocq"]
+					"AntMed Item",
+					filters={"name": ["in", list(item_codes)]},
+					fields=["name", "requires_cocq"],
 				)
 			}
 			if item_codes
@@ -75,14 +77,14 @@ class AntMedStockEntry(Document):
 		today = getdate(nowdate())
 		for line in self.items:
 			lot = lot_map.get(line.lot) or {}
-			line.cocq_ok = stock.compute_cocq_ok(req_map.get(line.item, 0), lot.get("co_cert"), lot.get("cq_cert"))
+			line.cocq_ok = stock.compute_cocq_ok(
+				req_map.get(line.item, 0), lot.get("co_cert"), lot.get("cq_cert")
+			)
 			if not blocks_issue:
 				continue
 			# An toàn recall: KHÔNG xuất/đặt ký gửi lô đã thu hồi.
 			if lot.get("recall_status") == _RECALL_BLOCKED:
-				frappe.throw(
-					_("Lô {0} đã bị thu hồi (recall) — không thể xuất/đặt ký gửi.").format(line.lot)
-				)
+				frappe.throw(_("Lô {0} đã bị thu hồi (recall) — không thể xuất/đặt ký gửi.").format(line.lot))
 			# An toàn HSD: KHÔNG xuất/đặt ký gửi lô đã hết hạn (expiry < hôm nay).
 			expiry = lot.get("expiry_date")
 			if expiry and getdate(expiry) < today:

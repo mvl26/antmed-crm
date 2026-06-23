@@ -44,7 +44,13 @@ def _mk_supplier(code, name):
 
 def _mk_lot(lot_no, item, **kw):
 	return frappe.get_doc(
-		{"doctype": "AntMed Lot", "lot_no": lot_no, "item": item, "expiry_date": kw.pop("expiry_date", "2027-12-31"), **kw}
+		{
+			"doctype": "AntMed Lot",
+			"lot_no": lot_no,
+			"item": item,
+			"expiry_date": kw.pop("expiry_date", "2027-12-31"),
+			**kw,
+		}
 	).insert(ignore_permissions=True)
 
 
@@ -61,15 +67,26 @@ class TestAntMedLot(FrappeTestCase):
 	def test_doctypes_and_fields(self):
 		for dt in ("AntMed Supplier", "AntMed Lot", "AntMed Certificate"):
 			self.assertTrue(frappe.db.exists("DocType", dt), msg=f"thiếu DocType {dt}")
-		self.assertTrue(SUPPLIER_FIELDS.issubset({f.fieldname for f in frappe.get_meta("AntMed Supplier").fields}))
-		self.assertTrue(CERT_FIELDS.issubset({f.fieldname for f in frappe.get_meta("AntMed Certificate").fields}))
+		self.assertTrue(
+			SUPPLIER_FIELDS.issubset({f.fieldname for f in frappe.get_meta("AntMed Supplier").fields})
+		)
+		self.assertTrue(
+			CERT_FIELDS.issubset({f.fieldname for f in frappe.get_meta("AntMed Certificate").fields})
+		)
 		self.assertTrue(LOT_FIELDS.issubset({f.fieldname for f in frappe.get_meta("AntMed Lot").fields}))
 		self.assertEqual(self.lot1, "_T-LOT-001")  # autoname field:lot_no
 
 	def test_lot_unique_and_expiry(self):
-		with self.assertRaises((frappe.UniqueValidationError, frappe.DuplicateEntryError, frappe.ValidationError)):
+		with self.assertRaises(
+			(frappe.UniqueValidationError, frappe.DuplicateEntryError, frappe.ValidationError)
+		):
 			frappe.get_doc(
-				{"doctype": "AntMed Lot", "lot_no": "_T-LOT-001", "item": self.item, "expiry_date": "2028-01-01"}
+				{
+					"doctype": "AntMed Lot",
+					"lot_no": "_T-LOT-001",
+					"item": self.item,
+					"expiry_date": "2028-01-01",
+				}
 			).insert(ignore_permissions=True)
 		# expiry_date reqd
 		with self.assertRaises(frappe.ValidationError):

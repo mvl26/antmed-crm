@@ -2,9 +2,9 @@
 
 | Mục | Giá trị |
 |---|---|
-| Module folder | `crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) — DocType AntMed mới đặt ở `crm/antmed/doctype/<snake>/` |
-| Mở rộng core CRM | `crm/fcrm/doctype/crm_lead/` + `crm/fcrm/doctype/crm_deal/` (chỉ THÊM Custom Field qua fixtures — **KHÔNG sửa JSON gốc**) |
-| Code path BE | `crm/api/antmed/pipeline.py` → đường gọi `antmed_crm.api.antmed.pipeline.<fn>` · business rules ở `crm/antmed/pipeline_hooks.py` wire qua `doc_events` |
+| Module folder | `antmed_crm/antmed/` (module Frappe **`AntMed`**, scrubbed = `antmed`) — DocType AntMed mới đặt ở `antmed_crm/antmed/doctype/<snake>/` |
+| Mở rộng core CRM | `antmed_crm/fcrm/doctype/crm_lead/` + `antmed_crm/fcrm/doctype/crm_deal/` (chỉ THÊM Custom Field qua fixtures — **KHÔNG sửa JSON gốc**) |
+| Code path BE | `antmed_crm/api/antmed/pipeline.py` → đường gọi `antmed_crm.api.antmed.pipeline.<fn>` · business rules ở `antmed_crm/antmed/pipeline_hooks.py` wire qua `doc_events` |
 | FE pages | `frontend/src/pages/AntmedPipeline*.vue` + route `/antmed/pipeline`, `/antmed/pipeline/forecast`, `/antmed/tenders`, `/antmed/tenders/:name` |
 | Wave (PLAN) | **W4 — Tăng trưởng & kiểm soát** (Phase 3) |
 | Role chính (VI) | `NV kinh doanh`, `Quản lý` · [PLANNED] `Trưởng KD` / `CEO` (xem §4, §7 — đề xuất role VI mới) |
@@ -15,13 +15,13 @@
 | Cập nhật | 2026-06-17 |
 
 > **Trạng thái: [PLANNED — chưa code]**
-> Toàn bộ DocType / API / Workflow / BR dưới đây là **DESIGN (đề xuất)**, ground trên: PLAN dòng 50 (`mở rộng CRM Lead/CRM Deal + AntMed Tender`), `AntMed_CRM_Modules.md §8`, scaffold cũ `m08_pipeline/doctype/` (separate-app, prefix `AM `, reuse `Opportunity/Customer/Employee` của ERPNext — đã ADAPT sang in-place + native-lite), `AntMed_CRM_UI_Design.md` (hàng 3 dashboard + bảng module #8). Chưa có dòng code nào trên site `miyano`.
+> Toàn bộ DocType / API / Workflow / BR dưới đây là **DESIGN (đề xuất)**, ground trên: PLAN dòng 50 (`mở rộng CRM Lead/CRM Deal + AntMed Tender`), `AntMed_CRM_Modules.md §8`, scaffold cũ `m08_pipeline/doctype/` (separate-app, prefix `AM `, reuse `Opportunity/Customer/Employee` của ERPNext — đã ADAPT sang app RIÊNG `antmed_crm` + native-lite), `AntMed_CRM_UI_Design.md` (hàng 3 dashboard + bảng module #8). Chưa có dòng code nào trên site `miyano`.
 
 ---
 
 ## 1. Overview
 
-M08 là module **phát triển khách hàng mới** — phễu (pipeline) đưa một **bệnh viện chưa ký hợp đồng** đi từ tiếp cận đến trúng/trượt thầu, rồi **bàn giao sang M02** để lập `AntMed Contract` + quota. Trong 14 module, M08 nằm ở **đầu vòng đời thương mại**: M01 (master BV/bác sỹ) → **M08 (lead → thầu → trúng)** → M02 (hợp đồng/quota) → M09 (đơn/AR). Đây là một trong số ít module **mở rộng trực tiếp Frappe CRM gốc** — lợi thế in-place: tái dùng nguyên `CRM Lead` / `CRM Deal` (đã có status, pipeline, owner, activity timeline, kanban) và chỉ **THÊM** lớp y tế (BV mục tiêu, nguồn thầu, ngày mở thầu) + DocType `AntMed Tender` để theo dõi gói thầu công (cổng muasamcong).
+M08 là module **phát triển khách hàng mới** — phễu (pipeline) đưa một **bệnh viện chưa ký hợp đồng** đi từ tiếp cận đến trúng/trượt thầu, rồi **bàn giao sang M02** để lập `AntMed Contract` + quota. Trong 14 module, M08 nằm ở **đầu vòng đời thương mại**: M01 (master BV/bác sỹ) → **M08 (lead → thầu → trúng)** → M02 (hợp đồng/quota) → M09 (đơn/AR). Đây là một trong số ít module **mở rộng trực tiếp Frappe CRM gốc** — lợi thế fork từ Frappe CRM: tái dùng nguyên `CRM Lead` / `CRM Deal` (đã có status, pipeline, owner, activity timeline, kanban) và chỉ **THÊM** lớp y tế (BV mục tiêu, nguồn thầu, ngày mở thầu) + DocType `AntMed Tender` để theo dõi gói thầu công (cổng muasamcong).
 
 **Vai trò khác biệt vs CRM thường:** CRM gốc dừng ở "Deal Won". Ngành VTYT thì "won" = **trúng gói thầu công** → cần theo dõi *lịch mở thầu*, *số quyết định phê duyệt KQLCNT*, *giá trị gói*, *xác suất trúng theo giai đoạn* để **forecast doanh thu trọng số**, và khi trúng thì **derive sang hợp đồng (M02)**.
 
@@ -75,7 +75,7 @@ M08 là module **phát triển khách hàng mới** — phễu (pipeline) đưa 
 
 ## 3. Workflow
 
-M08 có **một** state machine cho `AntMed Tender` (gói thầu) = **Frappe-native Workflow** (fixture `crm/fixtures/workflow.json` + `docstatus`). `CRM Lead`/`CRM Deal` **giữ nguyên** status/pipeline gốc của Frappe CRM (KHÔNG thêm workflow lên doctype gốc — chỉ Custom Field hiển thị).
+M08 có **một** state machine cho `AntMed Tender` (gói thầu) = **Frappe-native Workflow** (fixture `antmed_crm/fixtures/workflow.json` + `docstatus`). `CRM Lead`/`CRM Deal` **giữ nguyên** status/pipeline gốc của Frappe CRM (KHÔNG thêm workflow lên doctype gốc — chỉ Custom Field hiển thị).
 
 **Workflow `AntMed Tender Workflow`** — field trạng thái: `workflow_state`. Giai đoạn ngành VTYT theo Modules §8 + UI hàng 3:
 
@@ -105,7 +105,7 @@ M08 có **một** state machine cho `AntMed Tender` (gói thầu) = **Frappe-nat
 
 ## 4. Business Rules
 
-> M08 chưa có BR-01..15 nào trong danh sách chuẩn (README dòng 203–217 — các BR đó thuộc M02/M03/M04/M05/M06/M09/M14). M08 đề xuất **BR cấp module** `BR-M08-xx` (enforce trong `crm/antmed/pipeline_hooks.py` qua `doc_events`, hoặc controller `AntMed Tender.validate`). Tất cả message tiếng Việt, prefix mã BR.
+> M08 chưa có BR-01..15 nào trong danh sách chuẩn (README dòng 203–217 — các BR đó thuộc M02/M03/M04/M05/M06/M09/M14). M08 đề xuất **BR cấp module** `BR-M08-xx` (enforce trong `antmed_crm/antmed/pipeline_hooks.py` qua `doc_events`, hoặc controller `AntMed Tender.validate`). Tất cả message tiếng Việt, prefix mã BR.
 
 | Mã | Mô tả | Nơi enforce |
 |---|---|---|
@@ -122,7 +122,7 @@ M08 có **một** state machine cho `AntMed Tender` (gói thầu) = **Frappe-nat
 
 ## 5. API
 
-> File: `crm/api/antmed/pipeline.py`. Mọi hàm `@frappe.whitelist(methods=["GET"|"POST"])`, **type-annotated** (`crm/hooks.py:28`), trả **RAW dict/list** (KHÔNG `_ok/_err` envelope). Lỗi nghiệp vụ = `frappe.throw(_("BR-M08-..."))`. List endpoint giữ invariant **count == rows** (`get_list(pluck=…, limit_page_length=0)` để đếm, không cắt bởi page_length).
+> File: `antmed_crm/api/antmed/pipeline.py`. Mọi hàm `@frappe.whitelist(methods=["GET"|"POST"])`, **type-annotated** (`antmed_crm/hooks.py:28`), trả **RAW dict/list** (KHÔNG `_ok/_err` envelope). Lỗi nghiệp vụ = `frappe.throw(_("BR-M08-..."))`. List endpoint giữ invariant **count == rows** (`get_list(pluck=…, limit_page_length=0)` để đếm, không cắt bởi page_length).
 
 | Endpoint (`antmed_crm.api.antmed.pipeline.<fn>`) | Verb | Mô tả |
 |---|---|---|
@@ -147,21 +147,21 @@ Dependency DAG (PLAN dòng 63): `M01 ─► M08 ─► M02`.
 - `AntMed Tender.hospital` + `CRM Deal.antmed_hospital`/`CRM Lead.antmed_target_hospital` Link→`AntMed Hospital` (M01). M08 chỉ **đọc** master BV — không sửa.
 
 **Ra (M08 cấp dữ liệu cho M02):**
-- `pipeline_hooks.on_submit_tender` (doc_event `AntMed Tender` → `on_submit`): khi `result=Trúng` → **lazy-import** module M02 và tạo/gợi ý `AntMed Contract`, truyền **PK** (`hospital`, `tender.name`, `estimated_value`), set `won_contract` ngược lại. Pattern: `from crm.antmed import contract_hooks` *bên trong hàm* (lazy) để tránh import vòng + giữ M08 chạy được cả khi M02 chưa land (guard `if frappe.db.exists("DocType", "AntMed Contract")`).
+- `pipeline_hooks.on_submit_tender` (doc_event `AntMed Tender` → `on_submit`): khi `result=Trúng` → **lazy-import** module M02 và tạo/gợi ý `AntMed Contract`, truyền **PK** (`hospital`, `tender.name`, `estimated_value`), set `won_contract` ngược lại. Pattern: `from antmed_crm.antmed import contract_hooks` *bên trong hàm* (lazy) để tránh import vòng + giữ M08 chạy được cả khi M02 chưa land (guard `if frappe.db.exists("DocType", "AntMed Contract")`).
 
-**Wiring `crm/hooks.py` (THÊM key — KHÔNG sửa key gốc):**
+**Wiring `antmed_crm/hooks.py` (THÊM key — KHÔNG sửa key gốc):**
 ```python
 doc_events = {
   "AntMed Tender": {
-    "validate": "crm.antmed.pipeline_hooks.validate_tender",
-    "on_submit": "crm.antmed.pipeline_hooks.on_submit_tender",
+    "validate": "antmed_crm.antmed.pipeline_hooks.validate_tender",
+    "on_submit": "antmed_crm.antmed.pipeline_hooks.on_submit_tender",
   },
   "CRM Deal": {  # additive — chỉ validate Custom Field AntMed, KHÔNG đụng logic gốc
-    "validate": "crm.antmed.pipeline_hooks.validate_deal_forecast",
+    "validate": "antmed_crm.antmed.pipeline_hooks.validate_deal_forecast",
   },
 }
 ```
-- Fixtures: `crm/fixtures/workflow.json` (+ `AntMed Tender Workflow`), `crm/fixtures/custom_field.json` (Custom Field §2a trên `CRM Lead`/`CRM Deal`), `crm/fixtures/role.json` (nếu thêm role VI mới `Trưởng KD`/`CEO`), `crm/fixtures/workflow_state.json`/`workflow_action_master.json` cho state/action VI.
+- Fixtures: `antmed_crm/fixtures/workflow.json` (+ `AntMed Tender Workflow`), `antmed_crm/fixtures/custom_field.json` (Custom Field §2a trên `CRM Lead`/`CRM Deal`), `antmed_crm/fixtures/role.json` (nếu thêm role VI mới `Trưởng KD`/`CEO`), `antmed_crm/fixtures/workflow_state.json`/`workflow_action_master.json` cho state/action VI.
 - **Gate compliance:** M08 không có gate CO/CQ/HĐĐT (đó là M03/M06). Gate duy nhất = BR-M08-02 (decision_no khi Trúng) + BR-M08-05 (bàn giao M02).
 
 ---
@@ -188,7 +188,7 @@ doc_events = {
 
 ## 8. Build slices (vertical, cho factory — mỗi slice 1 vòng)
 
-1. **Slice 8.1 — Pipeline trên core CRM (Lead/Deal extend).** Custom Field §2a (fixtures `custom_field.json`) lên `CRM Lead`/`CRM Deal`; API `list_pipeline` + `get_pipeline_board` + `move_stage`; `pipeline_hooks.validate_deal_forecast` (BR-M08-04); FE `AntmedPipeline.vue` kanban. TDD BE + vitest FE. *Lợi thế in-place: tái dùng toàn bộ Deal gốc.*
+1. **Slice 8.1 — Pipeline trên core CRM (Lead/Deal extend).** Custom Field §2a (fixtures `custom_field.json`) lên `CRM Lead`/`CRM Deal`; API `list_pipeline` + `get_pipeline_board` + `move_stage`; `pipeline_hooks.validate_deal_forecast` (BR-M08-04); FE `AntmedPipeline.vue` kanban. TDD BE + vitest FE. *Lợi thế fork Frappe CRM: tái dùng toàn bộ Deal gốc.*
 2. **Slice 8.2 — AntMed Tender + Workflow.** DocType `AntMed Tender` + workflow fixture (6 state VI); controller `validate` (BR-M08-01/02/03); API `list_tenders`/`get_tender`/`create_tender`/`set_tender_result`; FE `AntmedTenders.vue` + `AntmedTenderDetail.vue` (workflow action).
 3. **Slice 8.3 — Forecast.** API `forecast` (tính trọng số on-the-fly); FE `AntmedForecast.vue`. (Tùy chọn: thêm DocType `AntMed Sales Forecast` snapshot + scheduler tính định kỳ — [PLANNED], chỉ khi cần lịch sử.)
 4. **Slice 8.4 — Bàn giao M02 (integration).** `pipeline_hooks.on_submit_tender` (BR-M08-05) lazy-import M02 tạo `AntMed Contract` khi Trúng. *Chỉ chạy được sau khi M02 land — guard `frappe.db.exists`.*
@@ -200,9 +200,9 @@ doc_events = {
 ### ADR-M08-01: Mở rộng `CRM Lead`/`CRM Deal` bằng Custom Field, thêm `AntMed Tender` (KHÔNG tạo DocType `Opportunity` mới)
 - **Status**: Proposed
 - **Date**: 2026-06-17
-- **Context**: Scaffold cũ (separate-app) dựng `AM Tender Opportunity`/`AM Tender Lead Info` quanh ERPNext `Opportunity`/`Lead`. In-place, Frappe CRM **đã có** `CRM Lead`/`CRM Deal` với pipeline/status/kanban/owner/timeline đầy đủ. Tái dựng DocType phễu riêng = trùng lặp + bỏ phí hạ tầng CRM gốc.
+- **Context**: Scaffold cũ (separate-app) dựng `AM Tender Opportunity`/`AM Tender Lead Info` quanh ERPNext `Opportunity`/`Lead`. Là bản fork Frappe CRM, app RIÊNG `antmed_crm` **đã có** `CRM Lead`/`CRM Deal` với pipeline/status/kanban/owner/timeline đầy đủ. Tái dựng DocType phễu riêng = trùng lặp + bỏ phí hạ tầng CRM gốc.
 - **Decision**: Phần phễu (lead→deal→won) **dùng nguyên `CRM Lead`/`CRM Deal`**, chỉ THÊM Custom Field y tế (BV mục tiêu, nguồn thầu, giai đoạn VTYT, xác suất, forecast). Phần **gói thầu công** (lịch mở thầu, số QĐ KQLCNT, kết quả, có workflow + docstatus) tách thành DocType mới **`AntMed Tender`**.
-- **Alternatives**: (a) DocType phễu AntMed riêng — loại: trùng `CRM Deal`, mất kanban/timeline gốc, đụng nguyên tắc tận-dụng in-place. (b) Nhồi cả gói thầu vào `CRM Deal` — loại: gói thầu cần workflow submit/khoá + field pháp lý (QĐ KQLCNT) không hợp với Deal gốc.
+- **Alternatives**: (a) DocType phễu AntMed riêng — loại: trùng `CRM Deal`, mất kanban/timeline gốc, đụng nguyên tắc tận-dụng bản fork Frappe CRM. (b) Nhồi cả gói thầu vào `CRM Deal` — loại: gói thầu cần workflow submit/khoá + field pháp lý (QĐ KQLCNT) không hợp với Deal gốc.
 - **Consequences**: (+) Tận dụng tối đa CRM gốc, additive thuần (no-regression). (+) Tender độc lập có workflow/audit. (−) Phải đồng bộ `antmed_pipeline_stage` (Deal) ↔ `workflow_state` (Tender) khi 2 thực thể gắn nhau — quy ước: Tender là nguồn chân lý của giai đoạn thầu, Deal mirror để kanban.
 
 ### ADR-M08-02: Forecast tính on-the-fly trước, snapshot DocType sau ([PLANNED])
@@ -211,13 +211,13 @@ doc_events = {
 - **Decision**: API `forecast` **tính trọng số on-the-fly** từ `CRM Deal` đang mở. `AntMed Sales Forecast` (snapshot lịch sử + scheduler) là [PLANNED], chỉ thêm khi cần so sánh forecast theo thời gian.
 - **Consequences**: (+) Slice gọn, không scheduler/migration sớm. (−) Chưa có lịch sử forecast cho tới khi land snapshot.
 
-> Kế thừa: **ADR-M01-01** (in-place), **ADR-M01-02** (prefix `AntMed `), **ADR-M01-05** (hoãn data-scope BR-13 → áp cho BR-M08-06), **DEC-A** (role VI), **DEC-B** (route `/antmed/*` riêng). D1 (native-lite, KHÔNG ERPNext) + D2 (Frappe Workflow gốc) chi phối §2/§3.
+> Kế thừa: **ADR-M01-01** (app RIÊNG `antmed_crm`; gốc: in-place; THỰC TẾ = app RIÊNG `antmed_crm`), **ADR-M01-02** (prefix `AntMed `), **ADR-M01-05** (hoãn data-scope BR-13 → áp cho BR-M08-06), **DEC-A** (role VI), **DEC-B** (route `/antmed/*` riêng). D1 (native-lite, KHÔNG ERPNext) + D2 (Frappe Workflow gốc) chi phối §2/§3.
 
 ---
 
 ## 10. Acceptance / DoD (theo SPEC §6)
 
-**BE (TDD — `Ran N OK`, 0 fail):** `bench --site miyano run-tests --module crm.tests.test_antmed_pipeline`
+**BE (TDD — `Ran N OK`, 0 fail):** `bench --site miyano run-tests --module antmed_crm.tests.test_antmed_pipeline`
 1. Custom Field §2a tồn tại trên `CRM Lead`/`CRM Deal` sau migrate (`frappe.get_meta` chứa `antmed_pipeline_stage`, `antmed_win_probability_pct`, `antmed_forecast_value`, `antmed_hospital`).
 2. `AntMed Tender` tồn tại + naming `AM-TND-…`; `tender_no` unique (BR-M08-01 → DuplicateEntryError).
 3. Workflow `AntMed Tender Workflow` có 6 state VI; transition `Dự thầu`→`Trúng` set `docstatus=1`.

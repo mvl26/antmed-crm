@@ -19,7 +19,10 @@ from antmed_crm.api.antmed import mobile_sync
 
 
 def _ensure(doctype, key, val, values):
-	return frappe.db.get_value(doctype, {key: val}, "name") or frappe.get_doc({"doctype": doctype, key: val, **values}).insert(ignore_permissions=True).name
+	return (
+		frappe.db.get_value(doctype, {key: val}, "name")
+		or frappe.get_doc({"doctype": doctype, key: val, **values}).insert(ignore_permissions=True).name
+	)
 
 
 class TestAntMedMobile(FrappeTestCase):
@@ -27,7 +30,9 @@ class TestAntMedMobile(FrappeTestCase):
 	def setUpClass(cls):
 		super().setUpClass()
 		cls.item = _ensure("AntMed Item", "item_code", "_T-MOB-VTYT", {"item_name": "VT mobile"})
-		cls.lot = _ensure("AntMed Lot", "lot_no", "_T-MOB-LOT", {"item": cls.item, "expiry_date": "2027-12-31"})
+		cls.lot = _ensure(
+			"AntMed Lot", "lot_no", "_T-MOB-LOT", {"item": cls.item, "expiry_date": "2027-12-31"}
+		)
 
 	def test_doctypes(self):
 		self.assertTrue(frappe.db.exists("DocType", "AntMed Mobile Device"))
@@ -49,18 +54,26 @@ class TestAntMedMobile(FrappeTestCase):
 			mobile_sync.scan_lot("_T-MOB-KHONGCO")
 
 	def test_register_device(self):
-		res = mobile_sync.register_device(device_id="DEV-TEST-1", push_token="tok-123", platform="android", app_version="1.0.0")
+		res = mobile_sync.register_device(
+			device_id="DEV-TEST-1", push_token="tok-123", platform="android", app_version="1.0.0"
+		)
 		self.assertEqual(res["device_id"], "DEV-TEST-1")
 		self.assertTrue(frappe.db.exists("AntMed Mobile Device", "DEV-TEST-1"))
 		# upsert: gọi lại đổi token → vẫn 1 bản ghi
-		mobile_sync.register_device(device_id="DEV-TEST-1", push_token="tok-456", platform="android", app_version="1.0.1")
+		mobile_sync.register_device(
+			device_id="DEV-TEST-1", push_token="tok-456", platform="android", app_version="1.0.1"
+		)
 		self.assertEqual(frappe.db.count("AntMed Mobile Device", {"device_id": "DEV-TEST-1"}), 1)
 		self.assertEqual(frappe.db.get_value("AntMed Mobile Device", "DEV-TEST-1", "push_token"), "tok-456")
 
 	def test_register_device_idor_blocked(self):
 		"""IDOR: user khác KHÔNG được chiếm/ghi đè thiết bị đã đăng ký bởi người khác (device takeover)."""
-		ua = _ensure("User", "email", "_t_mob_a@example.com", {"first_name": "Mob A", "send_welcome_email": 0})
-		ub = _ensure("User", "email", "_t_mob_b@example.com", {"first_name": "Mob B", "send_welcome_email": 0})
+		ua = _ensure(
+			"User", "email", "_t_mob_a@example.com", {"first_name": "Mob A", "send_welcome_email": 0}
+		)
+		ub = _ensure(
+			"User", "email", "_t_mob_b@example.com", {"first_name": "Mob B", "send_welcome_email": 0}
+		)
 		frappe.set_user(ua)
 		try:
 			mobile_sync.register_device(device_id="DEV-IDOR", push_token="A-token")

@@ -33,32 +33,56 @@ def _user(email):
 
 
 def _delivery(hospital, nv, item, lot, qty, status="Đang giao", doctor=None):
-	return frappe.get_doc(
-		{
-			"doctype": "AntMed Delivery",
-			"hospital": hospital,
-			"doctor": doctor,
-			"surgery_datetime": f"{add_days(nowdate(), 1)} 14:30:00",
-			"status": status,
-			"assigned_employee": nv,
-			"items": [{"item": item, "lot": lot, "requested_qty": qty, "consumed_qty": qty}],
-		}
-	).insert(ignore_permissions=True).name
+	return (
+		frappe.get_doc(
+			{
+				"doctype": "AntMed Delivery",
+				"hospital": hospital,
+				"doctor": doctor,
+				"surgery_datetime": f"{add_days(nowdate(), 1)} 14:30:00",
+				"status": status,
+				"assigned_employee": nv,
+				"items": [{"item": item, "lot": lot, "requested_qty": qty, "consumed_qty": qty}],
+			}
+		)
+		.insert(ignore_permissions=True)
+		.name
+	)
 
 
 class TestDeliveryConsumption(FrappeTestCase):
 	@classmethod
 	def setUpClass(cls):
 		super().setUpClass()
-		cls.item = _mk("AntMed Item", "_T-GPM-ITEM", {"item_code": "_T-GPM-ITEM", "item_name": "VT giao phòng mổ", "requires_cocq": 0}).name
-		cls.hosp = _mk("AntMed Hospital", "_T-GPM-BV", {"hospital_code": "_T-GPM-BV", "hospital_name": "BV Giao Phòng Mổ"}).name
+		cls.item = _mk(
+			"AntMed Item",
+			"_T-GPM-ITEM",
+			{"item_code": "_T-GPM-ITEM", "item_name": "VT giao phòng mổ", "requires_cocq": 0},
+		).name
+		cls.hosp = _mk(
+			"AntMed Hospital",
+			"_T-GPM-BV",
+			{"hospital_code": "_T-GPM-BV", "hospital_name": "BV Giao Phòng Mổ"},
+		).name
 		cls.nv = _user("_t_gpm_nv@example.com")
-		cls.nv_wh = _mk("AntMed Warehouse", "_T-GPM-WH-NV", {"warehouse_name": "_T-GPM-WH-NV", "warehouse_type": "Cá nhân NV", "employee": cls.nv}).name
+		cls.nv_wh = _mk(
+			"AntMed Warehouse",
+			"_T-GPM-WH-NV",
+			{"warehouse_name": "_T-GPM-WH-NV", "warehouse_type": "Cá nhân NV", "employee": cls.nv},
+		).name
 
 	def _fresh_lot(self, suffix, qty):
 		"""Lô riêng + nạp tồn `qty` vào kho NV → mỗi test tồn độc lập (handover submit không rollback sạch)."""
-		lot = _mk("AntMed Lot", f"_T-GPM-LOT-{suffix}", {"lot_no": f"_T-GPM-LOT-{suffix}", "item": self.item, "expiry_date": add_days(nowdate(), 300)}).name
-		inventory.create_stock_entry(entry_type="Nhập NCC", to_warehouse=self.nv_wh, items=[{"item": self.item, "lot": lot, "qty": qty}])
+		lot = _mk(
+			"AntMed Lot",
+			f"_T-GPM-LOT-{suffix}",
+			{"lot_no": f"_T-GPM-LOT-{suffix}", "item": self.item, "expiry_date": add_days(nowdate(), 300)},
+		).name
+		inventory.create_stock_entry(
+			entry_type="Nhập NCC",
+			to_warehouse=self.nv_wh,
+			items=[{"item": self.item, "lot": lot, "qty": qty}],
+		)
 		return lot
 
 	def test_handover_posts_consumption_stock_entry(self):
@@ -67,7 +91,9 @@ class TestDeliveryConsumption(FrappeTestCase):
 		dlv = _delivery(self.hosp, self.nv, self.item, lot, 20)
 		delivery.handover(dlv)
 		# Phiếu kho 'Giao phòng mổ' link delivery, đã submit.
-		se = frappe.db.get_value(STOCK_ENTRY, {"delivery": dlv, "entry_type": "Giao phòng mổ"}, ["name", "docstatus"], as_dict=True)
+		se = frappe.db.get_value(
+			STOCK_ENTRY, {"delivery": dlv, "entry_type": "Giao phòng mổ"}, ["name", "docstatus"], as_dict=True
+		)
 		self.assertIsNotNone(se, "phải sinh AntMed Stock Entry 'Giao phòng mổ'")
 		self.assertEqual(se["docstatus"], 1)
 		# Kho NV giảm 20 (lô riêng → không bị test khác trừ).

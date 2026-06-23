@@ -8,7 +8,10 @@
     aria-labelledby="antmed-revenue-mix-title"
   >
     <header class="flex items-baseline justify-between gap-2">
-      <h2 id="antmed-revenue-mix-title" class="text-p-base font-semibold text-ink-gray-8">
+      <h2
+        id="antmed-revenue-mix-title"
+        class="text-p-base font-semibold text-ink-gray-8"
+      >
         {{ __('Cơ cấu doanh thu') }}
       </h2>
       <span
@@ -36,8 +39,18 @@
       class="flex flex-col items-center gap-3 py-8 text-center"
       role="alert"
     >
-      <Badge variant="subtle" theme="red" size="sm" :label="__('Không tải được')" />
-      <Button variant="outline" size="sm" :label="__('Thử lại')" @click="$emit('retry')" />
+      <Badge
+        variant="subtle"
+        theme="red"
+        size="sm"
+        :label="__('Không tải được')"
+      />
+      <Button
+        variant="outline"
+        size="sm"
+        :label="__('Thử lại')"
+        @click="$emit('retry')"
+      />
     </div>
 
     <!-- Empty — total_revenue==0 (chưa có doanh thu lớp nào) -->
@@ -53,14 +66,18 @@
     <!-- Data — bảng 3 cột Phân loại | Doanh thu | Tỷ trọng (bar) -->
     <table v-else class="w-full border-separate border-spacing-0 text-left">
       <caption class="sr-only">
-        {{ __('Bảng cơ cấu doanh thu theo phân loại VTYT') }}
+        {{
+          __('Bảng cơ cấu doanh thu theo phân loại VTYT')
+        }}
       </caption>
       <thead>
         <tr class="text-p-xs text-ink-gray-6">
           <th class="border-b border-outline-gray-1 py-2 pr-4 font-medium">
             {{ __('Phân loại') }}
           </th>
-          <th class="border-b border-outline-gray-1 py-2 pr-4 text-right font-medium">
+          <th
+            class="border-b border-outline-gray-1 py-2 pr-4 text-right font-medium"
+          >
             {{ __('Doanh thu') }}
           </th>
           <th class="border-b border-outline-gray-1 py-2 font-medium">
@@ -76,12 +93,16 @@
           class="text-p-sm text-ink-gray-8"
         >
           <!-- Phân loại (nhãn lớp) -->
-          <td class="border-b border-outline-gray-1 py-2.5 pr-4 font-medium text-ink-gray-9">
+          <td
+            class="border-b border-outline-gray-1 py-2.5 pr-4 font-medium text-ink-gray-9"
+          >
             {{ row.label }}
           </td>
 
           <!-- Doanh thu (format VI ĐẦY ĐỦ CHỮ triệu/tỷ — mockup A2) — lớp revenue=0 vẫn render số -->
-          <td class="border-b border-outline-gray-1 py-2.5 pr-4 text-right tabular-nums text-ink-gray-8">
+          <td
+            class="border-b border-outline-gray-1 py-2.5 pr-4 text-right tabular-nums text-ink-gray-8"
+          >
             {{ formatCurrencyVi(row.revenue) }}
           </td>
 
@@ -102,7 +123,9 @@
                   :style="revenueMixBarStyle(row.pct)"
                 />
               </div>
-              <span class="min-w-[2.75rem] tabular-nums text-p-xs text-ink-gray-7">
+              <span
+                class="min-w-[2.75rem] tabular-nums text-p-xs text-ink-gray-7"
+              >
                 {{ pctLabel(row.pct) }}
               </span>
             </div>

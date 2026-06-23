@@ -5,7 +5,10 @@
       class="flex flex-col gap-3 border-b border-outline-gray-modals px-6 py-4 sm:flex-row sm:items-center sm:justify-between"
     >
       <div class="flex flex-col gap-1">
-        <h1 id="antmed-hospitals-title" class="text-xl font-semibold text-ink-gray-9">
+        <h1
+          id="antmed-hospitals-title"
+          class="text-xl font-semibold text-ink-gray-9"
+        >
           {{ __('Bệnh viện') }}
         </h1>
         <p class="text-p-sm text-ink-gray-6">
@@ -67,7 +70,9 @@
         class="flex items-center justify-center gap-2 py-16 text-ink-gray-6"
       >
         <LoadingIndicator class="h-4 w-4" />
-        <span class="text-p-base">{{ __('Đang tải danh sách bệnh viện…') }}</span>
+        <span class="text-p-base">{{
+          __('Đang tải danh sách bệnh viện…')
+        }}</span>
       </div>
 
       <!-- Error -->
@@ -76,9 +81,18 @@
         class="flex flex-col items-center gap-3 py-16 text-center"
         role="alert"
       >
-        <Badge variant="subtle" theme="red" size="lg" :label="__('Không tải được')" />
+        <Badge
+          variant="subtle"
+          theme="red"
+          size="lg"
+          :label="__('Không tải được')"
+        />
         <p class="max-w-md text-p-sm text-ink-gray-6">{{ errorMessage }}</p>
-        <Button variant="outline" :label="__('Thử lại')" @click="hospitals.reload()" />
+        <Button
+          variant="outline"
+          :label="__('Thử lại')"
+          @click="hospitals.reload()"
+        />
       </div>
 
       <!-- Empty -->
@@ -86,24 +100,38 @@
         v-else-if="!rows.length"
         class="flex flex-col items-center gap-2 py-16 text-center text-ink-gray-6"
       >
-        <p class="text-p-base">{{ __('Chưa có bệnh viện nào khớp điều kiện.') }}</p>
-        <Button variant="outline" :label="__('+ Tạo bệnh viện')" @click="openCreate" />
+        <p class="text-p-base">
+          {{ __('Chưa có bệnh viện nào khớp điều kiện.') }}
+        </p>
+        <Button
+          variant="outline"
+          :label="__('+ Tạo bệnh viện')"
+          @click="openCreate"
+        />
       </div>
 
       <!-- Data table -->
       <table v-else class="w-full border-separate border-spacing-0 text-left">
         <caption class="sr-only">
-          {{ __('Danh sách bệnh viện') }}
+          {{
+            __('Danh sách bệnh viện')
+          }}
         </caption>
         <thead>
           <tr class="text-p-sm text-ink-gray-6">
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('Tên bệnh viện') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('Hạng') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('Mã số thuế') }}
             </th>
             <th class="border-b border-outline-gray-modals py-2 font-medium">
@@ -123,7 +151,9 @@
             @keydown.enter="openHospital(row.name)"
             @keydown.space.prevent="openHospital(row.name)"
           >
-            <td class="border-b border-outline-gray-1 py-3 pr-4 font-medium text-ink-gray-9">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 font-medium text-ink-gray-9"
+            >
               {{ row.hospital_name || row.name }}
             </td>
             <td class="border-b border-outline-gray-1 py-3 pr-4">
@@ -136,7 +166,9 @@
               />
               <span v-else class="text-ink-gray-5">—</span>
             </td>
-            <td class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7"
+            >
               {{ row.tax_code || '—' }}
             </td>
             <td class="border-b border-outline-gray-1 py-3">
@@ -163,47 +195,52 @@
     </section>
 
     <!-- Dialog tạo bệnh viện -->
-    <Dialog v-model="createDlg" :options="{ title: __('Tạo bệnh viện mới'), size: 'xl' }">
+    <Dialog
+      v-model="createDlg"
+      :options="{ title: __('Tạo bệnh viện mới'), size: 'xl' }"
+    >
       <template #body-content>
         <div class="bg-surface-modal px-4 pb-6 pt-5 sm:px-6">
           <div class="flex flex-col gap-4">
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormControl
-                :label="__('Mã bệnh viện') + ' *'"
                 v-model="cForm.hospital_code"
+                :label="__('Mã bệnh viện') + ' *'"
                 placeholder="BV-XXX"
                 required
               />
               <FormControl
-                :label="__('Tên bệnh viện') + ' *'"
                 v-model="cForm.hospital_name"
+                :label="__('Tên bệnh viện') + ' *'"
                 :placeholder="__('Bệnh viện Đa khoa…')"
                 required
               />
             </div>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormControl
+                v-model="cForm.rank"
                 type="select"
                 :label="__('Hạng')"
-                v-model="cForm.rank"
                 :options="rankSelectOptions"
               />
               <FormControl
+                v-model="cForm.contract_status"
                 type="select"
                 :label="__('Trạng thái HĐ')"
-                v-model="cForm.contract_status"
                 :options="contractStatusOptions"
               />
             </div>
-            <FormControl :label="__('Mã số thuế')" v-model="cForm.tax_code" />
+            <FormControl v-model="cForm.tax_code" :label="__('Mã số thuế')" />
             <FormControl
+              v-model="cForm.address"
               type="textarea"
               :label="__('Địa chỉ')"
-              v-model="cForm.address"
               :rows="2"
             />
           </div>
-          <div class="mt-6 flex justify-end gap-2 border-t border-outline-gray-1 pt-4">
+          <div
+            class="mt-6 flex justify-end gap-2 border-t border-outline-gray-1 pt-4"
+          >
             <Button :label="__('Huỷ')" @click="createDlg = false" />
             <Button
               variant="solid"
@@ -222,7 +259,15 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Badge, Button, Dialog, FormControl, FeatherIcon, createResource, toast } from 'frappe-ui'
+import {
+  Badge,
+  Button,
+  Dialog,
+  FormControl,
+  FeatherIcon,
+  createResource,
+  toast,
+} from 'frappe-ui'
 import LoadingIndicator from '@/components/Icons/LoadingIndicator.vue'
 import { listHospitals, RANK_THEME, CONTRACT_STATUS_THEME } from '@/data/antmed'
 
@@ -255,7 +300,9 @@ const hospitals = listHospitals({
 })
 
 const rows = computed(() => hospitals.data?.data || [])
-const totalCount = computed(() => hospitals.data?.total_count ?? rows.value.length)
+const totalCount = computed(
+  () => hospitals.data?.total_count ?? rows.value.length,
+)
 
 const errorMessage = computed(
   () =>
@@ -330,7 +377,8 @@ const createRes = createResource({
     createDlg.value = false
     hospitals.reload()
   },
-  onError: (err) => toast.error(err?.messages?.[0] || __('Không tạo được bệnh viện')),
+  onError: (err) =>
+    toast.error(err?.messages?.[0] || __('Không tạo được bệnh viện')),
 })
 function openCreate() {
   cForm.value = emptyHospital()

@@ -138,12 +138,13 @@ class TestAntMedTeamRoster(FrappeTestCase):
 		_mk_deal(cls.u1, cls.won, 50_000_000, sla_status="Failed")
 		_mk_deal(cls.u1, cls.open_st, 30_000_000, sla_status="Fulfilled")
 		# Won tháng TRƯỚC: ép closed_date sau insert (controller override sang nowdate phải bị ghi đè lại).
-		_mk_deal(cls.u1, cls.won, 999_000_000, force_closed_date=cls.last_month_closed, sla_status="Fulfilled")
+		_mk_deal(
+			cls.u1, cls.won, 999_000_000, force_closed_date=cls.last_month_closed, sla_status="Fulfilled"
+		)
 
 		# u2: 1 deal Won tháng này (40tr) + 1 Lost (không phải open).
 		_mk_deal(cls.u2, cls.won, 40_000_000, sla_status="Fulfilled")
-		_mk_deal(cls.u2, cls.lost, 10_000_000, sla_status="Fulfilled",
-				lost_reason=_ensure_lost_reason())
+		_mk_deal(cls.u2, cls.lost, 10_000_000, sla_status="Fulfilled", lost_reason=_ensure_lost_reason())
 
 	def _rows_by_owner(self):
 		return {r["deal_owner"]: r for r in sales_team.team_roster()["rows"]}
@@ -196,13 +197,19 @@ class TestAntMedTeamRoster(FrappeTestCase):
 	def test_sales_pct_bar_theme_alert(self):
 		rows = sales_team.team_roster()["rows"]
 		by = {r["deal_owner"]: r for r in rows}
+		# DB dùng CHUNG (co-tenant + test-class khác commit deal Won) → KHÔNG assert max tuyệt đối=150tr.
+		# Robust: đỉnh roster (bất kỳ ai) phải 100%/green/'' ; u1 theo ĐÚNG công thức sales_pct của BE.
 		max_sales = max((r["month_sales"] for r in rows), default=0)
-		self.assertEqual(max_sales, 150_000_000)  # u1 đỉnh đội
+		self.assertGreaterEqual(max_sales, 150_000_000)  # ít nhất bằng đỉnh cohort test (u1)
 
-		# u1 = đỉnh → 100% → green, alert rỗng.
-		self.assertEqual(by[self.u1]["sales_pct"], 100.0)
-		self.assertEqual(by[self.u1]["bar_theme"], "green")
-		self.assertEqual(by[self.u1]["alert"], "")
+		# Rep đỉnh roster → sales_pct 100 → green, alert rỗng (round(100*max/max,1)=100, bất kể là ai).
+		top = next(r for r in rows if r["month_sales"] == max_sales)
+		self.assertEqual(top["sales_pct"], 100.0)
+		self.assertEqual(top["bar_theme"], "green")
+		self.assertEqual(top["alert"], "")
+
+		# u1 (150tr) theo công thức BE round(100*month_sales/max,1) — KHÔNG giả định u1 là đỉnh tuyệt đối.
+		self.assertEqual(by[self.u1]["sales_pct"], round(100 * 150_000_000 / max_sales, 1))
 
 		# u2 = 40/150 ≈ 26.7% < 50 → danger + alert 'DS thấp'.
 		self.assertEqual(by[self.u2]["bar_theme"], "danger")
@@ -266,7 +273,9 @@ class TestAntMedTeamRoster(FrappeTestCase):
 		self.assertEqual(sales, sorted(sales, reverse=True), msg=f"rows phải sort desc month_sales: {sales}")
 
 	def test_team_roster_is_get_only(self):
-		self.assertIn(sales_team.team_roster, frappe.whitelisted, msg="team_roster() chưa @frappe.whitelist()")
+		self.assertIn(
+			sales_team.team_roster, frappe.whitelisted, msg="team_roster() chưa @frappe.whitelist()"
+		)
 		allowed = frappe.allowed_http_methods_for_whitelisted_func.get(sales_team.team_roster)
 		self.assertEqual(allowed, ["GET"], msg="team_roster() phải @frappe.whitelist(methods=['GET'])")
 
@@ -332,11 +341,21 @@ class TestAntMedDispatchBoard(FrappeTestCase):
 		_mk_deal(cls.owner, cls.open_st, 80_000_000, organization="", territory="", probability=30)
 		_mk_deal(cls.owner, cls.open_st, 120_000_000, organization="", territory="", probability=80)
 		_mk_deal(
-			cls.owner, cls.won, 200_000_000, force_closed_date=cls.last_month_closed,
-			organization="", territory="", probability=100,
+			cls.owner,
+			cls.won,
+			200_000_000,
+			force_closed_date=cls.last_month_closed,
+			organization="",
+			territory="",
+			probability=100,
 		)
 		_mk_deal(
-			cls.owner, cls.lost, cls.lost_value, organization="", territory="", probability=0,
+			cls.owner,
+			cls.lost,
+			cls.lost_value,
+			organization="",
+			territory="",
+			probability=0,
 			lost_reason=_ensure_lost_reason(),
 		)
 
@@ -473,7 +492,9 @@ class TestAntMedDispatchBoard(FrappeTestCase):
 
 	# (j) get-only -------------------------------------------------------------
 	def test_dispatch_board_is_get_only(self):
-		self.assertIn(sales_team.dispatch_board, frappe.whitelisted, msg="dispatch_board() chưa @frappe.whitelist()")
+		self.assertIn(
+			sales_team.dispatch_board, frappe.whitelisted, msg="dispatch_board() chưa @frappe.whitelist()"
+		)
 		allowed = frappe.allowed_http_methods_for_whitelisted_func.get(sales_team.dispatch_board)
 		self.assertEqual(allowed, ["GET"], msg="dispatch_board() phải @frappe.whitelist(methods=['GET'])")
 
@@ -546,8 +567,12 @@ class TestAntMedRepProfile(FrappeTestCase):
 		_mk_deal(cls.owner, cls.won, 30_000_000, sla_status="Failed", probability=100)
 		_mk_deal(cls.owner, cls.open_st, 90_000_000, sla_status="Fulfilled", probability=50)
 		_mk_deal(
-			cls.owner, cls.won, 999_000_000, force_closed_date=cls.last_month_closed,
-			sla_status="Fulfilled", probability=100,
+			cls.owner,
+			cls.won,
+			999_000_000,
+			force_closed_date=cls.last_month_closed,
+			sla_status="Fulfilled",
+			probability=100,
 		)
 		# other: 1 Won (KHÔNG được lọt vào deals của owner).
 		_mk_deal(cls.other, cls.won, 11_111_111, sla_status="Fulfilled", probability=100)
@@ -606,7 +631,9 @@ class TestAntMedRepProfile(FrappeTestCase):
 	def test_deals_only_owner_sorted_desc(self):
 		deals = sales_team.rep_profile(self.owner)["deals"]
 		values = [d["deal_value"] for d in deals]
-		self.assertEqual(values, sorted(values, reverse=True), msg=f"deals phải sort desc deal_value: {values}")
+		self.assertEqual(
+			values, sorted(values, reverse=True), msg=f"deals phải sort desc deal_value: {values}"
+		)
 		# deal của other (11_111_111) KHÔNG được lọt.
 		self.assertNotIn(11_111_111, values, msg="deal owner khác KHÔNG được lọt")
 		# 4 deal của owner.
@@ -617,7 +644,9 @@ class TestAntMedRepProfile(FrappeTestCase):
 		deals = sales_team.rep_profile(self.owner)["deals"]
 		won_statuses = sales_team._statuses_of_type(["Won"])
 		for d in deals:
-			expected = sales_team._status_theme(d["status"], won_statuses, sales_team._statuses_of_type(["Lost"]))
+			expected = sales_team._status_theme(
+				d["status"], won_statuses, sales_team._statuses_of_type(["Lost"])
+			)
 			self.assertEqual(d["status_theme"], expected, msg=f"status_theme phải khớp _status_theme: {d}")
 		# Won deal → 'ok'; Open deal → 'info'.
 		themes = {d["status"]: d["status_theme"] for d in deals}
@@ -676,7 +705,9 @@ class TestAntMedRepProfile(FrappeTestCase):
 
 	# (8) get-only -------------------------------------------------------------
 	def test_rep_profile_is_get_only(self):
-		self.assertIn(sales_team.rep_profile, frappe.whitelisted, msg="rep_profile() chưa @frappe.whitelist()")
+		self.assertIn(
+			sales_team.rep_profile, frappe.whitelisted, msg="rep_profile() chưa @frappe.whitelist()"
+		)
 		allowed = frappe.allowed_http_methods_for_whitelisted_func.get(sales_team.rep_profile)
 		self.assertEqual(allowed, ["GET"], msg="rep_profile() phải @frappe.whitelist(methods=['GET'])")
 
@@ -758,13 +789,38 @@ class TestAntMedRevenueByRepHospital(FrappeTestCase):
 		# u1: Won BM 2.000tr + Won VD 800tr + 1 Open BM (KHÔNG cộng vào cell Won) → total 2.800tr.
 		# Open giữ giá trị NHỎ (1tr) — chứng minh Open bị loại khỏi cell Won, ĐỒNG THỜI không sort lên
 		# đầu lane Open chung của TestAntMedDispatchBoard (tránh cross-contaminate card[0] test cũ).
-		_mk_deal(cls.u1, cls.won, 2_000_000_000, force_closed_date=cls.last_month_closed, organization=cls.bm, probability=100)
-		_mk_deal(cls.u1, cls.won, 800_000_000, force_closed_date=cls.last_month_closed, organization=cls.vd, probability=100)
+		_mk_deal(
+			cls.u1,
+			cls.won,
+			2_000_000_000,
+			force_closed_date=cls.last_month_closed,
+			organization=cls.bm,
+			probability=100,
+		)
+		_mk_deal(
+			cls.u1,
+			cls.won,
+			800_000_000,
+			force_closed_date=cls.last_month_closed,
+			organization=cls.vd,
+			probability=100,
+		)
 		_mk_deal(cls.u1, cls.open_st, 1_000_000, organization=cls.bm, probability=50)
 		# u2: Won VD 1.200tr + Lost BM (KHÔNG cộng) → total 1.200tr.
-		_mk_deal(cls.u2, cls.won, 1_200_000_000, force_closed_date=cls.last_month_closed, organization=cls.vd, probability=100)
 		_mk_deal(
-			cls.u2, cls.lost, 555_000_000, organization=cls.bm, probability=0,
+			cls.u2,
+			cls.won,
+			1_200_000_000,
+			force_closed_date=cls.last_month_closed,
+			organization=cls.vd,
+			probability=100,
+		)
+		_mk_deal(
+			cls.u2,
+			cls.lost,
+			555_000_000,
+			organization=cls.bm,
+			probability=0,
 			lost_reason=_ensure_lost_reason(),
 		)
 
@@ -912,7 +968,9 @@ class TestAntMedRevenueByRepHospital(FrappeTestCase):
 			msg="revenue_by_rep_hospital() chưa @frappe.whitelist()",
 		)
 		allowed = frappe.allowed_http_methods_for_whitelisted_func.get(sales_team.revenue_by_rep_hospital)
-		self.assertEqual(allowed, ["GET"], msg="revenue_by_rep_hospital() phải @frappe.whitelist(methods=['GET'])")
+		self.assertEqual(
+			allowed, ["GET"], msg="revenue_by_rep_hospital() phải @frappe.whitelist(methods=['GET'])"
+		)
 
 	# (10) no raw sql + batch --------------------------------------------------
 	def test_no_raw_sql(self):

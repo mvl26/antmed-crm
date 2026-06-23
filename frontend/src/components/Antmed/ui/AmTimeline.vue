@@ -1,7 +1,10 @@
 <template>
   <!-- Timeline dọc (mockup .tl). events: [{ time, text, sub, muted, highlight }]. -->
   <div class="relative pl-5">
-    <span class="absolute bottom-0 left-1.5 top-0 w-0.5 bg-ink-gray-2" aria-hidden="true" />
+    <span
+      class="absolute bottom-0 left-1.5 top-0 w-0.5 bg-ink-gray-2"
+      aria-hidden="true"
+    />
     <div
       v-for="(e, i) in events"
       :key="i"

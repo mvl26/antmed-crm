@@ -53,11 +53,18 @@ describe('AntMed FE Customer 360° (M01 R2) — routes', () => {
 })
 
 describe('AntMed FE Customer 360° (M01 R2) — resource naming contract', () => {
-  it('data/antmed.js expose list_hospitals / get_hospital / list_doctors / get_doctor', () => {
-    expect(dataSrc).toMatch(/url:\s*['"]antmed_crm\.api\.antmed\.customer\.list_hospitals['"]/)
-    expect(dataSrc).toMatch(/url:\s*['"]antmed_crm\.api\.antmed\.customer\.get_hospital['"]/)
-    expect(dataSrc).toMatch(/url:\s*['"]antmed_crm\.api\.antmed\.customer\.list_doctors['"]/)
-    expect(dataSrc).toMatch(/url:\s*['"]antmed_crm\.api\.antmed\.customer\.get_doctor['"]/)
+  // (listDoctors wrapper gỡ ở vòng dọn dead-code — danh sách bác sỹ hiển thị lồng trong
+  //  get_hospital 360°, KHÔNG có page list bác sỹ riêng. get_doctor detail giữ nguyên.)
+  it('data/antmed.js expose list_hospitals / get_hospital / get_doctor', () => {
+    expect(dataSrc).toMatch(
+      /url:\s*['"]antmed_crm\.api\.antmed\.customer\.list_hospitals['"]/,
+    )
+    expect(dataSrc).toMatch(
+      /url:\s*['"]antmed_crm\.api\.antmed\.customer\.get_hospital['"]/,
+    )
+    expect(dataSrc).toMatch(
+      /url:\s*['"]antmed_crm\.api\.antmed\.customer\.get_doctor['"]/,
+    )
   })
 
   it('AntmedHospitalList gọi đúng url list_hospitals (qua resource layer)', () => {
@@ -72,7 +79,13 @@ describe('AntMed FE Customer 360° (M01 R2) — resource naming contract', () =>
 })
 
 describe('AntMed FE Customer 360° (M01 R2) — grep gate (di sản stack cũ = 0)', () => {
-  const allFiles = [dataSrc, listSrc, hospitalDetailSrc, doctorDetailSrc, routerSrc]
+  const allFiles = [
+    dataSrc,
+    listSrc,
+    hospitalDetailSrc,
+    doctorDetailSrc,
+    routerSrc,
+  ]
 
   it('KHÔNG axios / @tanstack/vue-query / @/api layer', () => {
     for (const src of allFiles) {

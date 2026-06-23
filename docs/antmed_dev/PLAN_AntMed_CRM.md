@@ -8,7 +8,7 @@
 
 ## 0. Trạng thái hiện tại (baseline)
 
-- ✅ **M01 — Bootstrap** (namespace `crm/antmed/`, 3 Role, `antmed_crm.api.antmed.health.ping`) + **Customer 360° slice** (DocType `AntMed Hospital`/`AntMed Doctor`, API list/detail, 3 trang Vue). Test xanh (BE 11 OK, FE 136). **Uncommitted**, chờ USER reload + pixel verify.
+- ✅ **M01 — Bootstrap** (namespace `antmed_crm/antmed/`, 3 Role, `antmed_crm.api.antmed.health.ping`) + **Customer 360° slice** (DocType `AntMed Hospital`/`AntMed Doctor`, API list/detail, 3 trang Vue). Test xanh (BE 11 OK, FE 136). **Uncommitted**, chờ USER reload + pixel verify.
 - ⏳ Mở: role-name → tiếng Việt (DEC-A), tách route AntMed riêng (DEC-B), purge data rác `_SEC-H*`.
 
 ---
@@ -95,7 +95,7 @@ M12(Mobile) & M11 = cross-cutting / aggregate (sau cùng)
 | Rủi ro | Mức | Giảm thiểu |
 |---|---|---|
 | **Không có ERPNext** (D1) | 🔴 cao | Chốt D1 trước W1; khuyến nghị native-lite, chỉ xây phần dùng tới (FIFO/HSD/CO-CQ) |
-| Fork `apps/crm` → khó merge upstream Frappe CRM | 🟠 vừa | Giữ AntMed **additive** (route/hook/doctype prefix riêng), không sửa core; ghi ADR mọi chỗ đụng core (vd `CRM_ALLOWED_ROLES`) |
+| App riêng `apps/antmed_crm` fork từ Frappe CRM → khó merge upstream Frappe CRM | 🟠 vừa | Giữ AntMed **additive** (route/hook/doctype prefix riêng), không sửa core; ghi ADR mọi chỗ đụng core (vd `CRM_ALLOWED_ROLES`) |
 | Reload gunicorn `--preload` (HARD-STOP, bench dùng chung) | 🟠 vừa | Gom thay đổi .py trước 1 lần reload; thêm **CI live-HTTP smoke** tách "run-tests xanh" vs "HTTP live" |
 | Scope 14 module khổng lồ | 🟠 vừa | Vertical slice + factory; checkpoint mỗi wave; KHÔNG big-bang |
 | Data-scope BR-13 hoãn (mọi NV thấy mọi BV) | 🟡 thấp | Giữ invariant `count==rows` ngay; bật `permission_query_conditions` ở W4/M14 không vỡ contract |

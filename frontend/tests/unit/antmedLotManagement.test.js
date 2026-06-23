@@ -18,16 +18,18 @@ describe('data/antmed.js — factory truy vết/quản lý lot (url + method kh�
   const cases = [
     ['getLotGenealogy', 'antmed_crm.api.antmed.inventory.lot_genealogy', 'GET'],
     ['saveLotTrace', 'antmed_crm.api.antmed.inventory.save_lot_trace', 'POST'],
-    ['listLotTraces', 'antmed_crm.api.antmed.inventory.list_lot_traces', 'GET'],
-    ['getLotTraceRequest', 'antmed_crm.api.antmed.inventory.get_lot_trace_request', 'GET'],
     ['listLots', 'antmed_crm.api.antmed.inventory.list_lots', 'GET'],
     ['listItems', 'antmed_crm.api.antmed.inventory.list_items', 'GET'],
-    ['listRecallNotifications', 'antmed_crm.api.antmed.inventory.list_recall_notifications', 'GET'],
-    ['getRecallNotification', 'antmed_crm.api.antmed.inventory.get_recall_notification', 'GET'],
-    ['exportLotTracePdf', 'antmed_crm.api.antmed.inventory.export_lot_trace_pdf', 'POST'],
+    [
+      'exportLotTracePdf',
+      'antmed_crm.api.antmed.inventory.export_lot_trace_pdf',
+      'POST',
+    ],
   ]
   it.each(cases)('%s → url %s method %s', (fn, url, method) => {
-    const m = dataSrc.match(new RegExp(`export function ${fn}\\([\\s\\S]*?\\n}`))
+    const m = dataSrc.match(
+      new RegExp(`export function ${fn}\\([\\s\\S]*?\\n}`),
+    )
     expect(m, `thiếu factory ${fn}`).toBeTruthy()
     expect(m[0]).toContain(`url: '${url}'`)
     expect(m[0]).toContain(`method: '${method}'`)

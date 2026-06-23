@@ -79,7 +79,7 @@ class TestDemoData(FrappeTestCase):
 
 		# Avatars exist
 		avatar_dir = os.path.abspath(
-			os.path.join(os.path.dirname(__file__), "..", "..", "crm", "public", "images", "demo")
+			os.path.join(os.path.dirname(__file__), "..", "public", "images", "demo")
 		)
 		for user in DEMO_USERS:
 			filename = user["avatar"].split("/")[-1]

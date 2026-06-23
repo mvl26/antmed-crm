@@ -21,7 +21,6 @@ KHÔNG raw SQL / KHÔNG f-string injection: chỉ get_list/get_all (filters list
 """
 
 import frappe
-from frappe import _
 
 DEAL_DOCTYPE = "CRM Deal"
 DEAL_STATUS_DOCTYPE = "CRM Deal Status"

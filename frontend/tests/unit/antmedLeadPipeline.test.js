@@ -1,6 +1,10 @@
 import { readFileSync } from 'fs'
 import path from 'path'
-import { funnelBarWidth, funnelBarClass, FUNNEL_BAR_MIN_FLOOR } from '../../src/utils/antmedUi'
+import {
+  funnelBarWidth,
+  funnelBarClass,
+  FUNNEL_BAR_MIN_FLOOR,
+} from '../../src/utils/antmedUi'
 
 // M08-S3 FE — màn Lead pipeline (AntmedLeads.vue): phễu Pipeline gói thầu (lead_funnel) +
 // drawer chi tiết (get_lead) + nút "Qualify → Tạo gói thầu" (convert_lead_to_tender).
@@ -19,14 +23,18 @@ describe('data/antmed.js — resource Lead pipeline (url + method khớp BE whit
   it("getLeadFunnel → url 'antmed_crm.api.antmed.pipeline.lead_funnel', method GET", () => {
     const m = dataSrc.match(/export function getLeadFunnel[\s\S]*?\n}/)
     expect(m).toBeTruthy()
-    expect(m[0]).toMatch(/url:\s*['"]antmed_crm\.api\.antmed\.pipeline\.lead_funnel['"]/)
+    expect(m[0]).toMatch(
+      /url:\s*['"]antmed_crm\.api\.antmed\.pipeline\.lead_funnel['"]/,
+    )
     expect(m[0]).toMatch(/method:\s*['"]GET['"]/)
   })
 
   it("getLead → url 'antmed_crm.api.antmed.pipeline.get_lead', method GET, nhận params", () => {
     const m = dataSrc.match(/export function getLead\b[\s\S]*?\n}/)
     expect(m).toBeTruthy()
-    expect(m[0]).toMatch(/url:\s*['"]antmed_crm\.api\.antmed\.pipeline\.get_lead['"]/)
+    expect(m[0]).toMatch(
+      /url:\s*['"]antmed_crm\.api\.antmed\.pipeline\.get_lead['"]/,
+    )
     expect(m[0]).toMatch(/method:\s*['"]GET['"]/)
     expect(m[0]).toMatch(/params/)
   })
@@ -46,7 +54,9 @@ describe('data/antmed.js — resource Lead pipeline (url + method khớp BE whit
   })
 
   it('KHÔNG dùng url legacy crm.api.* / app riêng cho 3 hàm này', () => {
-    const slice = dataSrc.slice(dataSrc.indexOf('export function getLeadFunnel'))
+    const slice = dataSrc.slice(
+      dataSrc.indexOf('export function getLeadFunnel'),
+    )
     expect(slice).not.toMatch(/url:\s*['"]crm\.api\./)
   })
 })
@@ -140,7 +150,8 @@ describe('AntmedLeads.vue — phễu + drawer + qualify (render wiring)', () => 
 
   it('mọi __("…{0}…") có placeholder đều kèm mảng [args] (chống vỡ trang trắng)', () => {
     // Bắt mọi lời gọi __('...') có {0}/{1}... → phải theo sau bởi , [ (replace array).
-    const calls = pageSrc.match(/__\(\s*['"][^'"]*\{\d+\}[^'"]*['"]\s*[^)]*\)/g) || []
+    const calls =
+      pageSrc.match(/__\(\s*['"][^'"]*\{\d+\}[^'"]*['"]\s*[^)]*\)/g) || []
     for (const c of calls) {
       expect(c).toMatch(/\{\d+\}[\s\S]*,\s*\[/)
     }

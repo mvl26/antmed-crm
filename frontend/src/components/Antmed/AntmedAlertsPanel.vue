@@ -25,8 +25,18 @@
       class="flex flex-1 flex-col items-center justify-center gap-2 text-center"
       role="alert"
     >
-      <Badge variant="subtle" theme="red" :label="__('Không tải được cảnh báo')" size="sm" />
-      <Button variant="outline" size="sm" :label="__('Thử lại')" @click="$emit('retry')" />
+      <Badge
+        variant="subtle"
+        theme="red"
+        :label="__('Không tải được cảnh báo')"
+        size="sm"
+      />
+      <Button
+        variant="outline"
+        size="sm"
+        :label="__('Thử lại')"
+        @click="$emit('retry')"
+      />
     </div>
 
     <!-- Empty -->
@@ -45,7 +55,11 @@
     <!-- Data — danh sách pill alert-box theo severity (đỏ=danger/cam=warn), label VI từ BE.
          Style qua helper alertClass (SSoT mockup A1 §.alert-box) — KHÔNG hex thô; label chữ
          luôn hiển thị (WCAG: không phân biệt chỉ bằng màu). -->
-    <ul v-else class="flex flex-1 flex-col gap-2" :aria-label="__('Danh sách cảnh báo')">
+    <ul
+      v-else
+      class="flex flex-1 flex-col gap-2"
+      :aria-label="__('Danh sách cảnh báo')"
+    >
       <li
         v-for="a in alerts"
         :key="`${a.contract}-${a.type}`"

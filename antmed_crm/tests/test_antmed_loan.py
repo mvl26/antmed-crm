@@ -28,16 +28,21 @@ LN_NAME_RE = re.compile(r"^AntMed-LN-\d{4}-\d+")
 def _mk_hospital(code, name):
 	if frappe.db.exists("AntMed Hospital", code):
 		return frappe.get_doc("AntMed Hospital", code)
-	return frappe.get_doc({"doctype": "AntMed Hospital", "hospital_code": code, "hospital_name": name}).insert(
-		ignore_permissions=True
-	)
+	return frappe.get_doc(
+		{"doctype": "AntMed Hospital", "hospital_code": code, "hospital_name": name}
+	).insert(ignore_permissions=True)
 
 
 def _mk_set(set_code):
 	if frappe.db.exists("AntMed Instrument Set", set_code):
 		return frappe.get_doc("AntMed Instrument Set", set_code)
 	return frappe.get_doc(
-		{"doctype": "AntMed Instrument Set", "set_code": set_code, "surgery_type": "Tim mạch", "components": [{"component_name": "Kẹp", "qty": 1}]}
+		{
+			"doctype": "AntMed Instrument Set",
+			"set_code": set_code,
+			"surgery_type": "Tim mạch",
+			"components": [{"component_name": "Kẹp", "qty": 1}],
+		}
 	).insert(ignore_permissions=True)
 
 
@@ -84,7 +89,9 @@ class TestAntMedLoan(FrappeTestCase):
 		name = self._book(s)
 		res = instrument_loan.handover(name)
 		self.assertEqual(res["status"], "Đang sử dụng tại BV")
-		self.assertEqual(frappe.db.get_value("AntMed Instrument Set", s, "current_status"), "Đang sử dụng tại BV")
+		self.assertEqual(
+			frappe.db.get_value("AntMed Instrument Set", s, "current_status"), "Đang sử dụng tại BV"
+		)
 		self.assertEqual(frappe.db.get_value("AntMed Instrument Set", s, "lifetime_loans"), 1)
 		self.assertEqual(frappe.db.get_value("AntMed Instrument Loan", name, "docstatus"), 1)
 		self.assertIsNotNone(frappe.db.get_value("AntMed Instrument Loan", name, "loaned_at"))
@@ -110,9 +117,9 @@ class TestAntMedLoan(FrappeTestCase):
 		# permission guard
 		email = "_t_ln_noperm@example.com"
 		if not frappe.db.exists("User", email):
-			frappe.get_doc({"doctype": "User", "email": email, "first_name": "NoPermLN", "send_welcome_email": 0}).insert(
-				ignore_permissions=True
-			)
+			frappe.get_doc(
+				{"doctype": "User", "email": email, "first_name": "NoPermLN", "send_welcome_email": 0}
+			).insert(ignore_permissions=True)
 		frappe.set_user(email)
 		try:
 			with self.assertRaises(frappe.PermissionError):

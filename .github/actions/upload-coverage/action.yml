@@ -1,5 +1,5 @@
 name: Upload Coverage Artifact
-description: Persist coverage artifacts produced during CRM server testing.
+description: Persist coverage artifacts produced during antmed_crm server testing.
 inputs:
     artifact-name:
         description: Name assigned to the uploaded artifact

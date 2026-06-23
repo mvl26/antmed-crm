@@ -6,9 +6,15 @@
     >
       <!-- Hình nền trang trí -->
       <div aria-hidden="true" class="pointer-events-none absolute inset-0">
-        <div class="absolute -left-24 -top-24 h-80 w-80 rounded-full bg-teal-400/20 blur-3xl" />
-        <div class="absolute -bottom-32 -right-10 h-96 w-96 rounded-full bg-emerald-300/10 blur-3xl" />
-        <div class="absolute right-8 top-10 select-none text-[13rem] font-bold leading-none text-white/[0.06]">
+        <div
+          class="absolute -left-24 -top-24 h-80 w-80 rounded-full bg-teal-400/20 blur-3xl"
+        />
+        <div
+          class="absolute -bottom-32 -right-10 h-96 w-96 rounded-full bg-emerald-300/10 blur-3xl"
+        />
+        <div
+          class="absolute right-8 top-10 select-none text-[13rem] font-bold leading-none text-white/[0.06]"
+        >
           ⚕
         </div>
       </div>
@@ -27,7 +33,9 @@
             :key="feat"
             class="flex items-center gap-2.5"
           >
-            <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/15">
+            <span
+              class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/15"
+            >
               <FeatherIcon name="check" class="h-3 w-3" aria-hidden="true" />
             </span>
             {{ feat }}
@@ -45,11 +53,17 @@
       class="flex w-full items-center justify-center bg-surface-gray-1 px-4 py-10 lg:w-1/2"
     >
       <div class="w-full max-w-sm">
-        <div class="mb-7 flex flex-col items-center gap-1 text-center lg:items-start lg:text-left">
-          <div class="mb-1 flex items-center gap-1.5 text-2xl font-bold text-teal-800 lg:hidden">
+        <div
+          class="mb-7 flex flex-col items-center gap-1 text-center lg:items-start lg:text-left"
+        >
+          <div
+            class="mb-1 flex items-center gap-1.5 text-2xl font-bold text-teal-800 lg:hidden"
+          >
             <span aria-hidden="true">⚕</span><span>AntMed CRM</span>
           </div>
-          <h1 class="text-xl font-semibold text-ink-gray-9">{{ __('Đăng nhập') }}</h1>
+          <h1 class="text-xl font-semibold text-ink-gray-9">
+            {{ __('Đăng nhập') }}
+          </h1>
           <p class="text-p-sm text-ink-gray-6">
             {{ __('Nhập tài khoản để vào hệ thống') }}
           </p>
@@ -82,7 +96,9 @@
                 <button
                   type="button"
                   class="rounded text-ink-gray-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
-                  :aria-label="showPassword ? __('Ẩn mật khẩu') : __('Hiện mật khẩu')"
+                  :aria-label="
+                    showPassword ? __('Ẩn mật khẩu') : __('Hiện mật khẩu')
+                  "
                   tabindex="-1"
                   @click="showPassword = !showPassword"
                 >
@@ -160,17 +176,17 @@ const REMEMBER_KEY = 'antmed_login_email'
 function safeLocal(fn, fallback = null) {
   try {
     return fn()
-  } catch (e) {
+  } catch {
     return fallback
   }
 }
 
-// Đích sau đăng nhập: query `redirect-to` (path SPA, vd /antmed/deliveries) → /crm/<path>.
-// Mặc định /crm/antmed. Chỉ chấp nhận path nội bộ bắt đầu bằng '/' (chống open-redirect).
+// Đích sau đăng nhập: query `redirect-to` (path SPA, vd /antmed/deliveries) → path (base '/').
+// Mặc định /antmed. Chỉ chấp nhận path nội bộ bắt đầu bằng '/' (chống open-redirect).
 const redirectTarget = computed(() => {
   const rt = route.query['redirect-to']
   const path = typeof rt === 'string' && rt.startsWith('/') ? rt : '/antmed'
-  return '/crm' + path
+  return path
 })
 
 // Login resource RIÊNG (KHÔNG dùng session.login — onSuccess của nó router.replace, còn ở
@@ -202,7 +218,7 @@ function doLogin() {
 onMounted(() => {
   // Đã đăng nhập mà mở trang login → về thẳng app (full reload lấy boot xác thực).
   if (session.isLoggedIn) {
-    window.location.href = '/crm/antmed'
+    window.location.href = '/antmed'
     return
   }
   // Prefill email đã ghi nhớ (nếu có) → tick sẵn "Nhớ tài khoản".

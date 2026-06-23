@@ -26,8 +26,18 @@
       class="flex flex-1 flex-col items-center justify-center gap-2 text-center"
       role="alert"
     >
-      <Badge variant="subtle" theme="red" :label="__('Không tải được pipeline')" size="sm" />
-      <Button variant="outline" size="sm" :label="__('Thử lại')" @click="$emit('retry')" />
+      <Badge
+        variant="subtle"
+        theme="red"
+        :label="__('Không tải được pipeline')"
+        size="sm"
+      />
+      <Button
+        variant="outline"
+        size="sm"
+        :label="__('Thử lại')"
+        @click="$emit('retry')"
+      />
     </div>
 
     <!-- Empty — total === 0: KHÔNG vẽ funnel rỗng méo -->

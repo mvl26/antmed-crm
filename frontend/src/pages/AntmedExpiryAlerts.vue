@@ -1,7 +1,9 @@
 <template>
   <main class="flex h-full flex-col" aria-labelledby="antmed-expiry-title">
     <!-- Header + breadcrumb: Trang chủ › Kho › Cảnh báo HSD -->
-    <header class="flex flex-col gap-2 border-b border-outline-gray-modals px-6 py-4">
+    <header
+      class="flex flex-col gap-2 border-b border-outline-gray-modals px-6 py-4"
+    >
       <nav class="text-p-xs text-ink-gray-5" :aria-label="__('Đường dẫn')">
         <RouterLink
           to="/antmed"
@@ -12,14 +14,23 @@
         <span class="px-1.5 text-ink-gray-4" aria-hidden="true">›</span>
         <span class="text-ink-gray-6">{{ __('Kho') }}</span>
         <span class="px-1.5 text-ink-gray-4" aria-hidden="true">›</span>
-        <span class="text-ink-gray-7" aria-current="page">{{ __('Cảnh báo HSD') }}</span>
+        <span class="text-ink-gray-7" aria-current="page">{{
+          __('Cảnh báo HSD')
+        }}</span>
       </nav>
       <div class="flex flex-col gap-1">
-        <h1 id="antmed-expiry-title" class="text-xl font-semibold text-ink-gray-9">
+        <h1
+          id="antmed-expiry-title"
+          class="text-xl font-semibold text-ink-gray-9"
+        >
           {{ __('Cảnh báo HSD') }}
         </h1>
         <p class="text-p-sm text-ink-gray-6">
-          {{ __('Lô cận / quá hạn sử dụng trên toàn bộ kho (Tổng / Cá nhân NV / Ký gửi BV)') }}
+          {{
+            __(
+              'Lô cận / quá hạn sử dụng trên toàn bộ kho (Tổng / Cá nhân NV / Ký gửi BV)',
+            )
+          }}
         </p>
       </div>
     </header>
@@ -72,9 +83,18 @@
         class="flex flex-col items-center gap-3 py-16 text-center"
         role="alert"
       >
-        <Badge variant="subtle" theme="red" size="lg" :label="__('Không tải được')" />
+        <Badge
+          variant="subtle"
+          theme="red"
+          size="lg"
+          :label="__('Không tải được')"
+        />
         <p class="max-w-md text-p-sm text-ink-gray-6">{{ errorMessage }}</p>
-        <Button variant="outline" :label="__('Thử lại')" @click="alerts.reload()" />
+        <Button
+          variant="outline"
+          :label="__('Thử lại')"
+          @click="alerts.reload()"
+        />
       </div>
 
       <!-- Empty -->
@@ -84,33 +104,49 @@
       >
         <p class="text-p-base">{{ __('Không có lot cận date') }}</p>
         <p class="text-p-sm">
-          {{ __('Không có lô nào cận hoặc quá hạn sử dụng trong toàn bộ kho.') }}
+          {{
+            __('Không có lô nào cận hoặc quá hạn sử dụng trong toàn bộ kho.')
+          }}
         </p>
       </div>
 
       <!-- Data table: 7 cột SKU / Tên VT / Lot / Kho / HSD / SL còn / Mức độ -->
       <table v-else class="w-full border-separate border-spacing-0 text-left">
         <caption class="sr-only">
-          {{ __('Bảng lô cận / quá hạn sử dụng trên toàn bộ kho') }}
+          {{
+            __('Bảng lô cận / quá hạn sử dụng trên toàn bộ kho')
+          }}
         </caption>
         <thead>
           <tr class="text-p-sm text-ink-gray-6">
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('SKU') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('Tên VT') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('Lot') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('Kho') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 font-medium"
+            >
               {{ __('HSD') }}
             </th>
-            <th class="border-b border-outline-gray-modals py-2 pr-4 text-right font-medium">
+            <th
+              class="border-b border-outline-gray-modals py-2 pr-4 text-right font-medium"
+            >
               {{ __('SL còn') }}
             </th>
             <th class="border-b border-outline-gray-modals py-2 font-medium">
@@ -124,27 +160,41 @@
             v-for="row in rows"
             :key="`${row.warehouse}|${row.sku}|${row.lot}`"
             class="text-p-base text-ink-gray-8"
-            :class="row.severity === 'expired' || row.severity === 'd30' ? 'bg-red-50' : ''"
+            :class="
+              row.severity === 'expired' || row.severity === 'd30'
+                ? 'bg-red-50'
+                : ''
+            "
           >
             <!-- SKU (item_code) — mã nhỏ phụ trợ -->
-            <td class="border-b border-outline-gray-1 py-3 pr-4 font-mono text-p-sm text-ink-gray-7">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 font-mono text-p-sm text-ink-gray-7"
+            >
               {{ row.sku || '—' }}
             </td>
 
             <!-- Tên VT: item_name (hiển thị tên, KHÔNG chỉ mã) -->
-            <td class="border-b border-outline-gray-1 py-3 pr-4 font-medium text-ink-gray-9">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 font-medium text-ink-gray-9"
+            >
               {{ row.item_name || row.sku || '—' }}
             </td>
 
             <!-- Lot -->
-            <td class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-7"
+            >
               {{ row.lot || '—' }}
             </td>
 
             <!-- Kho: tên kho + chip loại kho (warehouse_name, KHÔNG lộ mã) -->
-            <td class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-8">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 text-ink-gray-8"
+            >
               <div class="flex flex-col gap-1">
-                <span class="font-medium">{{ row.warehouse_name || row.warehouse || '—' }}</span>
+                <span class="font-medium">{{
+                  row.warehouse_name || row.warehouse || '—'
+                }}</span>
                 <span
                   v-if="row.warehouse_type"
                   class="inline-flex w-fit items-center rounded-full bg-ink-gray-2 px-2 py-0.5 text-p-xs font-medium text-ink-gray-7"
@@ -155,12 +205,16 @@
             </td>
 
             <!-- HSD: định dạng MM/YYYY -->
-            <td class="border-b border-outline-gray-1 py-3 pr-4 tabular-nums text-ink-gray-7">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 tabular-nums text-ink-gray-7"
+            >
               {{ formatExpiryMonthYear(row.expiry_date) || '—' }}
             </td>
 
             <!-- SL còn (balance_qty) -->
-            <td class="border-b border-outline-gray-1 py-3 pr-4 text-right tabular-nums text-ink-gray-8">
+            <td
+              class="border-b border-outline-gray-1 py-3 pr-4 text-right tabular-nums text-ink-gray-8"
+            >
               {{ row.balance_qty }}
             </td>
 
@@ -208,7 +262,8 @@ const alerts = getExpiryAlerts({ auto: true })
 // rows BE đã sort days_to_expiry tăng dần (quá hạn lên đầu) → FE KHÔNG sort lại.
 const rows = computed(() => alerts.data?.rows || [])
 const kpis = computed(
-  () => alerts.data?.kpis || { expired: 0, d30: 0, d60: 0, d90: 0, total_lots: 0 },
+  () =>
+    alerts.data?.kpis || { expired: 0, d30: 0, d60: 0, d90: 0, total_lots: 0 },
 )
 
 alerts.onError = (err) => {

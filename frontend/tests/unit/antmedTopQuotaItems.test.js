@@ -10,7 +10,10 @@ import { healthBarClass, BAR_THEME } from '../../src/utils/antmedUi'
 
 const srcDir = path.resolve(__dirname, '../../src')
 const dataSrc = readFileSync(path.join(srcDir, 'data/antmed.js'), 'utf8')
-const pageSrc = readFileSync(path.join(srcDir, 'pages/AntmedContractHealth.vue'), 'utf8')
+const pageSrc = readFileSync(
+  path.join(srcDir, 'pages/AntmedContractHealth.vue'),
+  'utf8',
+)
 const cardSrc = readFileSync(
   path.join(srcDir, 'components/Antmed/AntmedTopQuotaItemsCard.vue'),
   'utf8',
@@ -23,13 +26,19 @@ describe('M02-5 data layer — getTopQuotaItems url top_quota_items', () => {
   })
 
   it('url == antmed_crm.api.antmed.contract.top_quota_items (KHÔNG prefix sai)', () => {
-    expect(dataSrc).toMatch(/antmed_crm\.api\.antmed\.contract\.top_quota_items/)
+    expect(dataSrc).toMatch(
+      /antmed_crm\.api\.antmed\.contract\.top_quota_items/,
+    )
     // KHÔNG dùng 'crm.api.antmed' (idiom app khác) trong khối getTopQuotaItems
-    expect(dataSrc).not.toMatch(/['"]crm\.api\.antmed\.contract\.top_quota_items/)
+    expect(dataSrc).not.toMatch(
+      /['"]crm\.api\.antmed\.contract\.top_quota_items/,
+    )
   })
 
   it('dùng createResource (đọc dict bọc), KHÔNG import createListResource', () => {
-    expect(dataSrc).toMatch(/import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/)
+    expect(dataSrc).toMatch(
+      /import\s*\{\s*createResource\s*\}\s*from\s*'frappe-ui'/,
+    )
     expect(dataSrc).not.toMatch(/import[^\n]*createListResource/)
   })
 

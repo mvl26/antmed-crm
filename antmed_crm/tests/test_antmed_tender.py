@@ -24,7 +24,10 @@ TND_RE = re.compile(r"^AM-TND-\d{4}-\d+")
 
 
 def _ensure(doctype, key, val, values):
-	return frappe.db.get_value(doctype, {key: val}, "name") or frappe.get_doc({"doctype": doctype, key: val, **values}).insert(ignore_permissions=True).name
+	return (
+		frappe.db.get_value(doctype, {key: val}, "name")
+		or frappe.get_doc({"doctype": doctype, key: val, **values}).insert(ignore_permissions=True).name
+	)
 
 
 class TestAntMedTender(FrappeTestCase):
@@ -38,13 +41,20 @@ class TestAntMedTender(FrappeTestCase):
 		self.assertEqual(frappe.get_meta("AntMed Tender").is_submittable, 1)
 
 	def test_create_tender(self):
-		res = pipeline.create_tender(tender_no="_T-TND-001", tender_name="Gói thầu VTYT 2026", hospital=self.hosp, estimated_value=5000000000)
+		res = pipeline.create_tender(
+			tender_no="_T-TND-001",
+			tender_name="Gói thầu VTYT 2026",
+			hospital=self.hosp,
+			estimated_value=5000000000,
+		)
 		self.assertRegex(res["name"], TND_RE)
 		self.assertEqual(frappe.db.get_value("AntMed Tender", res["name"], "status"), "Tiếp cận")
 
 	def test_tender_no_unique(self):
 		pipeline.create_tender(tender_no="_T-TND-DUP", tender_name="A", hospital=self.hosp)
-		with self.assertRaises((frappe.UniqueValidationError, frappe.DuplicateEntryError, frappe.ValidationError)):
+		with self.assertRaises(
+			(frappe.UniqueValidationError, frappe.DuplicateEntryError, frappe.ValidationError)
+		):
 			pipeline.create_tender(tender_no="_T-TND-DUP", tender_name="B", hospital=self.hosp)
 
 	def test_set_result_requires_decision(self):
@@ -65,7 +75,9 @@ class TestAntMedTender(FrappeTestCase):
 		self.assertEqual(detail["hospital_name"], "BV Thầu")
 		email = "_t_tnd_noperm@example.com"
 		if not frappe.db.exists("User", email):
-			frappe.get_doc({"doctype": "User", "email": email, "first_name": "NoPermTnd", "send_welcome_email": 0}).insert(ignore_permissions=True)
+			frappe.get_doc(
+				{"doctype": "User", "email": email, "first_name": "NoPermTnd", "send_welcome_email": 0}
+			).insert(ignore_permissions=True)
 		frappe.set_user(email)
 		try:
 			with self.assertRaises(frappe.PermissionError):

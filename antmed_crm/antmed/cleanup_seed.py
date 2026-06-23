@@ -40,8 +40,6 @@ def delete_test_users():
 	if REAL_OWNER not in frappe.get_all("User", pluck="name"):
 		print("ABORT — REAL_OWNER không tồn tại:", REAL_OWNER)
 		return
-	tset = set(targets)
-
 	# 1) Reassign mọi link nghiệp vụ trỏ user bị xoá → REAL_OWNER (tránh dangling).
 	reassign = [
 		("CRM Deal", "deal_owner"),
@@ -88,13 +86,18 @@ def delete_test_users():
 
 # ── B) Top-up data thật (đầy đủ field) cho doctype < 3 ──────────────────────
 
+
 def _sha(s):
 	return hashlib.sha256(str(s).encode()).hexdigest()
 
 
 def _del_testish(doctype):
 	"""Xoá record _T-*/_test trong doctype (skip nếu FK chặn)."""
-	names = [n for n in frappe.get_all(doctype, pluck="name") if any(t in n.lower() for t in ("_t-", "_test", "smoke"))]
+	names = [
+		n
+		for n in frappe.get_all(doctype, pluck="name")
+		if any(t in n.lower() for t in ("_t-", "_test", "smoke"))
+	]
 	done = 0
 	for n in names:
 		try:
@@ -107,7 +110,14 @@ def _del_testish(doctype):
 
 def topup_real_data():
 	# 1) Dọn leftover _T-* (thứ tự phụ thuộc: con trước cha).
-	for dt in ["AntMed Stock Ledger", "AntMed Lot", "AntMed Certificate", "AntMed Item", "AntMed Warehouse", "AntMed Supplier"]:
+	for dt in [
+		"AntMed Stock Ledger",
+		"AntMed Lot",
+		"AntMed Certificate",
+		"AntMed Item",
+		"AntMed Warehouse",
+		"AntMed Supplier",
+	]:
 		d = _del_testish(dt)
 		if d:
 			print(f"cleaned {d} testish in {dt}")
@@ -124,7 +134,9 @@ def topup_real_data():
 
 	# 2) AntMed Certificate (0 → 3) — đủ field.
 	CERTS = [
-		("CO", 0), ("CQ", 1), ("Phiếu kiểm nghiệm", 2),
+		("CO", 0),
+		("CQ", 1),
+		("Phiếu kiểm nghiệm", 2),
 	]
 	c = frappe.db.count("AntMed Certificate")
 	for cert_type, idx in CERTS:
@@ -134,17 +146,19 @@ def topup_real_data():
 		cert_no = f"{cert_type[:2].upper()}-2026-{1000 + idx}"
 		if frappe.db.exists("AntMed Certificate", {"cert_no": cert_no}):
 			continue
-		frappe.get_doc({
-			"doctype": "AntMed Certificate",
-			"cert_no": cert_no,
-			"cert_type": cert_type,
-			"item": it.name,
-			"lot": lot_of(it.name),
-			"issued_date": add_days(nowdate(), -120),
-			"expires_at": add_days(nowdate(), 600),
-			"file_url": f"/files/cert_{cert_no}.pdf",
-			"hash_sha256": _sha(cert_no),
-		}).insert(ignore_permissions=True)
+		frappe.get_doc(
+			{
+				"doctype": "AntMed Certificate",
+				"cert_no": cert_no,
+				"cert_type": cert_type,
+				"item": it.name,
+				"lot": lot_of(it.name),
+				"issued_date": add_days(nowdate(), -120),
+				"expires_at": add_days(nowdate(), 600),
+				"file_url": f"/files/cert_{cert_no}.pdf",
+				"hash_sha256": _sha(cert_no),
+			}
+		).insert(ignore_permissions=True)
 		c += 1
 	print("Certificate now", frappe.db.count("AntMed Certificate"))
 
@@ -161,27 +175,31 @@ def topup_real_data():
 			it = items[(i + j) % len(items)]
 			quota = 1000 * (j + 1)
 			used = 200 * (j + 1)
-			child.append({
-				"item": it.name,
-				"item_name": it.item_name,
-				"uom": it.uom or "Cái",
-				"unit_price": 1_500_000 + j * 500_000,
-				"quota_qty": quota,
-				"used_qty": used,
-				"remaining_pct": round((quota - used) / quota * 100, 1),
-				"lock_at_100": 1,
-			})
-		frappe.get_doc({
-			"doctype": "AntMed Contract",
-			"contract_no": cno,
-			"hospital": hosp.name,
-			"status": "Hiệu lực",
-			"signed_date": add_days(nowdate(), -90),
-			"valid_from": add_days(nowdate(), -90),
-			"valid_to": add_days(nowdate(), 275),
-			"total_value": 3_000_000_000 + i * 500_000_000,
-			"items": child,
-		}).insert(ignore_permissions=True)
+			child.append(
+				{
+					"item": it.name,
+					"item_name": it.item_name,
+					"uom": it.uom or "Cái",
+					"unit_price": 1_500_000 + j * 500_000,
+					"quota_qty": quota,
+					"used_qty": used,
+					"remaining_pct": round((quota - used) / quota * 100, 1),
+					"lock_at_100": 1,
+				}
+			)
+		frappe.get_doc(
+			{
+				"doctype": "AntMed Contract",
+				"contract_no": cno,
+				"hospital": hosp.name,
+				"status": "Hiệu lực",
+				"signed_date": add_days(nowdate(), -90),
+				"valid_from": add_days(nowdate(), -90),
+				"valid_to": add_days(nowdate(), 275),
+				"total_value": 3_000_000_000 + i * 500_000_000,
+				"items": child,
+			}
+		).insert(ignore_permissions=True)
 	print("Contract now", frappe.db.count("AntMed Contract"))
 
 	# 4) AntMed Sterilization (→ 3) — link loan thật, đủ field.
@@ -193,16 +211,18 @@ def topup_real_data():
 			break
 		if frappe.db.exists("AntMed Sterilization", {"loan": ln.name}):
 			continue
-		frappe.get_doc({
-			"doctype": "AntMed Sterilization",
-			"loan": ln.name,
-			"instrument_set": ln.instrument_set,
-			"result": "Pass",
-			"method": METHODS[si % 3],
-			"operator": ["Nguyễn Thị Tiệt", "Trần Văn Khuẩn", "Lê Thanh Sạch"][si % 3],
-			"started_at": add_to_date(now_datetime(), hours=-6),
-			"ended_at": add_to_date(now_datetime(), hours=-5),
-		}).insert(ignore_permissions=True)
+		frappe.get_doc(
+			{
+				"doctype": "AntMed Sterilization",
+				"loan": ln.name,
+				"instrument_set": ln.instrument_set,
+				"result": "Pass",
+				"method": METHODS[si % 3],
+				"operator": ["Nguyễn Thị Tiệt", "Trần Văn Khuẩn", "Lê Thanh Sạch"][si % 3],
+				"started_at": add_to_date(now_datetime(), hours=-6),
+				"ended_at": add_to_date(now_datetime(), hours=-5),
+			}
+		).insert(ignore_permissions=True)
 		si += 1
 	print("Sterilization now", frappe.db.count("AntMed Sterilization"))
 
@@ -213,15 +233,17 @@ def topup_real_data():
 		ct = contracts[i % len(contracts)]
 		it = items[i % len(items)]
 		qty = 50 * (i + 1)
-		frappe.get_doc({
-			"doctype": "AntMed Quota Usage Log",
-			"contract": ct.name,
-			"item": it.name,
-			"do_ref": f"DO-2026-{300 + i}",
-			"qty": qty,
-			"snapshot_pct": round(20 + i * 15, 1),
-			"ts": add_to_date(now_datetime(), days=-(i + 1)),
-		}).insert(ignore_permissions=True)
+		frappe.get_doc(
+			{
+				"doctype": "AntMed Quota Usage Log",
+				"contract": ct.name,
+				"item": it.name,
+				"do_ref": f"DO-2026-{300 + i}",
+				"qty": qty,
+				"snapshot_pct": round(20 + i * 15, 1),
+				"ts": add_to_date(now_datetime(), days=-(i + 1)),
+			}
+		).insert(ignore_permissions=True)
 	print("QuotaUsageLog now", frappe.db.count("AntMed Quota Usage Log"))
 
 	frappe.db.commit()

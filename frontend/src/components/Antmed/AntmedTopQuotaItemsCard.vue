@@ -8,7 +8,10 @@
     aria-labelledby="antmed-top-quota-items-title"
   >
     <header class="flex items-baseline justify-between gap-2">
-      <h2 id="antmed-top-quota-items-title" class="text-p-base font-semibold text-ink-gray-8">
+      <h2
+        id="antmed-top-quota-items-title"
+        class="text-p-base font-semibold text-ink-gray-8"
+      >
         {{ __('Danh mục VT trúng thầu — top 5') }}
       </h2>
       <span
@@ -36,8 +39,18 @@
       class="flex flex-col items-center gap-3 py-8 text-center"
       role="alert"
     >
-      <Badge variant="subtle" theme="red" size="sm" :label="__('Không tải được')" />
-      <Button variant="outline" size="sm" :label="__('Thử lại')" @click="$emit('retry')" />
+      <Badge
+        variant="subtle"
+        theme="red"
+        size="sm"
+        :label="__('Không tải được')"
+      />
+      <Button
+        variant="outline"
+        size="sm"
+        :label="__('Thử lại')"
+        @click="$emit('retry')"
+      />
     </div>
 
     <!-- Empty -->
@@ -53,17 +66,23 @@
     <!-- Data — bảng 4 cột SKU | Quota | Đã xuất | % -->
     <table v-else class="w-full border-separate border-spacing-0 text-left">
       <caption class="sr-only">
-        {{ __('Bảng danh mục vật tư trúng thầu theo % quota đã dùng') }}
+        {{
+          __('Bảng danh mục vật tư trúng thầu theo % quota đã dùng')
+        }}
       </caption>
       <thead>
         <tr class="text-p-xs text-ink-gray-6">
           <th class="border-b border-outline-gray-1 py-2 pr-4 font-medium">
             {{ __('SKU') }}
           </th>
-          <th class="border-b border-outline-gray-1 py-2 pr-4 text-right font-medium">
+          <th
+            class="border-b border-outline-gray-1 py-2 pr-4 text-right font-medium"
+          >
             {{ __('Quota') }}
           </th>
-          <th class="border-b border-outline-gray-1 py-2 pr-4 text-right font-medium">
+          <th
+            class="border-b border-outline-gray-1 py-2 pr-4 text-right font-medium"
+          >
             {{ __('Đã xuất') }}
           </th>
           <th class="border-b border-outline-gray-1 py-2 font-medium">
@@ -89,12 +108,16 @@
           </td>
 
           <!-- Quota (quota_qty) -->
-          <td class="border-b border-outline-gray-1 py-2.5 pr-4 text-right tabular-nums text-ink-gray-8">
+          <td
+            class="border-b border-outline-gray-1 py-2.5 pr-4 text-right tabular-nums text-ink-gray-8"
+          >
             {{ qtyLabel(row.quota_qty) }}
           </td>
 
           <!-- Đã xuất (used_qty) -->
-          <td class="border-b border-outline-gray-1 py-2.5 pr-4 text-right tabular-nums text-ink-gray-8">
+          <td
+            class="border-b border-outline-gray-1 py-2.5 pr-4 text-right tabular-nums text-ink-gray-8"
+          >
             {{ qtyLabel(row.used_qty) }}
           </td>
 
@@ -115,7 +138,9 @@
                   :style="{ width: clampPct(row.used_pct) + '%' }"
                 />
               </div>
-              <span class="min-w-[2.75rem] tabular-nums text-p-xs text-ink-gray-7">
+              <span
+                class="min-w-[2.75rem] tabular-nums text-p-xs text-ink-gray-7"
+              >
                 {{ pctLabel(row.used_pct) }}
               </span>
             </div>

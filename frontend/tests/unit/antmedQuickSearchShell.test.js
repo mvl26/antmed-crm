@@ -10,7 +10,9 @@ const layoutSrc = readFileSync(
 describe('AntmedLayout — wire quick-search palette', () => {
   it('import + render AntmedQuickSearch (v-model:open)', () => {
     expect(layoutSrc).toContain('AntmedQuickSearch')
-    expect(layoutSrc).toMatch(/<AntmedQuickSearch[\s\S]*v-model:open="searchOpen"/)
+    expect(layoutSrc).toMatch(
+      /<AntmedQuickSearch[\s\S]*v-model:open="searchOpen"/,
+    )
   })
   it('ô header là button mở palette (KHÔNG còn <input> chết)', () => {
     expect(layoutSrc).toContain('searchOpen = true')
